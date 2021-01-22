@@ -1,0 +1,28 @@
+plugins {
+	id "application"
+	id "groovy"
+}
+
+group = "org.codesimius"
+mainClassName = "org.codesimius.jfactor.Main"
+
+wrapper() { gradleVersion = "6.5" }
+
+repositories { mavenCentral() }
+
+dependencies {
+	implementation "org.codehaus.groovy:groovy-all:3.0.6"
+	implementation "org.ow2.asm:asm:9.0"
+	implementation "org.ow2.asm:asm-commons:9.0"
+	implementation "org.ow2.asm:asm-util:9.0"
+}
+
+run {
+	if (project.hasProperty("args")) args project.property("args").split()
+}
+
+def testNames = new File("src/inputTests").list()
+
+sourceSets {
+	testNames.each { t -> "$t" { java { srcDirs = ["src/inputTests/$t"] } } }
+}
