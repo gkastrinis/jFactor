@@ -15,6 +15,6 @@ class MyClassVisitor extends ClassVisitor {
 
 	@Override
 	MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-		return new MyMethodVisitor(access, name, desc, signature, exceptions)
+		return new MyMethodVisitor(access, name, desc, signature, exceptions, this.name)
 	}
 }

@@ -3,11 +3,16 @@ package org.codesimius.jfactor
 @Singleton
 class Database {
 
+	File baseDir = new File("build")
+
 	void init() {
-		opcodes.delete()
-		vars.delete()
+		this.properties.each { prop, val ->
+			if(prop in ["metaClass", "class", "instance", "baseDir"]) return
+			this[prop].delete()
+		}
 	}
 
-	File opcodes = new File("Opcode.facts")
-	File vars = new File("Var.facts")
+	File opcodes = new File(baseDir, "Opcode.facts")
+	File vars = new File(baseDir, "Var.facts")
+	File formals = new File(baseDir, "FormalParam.facts")
 }

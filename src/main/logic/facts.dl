@@ -1,8 +1,25 @@
+// Input
 .decl Opcode(method: symbol, index: number, opcode: symbol, oper1: symbol, oper2: symbol)
-.decl Var(method: symbol, index: symbol, var: symbol)
+.decl Var(method: symbol, index: symbol, var: symbol, type: symbol)
 .input Opcode
 .input Var
+// Output
+.decl ASSIGN(method: symbol, index: number, to: symbol)
+.decl OPERAND(method: symbol, index: number, pos: number, from: symbol)
+.decl OPERATOR(method: symbol, index: number, op: symbol)
+.decl VCALL(method: symbol, index: number, base: symbol, sig: symbol)
+.decl ACTUAL_PARAM(method: symbol, index: number, pos: number, var: symbol)
+.decl RETURN(method: symbol, index: number, op: symbol)
+.output ASSIGN
+.output OPERAND
+.output OPERATOR
+.output VCALL
+.output ACTUAL_PARAM
+.output RETURN
 
+.decl isVar(var: symbol)
+isVar(var) :- Var(_, _, var, _).
+///////////////////////////////////////////////////////////////
 
 .type Stack = [top: symbol, rest: Stack]
 
@@ -12,87 +29,98 @@
 .decl BinaryConsumer(opcode: symbol, op: symbol)
 .decl VarLoad(opcode: symbol)
 .decl VarStore(opcode: symbol)
-
-.decl Instruction(method: symbol, index: number, cmd: symbol)
-.output Instruction
-.decl RequestVar(method: symbol, index: number, stack: Stack)
-.decl RespondVar(method: symbol, index: number, var: symbol)
-.decl RequestBINOP_afterInstr(method: symbol, index: number, oper1: symbol, op: symbol, oper2: symbol)
+.decl ConstantLoad(opcode: symbol)
+.decl ReturnValue(opcode: symbol)
 
 BinaryConsumer("dmul", "*").
 
 VarLoad("aload").
 VarLoad("dload").
 VarStore("dstore").
+ConstantLoad("ldc").
+ConstantLoad("bipush").
+ReturnValue("ireturn").
+ReturnValue("dreturn").
+
+
+.decl Instruction(method: symbol, index: number, cmd: symbol)
+//.output Instruction
+.decl RequestVar(method: symbol, index: number, stack: Stack)
+.decl RespondVar(method: symbol, index: number, var: symbol)
+.decl ProcessAParam(method: symbol, index: number, pos: number, arity: number, stack: Stack)
+
 
 StackBeforeIndex(method, 0, [".", nil]) :- Opcode(method, _, _, _, _).
 
 // Push var into stack
 StackBeforeIndex(method, i+1, [var, stack]) :-
 	StackBeforeIndex(method, i, stack),
-	Opcode(method, i, opcode, oper1, _),
+	Opcode(method, i, opcode, varIndex, _),
 	VarLoad(opcode),
-	Var(method, oper1, var).
+	Var(method, varIndex, var, _).
 
-// Compute intermediate result
+// Compute an intermediate result
 // Swap order of operands due to stack semantics
-RequestBINOP_afterInstr(method, i, oper2, op, oper1),
+OPERAND(method, i, 0, oper2),
+OPERAND(method, i, 1, oper1),
+OPERATOR(method, i, op),
 RequestVar(method, i, stack) :-
 	StackBeforeIndex(method, i, [oper1, [oper2, stack]]),
 	Opcode(method, i, opcode, _, _),
 	BinaryConsumer(opcode, op).
 
-RespondVar(method, i, var) :-
-	RequestVar(method, i, stack),
-	Opcode(method, i+1, opcode, oper1, _),
-	VarStore(opcode),
-	Var(method, oper1, var).
+OPERAND(method, i, 0, oper1),
+RequestVar(method, i, stack) :-
+	StackBeforeIndex(method, i, stack),
+	Opcode(method, i, "getstatic", oper1, _).
 
 RespondVar(method, i, var) :-
-	RequestVar(method, i, stack),
+	RequestVar(method, i, _),
+	Opcode(method, i+1, opcode, varIndex, _),
+	VarStore(opcode),
+	Var(method, varIndex, var, _).
+
+RespondVar(method, i, var) :-
+	RequestVar(method, i, _),
 	Opcode(method, i+1, opcode, _, _),
 	!VarStore(opcode),
 	var = cat("$var", to_string(i)).
 
-Instruction(method, i, cat(var, cat(oper1, oper2))),
+ASSIGN(method, i, var),
 StackBeforeIndex(method, i+1, [var, stack]) :-
 	RequestVar(method, i, stack),
-	RespondVar(method, i, var),
-	RequestBINOP_afterInstr(method, i, oper1, op, oper2).
+	RespondVar(method, i, var).
 
-Instruction(method, i+2, cat(var, cat("=",cat(oper1, cat(op, oper2))))),
-StackBeforeIndex(method, i+2, stack) :-
-	RequestVar(method, i, stack),
-	RespondVar(method, -1*i, var),
-	RequestBINOP_afterInstr(method, i, oper1, op, oper2).
-
-
-
-
-
-
-
-StackBeforeIndex(method, i+1, [oper1, stack]) :-
-	StackBeforeIndex(method, i, stack),
-	Opcode(method, i, "ldc", oper1, _).
-
-StackBeforeIndex(method, i+1, [oper1, stack]) :-
-	StackBeforeIndex(method, i, stack),
-	Opcode(method, i, "getstatic", oper1, _).
-
-Instruction(method, i, cat("call", cat(oper1, cat(head1, head2)))),
+// Pop (and ignore) the top operand in the stack
 StackBeforeIndex(method, i+1, stack) :-
-	StackBeforeIndex(method, i, [head1, [head2, stack]]),
-	Opcode(method, i, "invokevirtual", oper1, _).
+	StackBeforeIndex(method, i, [_, stack]),
+	Opcode(method, i, opcode, _, _),
+	VarStore(opcode).
 
-StackBeforeIndex(method, i+1, [oper1, stack]) :-
+ProcessAParam(method, i, arity-1, arity, stack) :-
 	StackBeforeIndex(method, i, stack),
-	Opcode(method, i, "bipush", oper1, _).
+	Opcode(method, i, "invokevirtual", _, arityStr),
+	arity = to_number(arityStr).
 
-Instruction(method, i, cat("return ", head)),
+VCALL(method, i, base, sig),
 StackBeforeIndex(method, i+1, stack) :-
-	StackBeforeIndex(method, i, [head, stack]),
-	Opcode(method, i, "ireturn", _, _).
+	Opcode(method, i, "invokevirtual", sig, _),
+	ProcessAParam(method, i, -1, _, [base, stack]).
+
+ACTUAL_PARAM(method, i, pos, param),
+ProcessAParam(method, i, pos-1, arity, stack) :-
+	ProcessAParam(method, i, pos, arity, [param, stack]), pos >= 0.
+
+StackBeforeIndex(method, i+1, [const, stack]) :-
+	StackBeforeIndex(method, i, stack),
+	Opcode(method, i, opcode, const, _),
+	ConstantLoad(opcode).
+
+RETURN(method, i, oper),
+StackBeforeIndex(method, i+1, stack) :-
+	StackBeforeIndex(method, i, [oper, stack]),
+	Opcode(method, i, opcode, _, _),
+	ReturnValue(opcode).
 
 StackBeforeIndex(method, i+1, stack) :-
 	StackBeforeIndex(method, i, stack),

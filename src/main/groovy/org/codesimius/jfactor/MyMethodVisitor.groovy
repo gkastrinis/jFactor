@@ -12,17 +12,23 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	String signature
 	String[] exceptions
 
+	String declaringType
 	int counter
 
-	MyMethodVisitor(int access, String name, String desc, String signature, String[] exceptions) {
+	Label firstLabel
+	int formalCounter
+
+	MyMethodVisitor(int access, String name, String desc, String signature, String[] exceptions, String declaringType) {
 		super(ASM9)
 		this.access = access
 		this.name = name
 		this.desc = desc
 		this.signature = signature
 		this.exceptions = exceptions
+		this.declaringType = declaringType
 		println "$access $name $desc $signature"
 		counter = -1
+		formalCounter = 0
 	}
 
 	void visitInsn(int opcode) {
@@ -66,7 +72,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		switch (opcode) {
 			case INVOKESPECIAL: rec("invokespecial", "${owner.replace("/", ".")}.${name}$descriptor")
 				break
-			case INVOKEVIRTUAL: rec("invokevirtual", "${owner.replace("/", ".")}.${name}$descriptor")
+			case INVOKEVIRTUAL: rec("invokevirtual", "${owner.replace("/", ".")}.${name}$descriptor", countParams(descriptor))
 				break
 			default: rec(opcode, "??", "??")
 				break
@@ -101,20 +107,49 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	}
 
 	void visitLabel(Label label) {
+		if (!firstLabel) firstLabel = label
 		println "Label $label:"
-	}
-
-	void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
-		println "$index Local $descriptor $name ($signature), start: $start, end: $end"
-		Database.instance.vars << "${this.name}\t$index\t$name\n"
 	}
 
 	void visitLineNumber(int line, Label start) {
 		println "----- $line ($start)"
 	}
 
+	void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
+		println "$index Local $descriptor $name ($signature), start: $start, end: $end"
+		Database.instance.vars << "${methID()}\t$index\t${varID(name)}\t$descriptor\n"
+		if (name != "this" && start == firstLabel) Database.instance.formals << "${methID()}\t${formalCounter++}\t${varID(name)}\n"
+	}
+
+
 	void rec(def opcode, def oper1 = "_", def oper2 = "_") {
-		printf("$counter: %h $oper1 $oper2\n", opcode)
-		Database.instance.opcodes << "$name\t$counter\t$opcode\t$oper1\t$oper2\n"
+		println "${methID()}\t$counter\t$opcode\t$oper1\t$oper2"
+		Database.instance.opcodes << "${methID()}\t$counter\t$opcode\t$oper1\t$oper2\n"
+	}
+
+	def methID() { "<${declaringType} ${name}$desc>" }
+
+	def varID(def name) { "${methID()}/$name" }
+
+	int countParams(def desc) {
+		if (!desc) return 0
+		switch (desc[0]) {
+			case 'B':
+			case 'C':
+			case 'D':
+			case 'F':
+			case 'I':
+			case 'J':
+			case 'S':
+			case 'Z':
+				return 1 + countParams(desc[1..-1])
+			case 'L':
+				def end = desc.indexOf(";")
+				return 1 + countParams(desc[end+1..-1])
+			case '[':
+				return countParams(desc[1..-1])
+			case '(': return countParams(desc[1..-1])
+			case ')': return 0
+		}
 	}
 }

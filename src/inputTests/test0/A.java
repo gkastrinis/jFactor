@@ -1,11 +1,10 @@
-import java.util.Scanner;
-
 public class A {
 	public static void main(String args[]){
 		B b1 = new B(42);
 		B b2 = new B("hello world");
 		B b3 = new B(1234);
 		b3.foobar(10);
+		b3.test(-2);
 	}
 }
 
@@ -28,10 +27,16 @@ class B {
 	}
 
 	public int foobar(double x) {
-		double y = x * 42;
+		double y;
+		y = x * 42;
 		baz(y, y*2*2);
 		System.out.println(y);
 		return 100;
+	}
+
+	public void test(int a) {
+		B b = new B(1000);
+		System.out.println(b.baz(10, 20.5 * a));
 	}
 
 	public double baz(double x, double z) { return x; }
