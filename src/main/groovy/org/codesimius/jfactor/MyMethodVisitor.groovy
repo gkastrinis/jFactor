@@ -79,14 +79,15 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
 		counter++
+		def sig = "${owner.replace("/", ".")}.${name}$descriptor"
 		switch (opcode) {
 			case INVOKESPECIAL:
-				callInfo(desc)
-				rec("invokespecial", "${owner.replace("/", ".")}.${name}$descriptor")
+				callInfo(sig)
+				rec("invokespecial", sig)
 				break
 			case INVOKEVIRTUAL:
-				callInfo(desc)
-				rec("invokevirtual", "${owner.replace("/", ".")}.${name}$descriptor")
+				callInfo(sig)
+				rec("invokevirtual", sig)
 				break
 			default: rec(opcode, "??")
 				break
@@ -144,24 +145,24 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	def varID(def name) { "${methID()}/$name" }
 
-	void callInfo(String desc) {
-		int argc = 0, i = 0
+	static void callInfo(String sig) {
+		int argc = 0, i = sig.indexOf("(") + 1
 		while (true) {
-			if (desc[i] in ["B", "C", "D", "F", "I", "J", "S", "Z"]) {
+			if (sig[i] in ["B", "C", "D", "F", "I", "J", "S", "Z"]) {
 				argc++
 				i++
-			} else if (desc[i] == "L") {
+			} else if (sig[i] == "L") {
 				argc++
-				i += (desc[i..-1].indexOf(";"))+1
-			} else if (desc[i] in ["[", "("]) {
+				i += (sig[i..-1].indexOf(";"))+1
+			} else if (sig[i] == "[") {
 				i++
-			} else if (desc[i] == ")") {
+			} else if (sig[i] == ")") {
 				i++
 				break
 			}
 		}
-		String retType
-		switch (desc[i]) {
+		String retType = "??"
+		switch (sig[i]) {
 			case 'B': retType = "byte"
 				break
 			case 'C': retType = "char"
@@ -180,10 +181,10 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case 'V': retType = "void"
 				break
-			case 'L': retType = desc[i+2..-2].replace("/", ".")
+			case 'L': retType = sig[i+2..-2].replace("/", ".")
 				break
-			case '[': retType = desc[i+1..-1].replace("/", ".")
+			case '[': retType = sig[i+1..-1].replace("/", ".")
 		}
-		Database.instance.calls << "${methID()}\t$counter\t$argc\t$retType\n"
+		Database.instance.methodSigs << "$sig\t$argc\t$retType\n"
 	}
 }

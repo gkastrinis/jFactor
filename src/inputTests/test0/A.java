@@ -29,6 +29,7 @@ class B {
 	public int foobar(double x) {
 		double y;
 		y = x * 42;
+		test(123);
 		double c = baz(y, y*2*2);
 		System.out.println(y*c);
 		return 100;
