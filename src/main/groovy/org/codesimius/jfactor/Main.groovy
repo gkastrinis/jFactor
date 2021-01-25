@@ -2,25 +2,15 @@ package org.codesimius.jfactor
 
 import org.objectweb.asm.ClassReader
 
-class Main extends ClassLoader {
-	static void main(String[] args) {
-		Database.instance.init()
-		try {
-			args.each {new Main().loadClass(it) }
-		} catch (ReflectiveOperationException e) {
-			e.printStackTrace()
-		}
-	}
+import java.util.jar.JarFile
 
-	@Override
-	protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-		try {
-			def is = new File("build/classes/java/test0/" + name.replace('.', '/') + ".class").newInputStream()
-			//def is = getResourceAsStream(name.replace('.', '/') + ".class")
-//			def is = getResourceAsStream("B.class")
-			new ClassReader(is).accept(new MyClassVisitor(name), 0)
-		} catch (Exception e) {
-			throw new ClassNotFoundException(name, e)
-		}
+Database.instance.init()
+
+args.each {
+	def jarFile = new JarFile(it)
+	jarFile.entries().each { entry ->
+		if (!entry.name.endsWith(".class")) return
+		def name = entry.name[0..-7]
+		new ClassReader(jarFile.getInputStream(entry)).accept(new MyClassVisitor(name), 0)
 	}
 }
