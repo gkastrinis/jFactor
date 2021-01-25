@@ -84,6 +84,7 @@ __REQ_Var(method, i, stack) :-
 	StackBeforeIndex(method, i, stack),
 	Opcode(method, i, "getstatic", oper1).
 
+// Store top of stack into a var (found in source code, or temp)
 __RES_Var(method, i, var) :-
 	__REQ_Var(method, i, _),
 	Opcode(method, i+1, opcode, varIndex),
@@ -108,7 +109,7 @@ StackBeforeIndex(method, i+1, stack) :-
 	Opcode(method, i, opcode, _),
 	VarStoreOpcode(opcode).
 
-
+// Pop call arguments from stack
 __PROC_Param(method, i, argc - 1, argc, stack) :-
 	StackBeforeIndex(method, i, stack),
 	Opcode(method, i, opcode, sig),
@@ -119,17 +120,31 @@ ACTUAL_PARAM(method, i, pos, param),
 __PROC_Param(method, i, pos - 1, arity, stack) :-
 	__PROC_Param(method, i, pos, arity, [param, stack]), pos >= 0.
 
-__REQ_Var(method, i, stack),
+// Pop call receiver from stack
 VCALL(method, i, base, sig) :-
 	Opcode(method, i, "invokevirtual", sig),
-	__PROC_Param(method, i, -1, _, [base, stack]).
+	__PROC_Param(method, i, -1, _, [base, _]).
 
-__REQ_Var(method, i, stack),
+// Pop call receiver from stack
 SPCALL(method, i, base, sig) :-
 	Opcode(method, i, "invokespecial", sig),
-	__PROC_Param(method, i, -1, _, [base, stack]).
+	__PROC_Param(method, i, -1, _, [base, _]).
 
+StackBeforeIndex(method, i+1, stack) :-
+	Opcode(method, i, opcode, sig),
+	CallOpcode(opcode),
+	MethodSig(sig, _, "void"),
+	__PROC_Param(method, i, -1, _, [_, stack]).
 
+// Push var for call result
+__REQ_Var(method, i, stack) :-
+	Opcode(method, i, opcode, sig),
+	CallOpcode(opcode),
+	MethodSig(sig, _, retType),
+	retType != "void",
+	__PROC_Param(method, i, -1, _, [_, stack]).
+
+// Push constant value into stack
 StackBeforeIndex(method, i+1, [const, stack]) :-
 	StackBeforeIndex(method, i, stack),
 	Opcode(method, i, opcode, const),
