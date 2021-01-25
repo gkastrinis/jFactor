@@ -15,4 +15,5 @@ class Database {
 	File opcodes = new File(baseDir, "Opcode.facts")
 	File vars = new File(baseDir, "Var.facts")
 	File formals = new File(baseDir, "FormalParam.facts")
+	File calls = new File(baseDir, "Call.facts")
 }

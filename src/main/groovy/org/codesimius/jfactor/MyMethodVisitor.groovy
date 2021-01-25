@@ -36,7 +36,13 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		switch (opcode) {
 			case ICONST_0: rec("iconst_0")
 				break
+			case I2D: rec("i2d")
+				break
+			case POP: rec("pop")
+				break
 			case POP2: rec("pop2")
+				break
+			case DUP: rec("dup")
 				break
 			case DMUL: rec("dmul")
 				break
@@ -46,7 +52,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case RETURN: rec("return")
 				break
-			default: rec(opcode, "??", "??")
+			default: rec(opcode, "??")
 				break
 		}
 	}
@@ -58,11 +64,15 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case ILOAD: rec("iload", var)
 				break
+			case DLOAD: rec("fload", var)
+				break
 			case DLOAD: rec("dload", var)
+				break
+			case ASTORE: rec("astore", var)
 				break
 			case DSTORE: rec("dstore", var)
 				break
-			default: rec(opcode, var, "??")
+			default: rec(opcode, "??")
 				break
 		}
 	}
@@ -70,11 +80,15 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
 		counter++
 		switch (opcode) {
-			case INVOKESPECIAL: rec("invokespecial", "${owner.replace("/", ".")}.${name}$descriptor")
+			case INVOKESPECIAL:
+				callInfo(desc)
+				rec("invokespecial", "${owner.replace("/", ".")}.${name}$descriptor")
 				break
-			case INVOKEVIRTUAL: rec("invokevirtual", "${owner.replace("/", ".")}.${name}$descriptor", countParams(descriptor))
+			case INVOKEVIRTUAL:
+				callInfo(desc)
+				rec("invokevirtual", "${owner.replace("/", ".")}.${name}$descriptor")
 				break
-			default: rec(opcode, "??", "??")
+			default: rec(opcode, "??")
 				break
 		}
 	}
@@ -91,7 +105,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case GETSTATIC: rec("getstatic", "<$owner: $descriptor $name>")
 				break
-			default: rec(opcode, "??", "??")
+			default: rec(opcode, "??")
 				break
 		}
 	}
@@ -101,14 +115,15 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		switch (opcode) {
 			case BIPUSH: rec("bipush", operand)
 				break
-			default: rec(opcode, "??", "??")
+			case SIPUSH: rec("sipush", operand)
+				break
+			default: rec(opcode, "??")
 				break
 		}
 	}
 
 	void visitLabel(Label label) {
 		if (!firstLabel) firstLabel = label
-		println "Label $label:"
 	}
 
 	void visitLineNumber(int line, Label start) {
@@ -121,35 +136,54 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		if (name != "this" && start == firstLabel) Database.instance.formals << "${methID()}\t${formalCounter++}\t${varID(name)}\n"
 	}
 
-
-	void rec(def opcode, def oper1 = "_", def oper2 = "_") {
-		println "${methID()}\t$counter\t$opcode\t$oper1\t$oper2"
-		Database.instance.opcodes << "${methID()}\t$counter\t$opcode\t$oper1\t$oper2\n"
+	void rec(def opcode, def oper = "_") {
+		Database.instance.opcodes << "${methID()}\t$counter\t$opcode\t$oper\n"
 	}
 
 	def methID() { "<${declaringType} ${name}$desc>" }
 
 	def varID(def name) { "${methID()}/$name" }
 
-	int countParams(def desc) {
-		if (!desc) return 0
-		switch (desc[0]) {
-			case 'B':
-			case 'C':
-			case 'D':
-			case 'F':
-			case 'I':
-			case 'J':
-			case 'S':
-			case 'Z':
-				return 1 + countParams(desc[1..-1])
-			case 'L':
-				def end = desc.indexOf(";")
-				return 1 + countParams(desc[end+1..-1])
-			case '[':
-				return countParams(desc[1..-1])
-			case '(': return countParams(desc[1..-1])
-			case ')': return 0
+	void callInfo(String desc) {
+		int argc = 0, i = 0
+		while (true) {
+			if (desc[i] in ["B", "C", "D", "F", "I", "J", "S", "Z"]) {
+				argc++
+				i++
+			} else if (desc[i] == "L") {
+				argc++
+				i += (desc[i..-1].indexOf(";"))+1
+			} else if (desc[i] in ["[", "("]) {
+				i++
+			} else if (desc[i] == ")") {
+				i++
+				break
+			}
 		}
+		String retType
+		switch (desc[i]) {
+			case 'B': retType = "byte"
+				break
+			case 'C': retType = "char"
+				break
+			case 'D': retType = "double"
+				break
+			case 'F': retType = "float"
+				break
+			case 'I': retType = "int"
+				break
+			case 'J': retType = "long"
+				break
+			case 'S': retType = "short"
+				break
+			case 'Z': retType = "boolean"
+				break
+			case 'V': retType = "void"
+				break
+			case 'L': retType = desc[i+2..-2].replace("/", ".")
+				break
+			case '[': retType = desc[i+1..-1].replace("/", ".")
+		}
+		Database.instance.calls << "${methID()}\t$counter\t$argc\t$retType\n"
 	}
 }

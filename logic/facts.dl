@@ -1,24 +1,25 @@
 // Input
-.decl Opcode(method: symbol, index: number, opcode: symbol, oper1: symbol, oper2: symbol)
+.decl Opcode(method: symbol, index: number, opcode: symbol, oper: symbol)
 .decl Var(method: symbol, index: symbol, var: symbol, type: symbol)
+.decl Call(method: symbol, index: number, argc: number, retType: symbol)
 .input Opcode
 .input Var
+.input Call
 // Output
 .decl ASSIGN(method: symbol, index: number, to: symbol)
 .decl OPERAND(method: symbol, index: number, pos: number, from: symbol)
 .decl OPERATOR(method: symbol, index: number, op: symbol)
 .decl VCALL(method: symbol, index: number, base: symbol, sig: symbol)
+.decl SPCALL(method: symbol, index: number, base: symbol, sig: symbol)
 .decl ACTUAL_PARAM(method: symbol, index: number, pos: number, var: symbol)
 .decl RETURN(method: symbol, index: number, op: symbol)
 .output ASSIGN
 .output OPERAND
 .output OPERATOR
 .output VCALL
+.output SPCALL
 .output ACTUAL_PARAM
 .output RETURN
-
-.decl isVar(var: symbol)
-isVar(var) :- Var(_, _, var, _).
 ///////////////////////////////////////////////////////////////
 
 .type Stack = [top: symbol, rest: Stack]
@@ -31,16 +32,24 @@ isVar(var) :- Var(_, _, var, _).
 .decl VarStore(opcode: symbol)
 .decl ConstantLoad(opcode: symbol)
 .decl ReturnValue(opcode: symbol)
+.decl HackOpCode(opcode: symbol)
 
 BinaryConsumer("dmul", "*").
 
 VarLoad("aload").
+VarLoad("iload").
+VarLoad("fload").
 VarLoad("dload").
 VarStore("dstore").
 ConstantLoad("ldc").
 ConstantLoad("bipush").
+ConstantLoad("sipush").
 ReturnValue("ireturn").
 ReturnValue("dreturn").
+
+HackOpCode("dup").
+HackOpCode("pop").
+HackOpCode("pop2").
 
 
 .decl Instruction(method: symbol, index: number, cmd: symbol)
@@ -50,12 +59,12 @@ ReturnValue("dreturn").
 .decl ProcessAParam(method: symbol, index: number, pos: number, arity: number, stack: Stack)
 
 
-StackBeforeIndex(method, 0, [".", nil]) :- Opcode(method, _, _, _, _).
+StackBeforeIndex(method, 0, [".", nil]) :- Opcode(method, _, _, _).
 
 // Push var into stack
 StackBeforeIndex(method, i+1, [var, stack]) :-
 	StackBeforeIndex(method, i, stack),
-	Opcode(method, i, opcode, varIndex, _),
+	Opcode(method, i, opcode, varIndex),
 	VarLoad(opcode),
 	Var(method, varIndex, var, _).
 
@@ -66,23 +75,23 @@ OPERAND(method, i, 1, oper1),
 OPERATOR(method, i, op),
 RequestVar(method, i, stack) :-
 	StackBeforeIndex(method, i, [oper1, [oper2, stack]]),
-	Opcode(method, i, opcode, _, _),
+	Opcode(method, i, opcode, _),
 	BinaryConsumer(opcode, op).
 
 OPERAND(method, i, 0, oper1),
 RequestVar(method, i, stack) :-
 	StackBeforeIndex(method, i, stack),
-	Opcode(method, i, "getstatic", oper1, _).
+	Opcode(method, i, "getstatic", oper1).
 
 RespondVar(method, i, var) :-
 	RequestVar(method, i, _),
-	Opcode(method, i+1, opcode, varIndex, _),
+	Opcode(method, i+1, opcode, varIndex),
 	VarStore(opcode),
 	Var(method, varIndex, var, _).
 
 RespondVar(method, i, var) :-
 	RequestVar(method, i, _),
-	Opcode(method, i+1, opcode, _, _),
+	Opcode(method, i+1, opcode, _),
 	!VarStore(opcode),
 	var = cat("$var", to_string(i)).
 
@@ -94,18 +103,29 @@ StackBeforeIndex(method, i+1, [var, stack]) :-
 // Pop (and ignore) the top operand in the stack
 StackBeforeIndex(method, i+1, stack) :-
 	StackBeforeIndex(method, i, [_, stack]),
-	Opcode(method, i, opcode, _, _),
+	Opcode(method, i, opcode, _),
 	VarStore(opcode).
 
-ProcessAParam(method, i, arity-1, arity, stack) :-
+ProcessAParam(method, i, argc-1, argc, stack) :-
 	StackBeforeIndex(method, i, stack),
-	Opcode(method, i, "invokevirtual", _, arityStr),
-	arity = to_number(arityStr).
+	Opcode(method, i, "invokevirtual", _),
+	Call(method, i, argc, _).
 
 VCALL(method, i, base, sig),
 StackBeforeIndex(method, i+1, stack) :-
-	Opcode(method, i, "invokevirtual", sig, _),
+	Opcode(method, i, "invokevirtual", sig),
 	ProcessAParam(method, i, -1, _, [base, stack]).
+
+ProcessAParam(method, i, argc-1, argc, stack) :-
+	StackBeforeIndex(method, i, stack),
+	Opcode(method, i, "invokespecial", _),
+	Call(method, i, argc, _).
+
+SPCALL(method, i, base, sig),
+StackBeforeIndex(method, i+1, stack) :-
+	Opcode(method, i, "invokespecial", sig),
+	ProcessAParam(method, i, -1, _, [base, stack]).
+
 
 ACTUAL_PARAM(method, i, pos, param),
 ProcessAParam(method, i, pos-1, arity, stack) :-
@@ -113,15 +133,18 @@ ProcessAParam(method, i, pos-1, arity, stack) :-
 
 StackBeforeIndex(method, i+1, [const, stack]) :-
 	StackBeforeIndex(method, i, stack),
-	Opcode(method, i, opcode, const, _),
+	Opcode(method, i, opcode, const),
 	ConstantLoad(opcode).
 
 RETURN(method, i, oper),
 StackBeforeIndex(method, i+1, stack) :-
 	StackBeforeIndex(method, i, [oper, stack]),
-	Opcode(method, i, opcode, _, _),
+	Opcode(method, i, opcode, _),
 	ReturnValue(opcode).
 
+
+// TODO might be problematic
 StackBeforeIndex(method, i+1, stack) :-
 	StackBeforeIndex(method, i, stack),
-	Opcode(method, i, "pop2", _, _).
+	Opcode(method, i, opcode, _),
+	HackOpCode(opcode).
