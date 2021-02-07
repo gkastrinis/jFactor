@@ -3,9 +3,10 @@ package org.codesimius.jfactor
 @Singleton
 class Database {
 
-	File baseDir = new File("build")
+	File baseDir = new File("build/out")
 
 	void init() {
+		baseDir.mkdirs()
 		this.properties.each { prop, val ->
 			if(prop in ["metaClass", "class", "instance", "baseDir"]) return
 			this[prop].delete()
@@ -15,5 +16,7 @@ class Database {
 	File opcodes = new File(baseDir, "Opcode.facts")
 	File vars = new File(baseDir, "Var.facts")
 	File formals = new File(baseDir, "FormalParam.facts")
-	File methodSigs = new File(baseDir, "MethodSig.facts")
+	File invocations = new File(baseDir, "Invocation.facts")
+
+	File allocs = new File(baseDir, "ALLOC.facts")
 }

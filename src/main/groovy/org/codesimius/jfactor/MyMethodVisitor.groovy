@@ -31,6 +31,18 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		formalCounter = 0
 	}
 
+	//NOP, ACONST_NULL, ICONST_M1, ICONST_0, ICONST_1, ICONST_2, ICONST_3,
+	// ICONST_4, ICONST_5, LCONST_0, LCONST_1, FCONST_0, FCONST_1, FCONST_2,
+	// DCONST_0, DCONST_1, IALOAD, LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD,
+	// SALOAD, IASTORE, LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE, SASTORE,
+	// POP, POP2, DUP, DUP_X1, DUP_X2, DUP2, DUP2_X1, DUP2_X2, SWAP, IADD, LADD,
+	// FADD, DADD, ISUB, LSUB, FSUB, DSUB, IMUL, LMUL, FMUL, DMUL, IDIV, LDIV, FDIV,
+	// DDIV, IREM, LREM, FREM, DREM, INEG, LNEG, FNEG, DNEG, ISHL, LSHL, ISHR, LSHR,
+	// IUSHR, LUSHR, IAND, LAND, IOR, LOR, IXOR, LXOR, I2L, I2F, I2D, L2I, L2F, L2D,
+	// F2I, F2L, F2D, D2I, D2L, D2F, I2B, I2C, I2S, LCMP, FCMPL, FCMPG, DCMPL, DCMPG,
+	// IRETURN, LRETURN, FRETURN, DRETURN, ARETURN, RETURN, ARRAYLENGTH, ATHROW,
+	// MONITORENTER, or MONITOREXIT.
+
 	void visitInsn(int opcode) {
 		counter++
 		switch (opcode) {
@@ -60,18 +72,47 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitVarInsn(int opcode, int var) {
 		counter++
 		switch (opcode) {
-			case ALOAD: rec("aload", var)
-				break
 			case ILOAD: rec("iload", var)
 				break
-			case DLOAD: rec("fload", var)
+			case LLOAD:
+				throw new RuntimeException()
+			case FLOAD: rec("fload", var)
 				break
 			case DLOAD: rec("dload", var)
 				break
-			case ASTORE: rec("astore", var)
+			case ALOAD: rec("aload", var)
 				break
+			case ISTORE:
+				throw new RuntimeException()
+			case LSTORE:
+				throw new RuntimeException()
+			case FSTORE:
+				throw new RuntimeException()
 			case DSTORE: rec("dstore", var)
 				break
+			case ASTORE: rec("astore", var)
+				break
+			case RET:
+				throw new RuntimeException()
+			default: rec(opcode, "??")
+				break
+		}
+	}
+
+	void visitTypeInsn(int opcode, String type) {
+		counter++
+		switch (opcode) {
+			case NEW:
+				def heap = "${methID()}/new $type/$counter"
+				Database.instance.allocs << "${methID()}\t$counter\t$heap\t$type\n"
+				rec("new", heap)
+				break
+			case ANEWARRAY:
+				throw new RuntimeException()
+			case CHECKCAST:
+				throw new RuntimeException()
+			case INSTANCEOF:
+				throw new RuntimeException()
 			default: rec(opcode, "??")
 				break
 		}
@@ -81,16 +122,31 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		counter++
 		def sig = "${owner.replace("/", ".")}.${name}$descriptor"
 		switch (opcode) {
-			case INVOKESPECIAL:
-				callInfo(sig)
-				rec("invokespecial", sig)
-				break
 			case INVOKEVIRTUAL:
 				callInfo(sig)
 				rec("invokevirtual", sig)
 				break
+			case INVOKESPECIAL:
+				callInfo(sig)
+				rec(name == "<init>" ? "X-invokeinit" : "invokespecial", sig)
+				break
+			case INVOKESTATIC:
+				throw new RuntimeException()
+			case INVOKEINTERFACE:
+				throw new RuntimeException()
 			default: rec(opcode, "??")
 				break
+		}
+	}
+
+	// IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE, IF_ICMPEQ, IF_ICMPNE, IF_ICMPLT,
+	// IF_ICMPGE, IF_ICMPGT, IF_ICMPLE, IF_ACMPEQ, IF_ACMPNE, GOTO, JSR, IFNULL or IFNONNULL
+
+	void visitJumpInsn(int opcode, Label label) {
+		counter++
+		switch (opcode) {
+			default:
+				throw new RuntimeException()
 		}
 	}
 
@@ -102,9 +158,14 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
 		counter++
 		switch (opcode) {
-			case PUTFIELD: rec("putfield", "<$owner: $descriptor $name>")
-				break
 			case GETSTATIC: rec("getstatic", "<$owner: $descriptor $name>")
+				break
+			case PUTSTATIC:
+				throw new RuntimeException()
+			case GETFIELD:
+				rec(opcode, "??")
+				break//throw new RuntimeException()
+			case PUTFIELD: rec("putfield", "<$owner: $descriptor $name>")
 				break
 			default: rec(opcode, "??")
 				break
@@ -118,6 +179,8 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case SIPUSH: rec("sipush", operand)
 				break
+			case NEWARRAY:
+				throw new RuntimeException()
 			default: rec(opcode, "??")
 				break
 		}
@@ -133,7 +196,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
 		println "$index Local $descriptor $name ($signature), start: $start, end: $end"
-		Database.instance.vars << "${methID()}\t$index\t${varID(name)}\t$descriptor\n"
+		Database.instance.vars << "${methID()}\t$index\t${varID(name)}\t$name\t$descriptor\n"
 		if (name != "this" && start == firstLabel) Database.instance.formals << "${methID()}\t${formalCounter++}\t${varID(name)}\n"
 	}
 
@@ -185,6 +248,6 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case '[': retType = sig[i+1..-1].replace("/", ".")
 		}
-		Database.instance.methodSigs << "$sig\t$argc\t$retType\n"
+		Database.instance.invocations << "$sig\t$argc\t$retType\n"
 	}
 }

@@ -1,10 +1,11 @@
 public class A {
 	public static void main(String args[]){
-		B b1 = new B(42);
-		B b2 = new B("hello world");
-		B b3 = new B(1234);
-		b3.foobar(10);
-		b3.test(-2);
+		B b1 = new B(new B());
+//		B b2 = new B("hello world");
+//		B b3 = new B(1234);
+//		b3.foobar(10);
+//		b3.test(-2);
+		B b4 = new B(b1.foobar(123));
 	}
 }
 
@@ -13,14 +14,19 @@ class B {
 	String f2;
 
 	public B() {
-		f2 = "-";
-		f1 = 0;
+		f1 = 1;
+	}
+
+	public B(B b) {
+		f1 = b.f1;
+		f2 = b.f2;
 	}
 
 	public B(int x) {
 		f1 = x;
 		f2 = "dummy";
 	}
+
 	public B(String s) {
 		f1 = s.length();
 		f2 = s;
