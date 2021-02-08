@@ -17,6 +17,5 @@ class Database {
 	File vars = new File(baseDir, "Var.facts")
 	File formals = new File(baseDir, "FormalParam.facts")
 	File invocations = new File(baseDir, "Invocation.facts")
-
-	File allocs = new File(baseDir, "ALLOC.facts")
+	File allocTypes = new File(baseDir, "AllocType.facts")
 }

@@ -104,7 +104,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		switch (opcode) {
 			case NEW:
 				def heap = "${methID()}/new $type/$counter"
-				Database.instance.allocs << "${methID()}\t$counter\t$heap\t$type\n"
+				Database.instance.allocTypes << "${methID()}\t$counter\t$type\n"
 				rec("new", heap)
 				break
 			case ANEWARRAY:
@@ -196,8 +196,10 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
 		println "$index Local $descriptor $name ($signature), start: $start, end: $end"
-		Database.instance.vars << "${methID()}\t$index\t${varID(name)}\t$name\t$descriptor\n"
-		if (name != "this" && start == firstLabel) Database.instance.formals << "${methID()}\t${formalCounter++}\t${varID(name)}\n"
+		def (type, rest) = typeFromJVM(descriptor)
+		Database.instance.vars << "${methID()}\t$index\t${varID(name)}\t$name\t$type\n"
+		if (name != "this" && start == firstLabel)
+			Database.instance.formals << "${methID()}\t${formalCounter++}\t${varID(name)}\n"
 	}
 
 	void rec(def opcode, def oper = "_") {
@@ -208,46 +210,38 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	def varID(def name) { "${methID()}/$name" }
 
+	static def typeFromJVM(String str) {
+		switch (str[0]) {
+			case 'B': return ["byte", str.drop(1)]
+			case 'C': return ["char", str.drop(1)]
+			case 'D': return ["double", str.drop(1)]
+			case 'F': return ["float", str.drop(1)]
+			case 'I': return ["int", str.drop(1)]
+			case 'J': return ["long", str.drop(1)]
+			case 'S': return ["short", str.drop(1)]
+			case 'Z': return ["boolean", str.drop(1)]
+			case 'V': return ["void", str.drop(1)]
+			case 'L':
+				def end = str.indexOf(";")
+				return [str[1..end-1].replace("/", "."), str.drop(end+1)]
+			case '[':
+				def (type, rest) = typeFromJVM(str.drop(1))
+				return ["[$type", rest]
+			default: return ["", str]
+		}
+	}
+
 	static void callInfo(String sig) {
-		int argc = 0, i = sig.indexOf("(") + 1
+		int argc = 0
+		def origSig = sig
+		sig = sig[(sig.indexOf("(") + 1)..-1]
 		while (true) {
-			if (sig[i] in ["B", "C", "D", "F", "I", "J", "S", "Z"]) {
-				argc++
-				i++
-			} else if (sig[i] == "L") {
-				argc++
-				i += (sig[i..-1].indexOf(";"))+1
-			} else if (sig[i] == "[") {
-				i++
-			} else if (sig[i] == ")") {
-				i++
-				break
-			}
+			if (sig[0] == ")") break
+			def (type, rest) = typeFromJVM(sig)
+			argc++
+			sig = rest
 		}
-		String retType = "??"
-		switch (sig[i]) {
-			case 'B': retType = "byte"
-				break
-			case 'C': retType = "char"
-				break
-			case 'D': retType = "double"
-				break
-			case 'F': retType = "float"
-				break
-			case 'I': retType = "int"
-				break
-			case 'J': retType = "long"
-				break
-			case 'S': retType = "short"
-				break
-			case 'Z': retType = "boolean"
-				break
-			case 'V': retType = "void"
-				break
-			case 'L': retType = sig[i+2..-2].replace("/", ".")
-				break
-			case '[': retType = sig[i+1..-1].replace("/", ".")
-		}
-		Database.instance.invocations << "$sig\t$argc\t$retType\n"
+		def (retType, rest) = typeFromJVM(sig.drop(1))
+		Database.instance.invocations << "$origSig\t$argc\t$retType\n"
 	}
 }
