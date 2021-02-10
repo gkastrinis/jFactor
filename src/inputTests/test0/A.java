@@ -1,11 +1,20 @@
 public class A {
 	public static void main(String args[]){
-		B b1 = new B(new B());
+		test1();
+		//B b1 = new B(new B());
+		//B b8 = b1;
 //		B b2 = new B("hello world");
 //		B b3 = new B(1234);
 //		b3.foobar(10);
 //		b3.test(-2);
-		B b4 = new B(b1.foobar(123));
+		//B b4 = new B(b1.foobar(123));
+	}
+
+	static void test1() {
+		int a = 1;
+		int b = a * 2;
+		int c = b;
+		int d = c - 3 * 4;
 	}
 }
 

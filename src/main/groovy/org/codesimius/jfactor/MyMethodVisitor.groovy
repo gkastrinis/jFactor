@@ -31,22 +31,48 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		formalCounter = 0
 	}
 
-	//NOP, ACONST_NULL, ICONST_M1, ICONST_0, ICONST_1, ICONST_2, ICONST_3,
-	// ICONST_4, ICONST_5, LCONST_0, LCONST_1, FCONST_0, FCONST_1, FCONST_2,
-	// DCONST_0, DCONST_1, IALOAD, LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD,
+	// NOP, ACONST_NULL,
+	// IALOAD, LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD,
 	// SALOAD, IASTORE, LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE, SASTORE,
-	// POP, POP2, DUP, DUP_X1, DUP_X2, DUP2, DUP2_X1, DUP2_X2, SWAP, IADD, LADD,
-	// FADD, DADD, ISUB, LSUB, FSUB, DSUB, IMUL, LMUL, FMUL, DMUL, IDIV, LDIV, FDIV,
-	// DDIV, IREM, LREM, FREM, DREM, INEG, LNEG, FNEG, DNEG, ISHL, LSHL, ISHR, LSHR,
-	// IUSHR, LUSHR, IAND, LAND, IOR, LOR, IXOR, LXOR, I2L, I2F, I2D, L2I, L2F, L2D,
-	// F2I, F2L, F2D, D2I, D2L, D2F, I2B, I2C, I2S, LCMP, FCMPL, FCMPG, DCMPL, DCMPG,
-	// IRETURN, LRETURN, FRETURN, DRETURN, ARETURN, RETURN, ARRAYLENGTH, ATHROW,
+	// DUP_X1, DUP_X2, DUP2, DUP2_X1, DUP2_X2, SWAP,
+	// INEG, LNEG, FNEG, DNEG,
+	// ISHL, LSHL, ISHR, LSHR,
+	// IUSHR, LUSHR,
+	// I2L, I2F, I2D, L2I, L2F, L2D, F2I, F2L, F2D, D2I, D2L, D2F, I2B, I2C, I2S,
+	// LCMP, FCMPL, FCMPG, DCMPL, DCMPG,
+	// ARRAYLENGTH, ATHROW,
 	// MONITORENTER, or MONITOREXIT.
 
 	void visitInsn(int opcode) {
 		counter++
 		switch (opcode) {
-			case ICONST_0: rec("iconst_0")
+			case ICONST_M1: rec("X-const", "-1")
+				break
+			case ICONST_0: rec("X-const", "0")
+				break
+			case ICONST_1: rec("X-const", "1")
+				break
+			case ICONST_2: rec("X-const", "2")
+				break
+			case ICONST_3: rec("X-const", "3")
+				break
+			case ICONST_4: rec("X-const", "4")
+				break
+			case ICONST_5: rec("X-const", "5")
+				break
+			case LCONST_0: rec("X-const", "0L")
+				break
+			case LCONST_1: rec("X-const", "1L")
+				break
+			case FCONST_0: rec("X-const", "0.0f")
+				break
+			case FCONST_1: rec("X-const", "1.0f")
+				break
+			case FCONST_2: rec("X-const", "2.0f")
+				break
+			case DCONST_0: rec("X-const", "0.0")
+				break
+			case DCONST_1: rec("X-const", "1.0")
 				break
 			case I2D: rec("i2d")
 				break
@@ -56,46 +82,100 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case DUP: rec("dup")
 				break
-			case DMUL: rec("dmul")
+			case IADD: rec("X-add")
 				break
-			case IRETURN: rec("ireturn")
+			case LADD: rec("X-add")
 				break
-			case DRETURN: rec("dreturn")
+			case FADD: rec("X-add")
 				break
-			case RETURN: rec("return")
+			case DADD: rec("X-add")
 				break
-			default: rec(opcode, "??")
+			case ISUB: rec("X-sub")
 				break
+			case LSUB: rec("X-sub")
+				break
+			case FSUB: rec("X-sub")
+				break
+			case DSUB: rec("X-sub")
+				break
+			case IMUL: rec("X-mul")
+				break
+			case LMUL: rec("X-mul")
+				break
+			case FMUL: rec("X-mul")
+				break
+			case DMUL: rec("X-mul")
+				break
+			case IDIV: rec("X-div")
+				break
+			case LDIV: rec("X-div")
+				break
+			case FDIV: rec("X-div")
+				break
+			case DDIV: rec("X-div")
+				break
+			case IREM: rec("X-rem")
+				break
+			case LREM: rec("X-rem")
+				break
+			case FREM: rec("X-rem")
+				break
+			case DREM: rec("X-rem")
+				break
+			case IAND: rec("X-band")
+				break
+			case LAND: rec("X-band")
+				break
+			case IOR: rec("X-bor")
+				break
+			case LOR: rec("X-bor")
+				break
+			case IXOR: rec("X-bxor")
+				break
+			case LXOR: rec("X-bxor")
+				break
+			case IRETURN: rec("X-return")
+				break
+			case LRETURN: rec("X-return")
+				break
+			case FRETURN: rec("X-return")
+				break
+			case DRETURN: rec("X-return")
+				break
+			case ARETURN: rec("X-return")
+				break
+			case RETURN: rec("X-return-void")
+				break
+			default: throw new RuntimeException()
 		}
 	}
 
 	void visitVarInsn(int opcode, int var) {
 		counter++
 		switch (opcode) {
-			case ILOAD: rec("iload", var)
+			case ILOAD: rec("X-load", var)
 				break
-			case LLOAD:
-				throw new RuntimeException()
-			case FLOAD: rec("fload", var)
+			case LLOAD: rec("X-load", var)
 				break
-			case DLOAD: rec("dload", var)
+			case FLOAD: rec("X-load", var)
 				break
-			case ALOAD: rec("aload", var)
+			case DLOAD: rec("X-load", var)
 				break
-			case ISTORE:
-				throw new RuntimeException()
-			case LSTORE:
-				throw new RuntimeException()
-			case FSTORE:
-				throw new RuntimeException()
-			case DSTORE: rec("dstore", var)
+			case ALOAD: rec("X-load", var)
 				break
-			case ASTORE: rec("astore", var)
+			case ISTORE: rec("X-store", var)
+				break
+			case LSTORE: rec("X-store", var)
+				break
+			case FSTORE: rec("X-store", var)
+				break
+			case DSTORE: rec("X-store", var)
+				break
+			case ASTORE: rec("X-store", var)
 				break
 			case RET:
 				throw new RuntimeException()
-			default: rec(opcode, "??")
-				break
+			default: throw new RuntimeException()
 		}
 	}
 
@@ -131,7 +211,9 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				rec(name == "<init>" ? "X-invokeinit" : "invokespecial", sig)
 				break
 			case INVOKESTATIC:
-				throw new RuntimeException()
+				callInfo(sig)
+				rec("invokestatic", sig)
+				break
 			case INVOKEINTERFACE:
 				throw new RuntimeException()
 			default: rec(opcode, "??")
