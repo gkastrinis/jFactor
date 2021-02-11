@@ -1,13 +1,8 @@
 public class A {
 	public static void main(String args[]){
 		test1();
-		//B b1 = new B(new B());
-		//B b8 = b1;
-//		B b2 = new B("hello world");
-//		B b3 = new B(1234);
-//		b3.foobar(10);
-//		b3.test(-2);
-		//B b4 = new B(b1.foobar(123));
+		test2();
+		test3();
 	}
 
 	static void test1() {
@@ -15,6 +10,20 @@ public class A {
 		int b = a * 2;
 		int c = b;
 		int d = c - 3 * 4;
+	}
+
+	static void test2() {
+		B b1 = new B(new B());
+		B b2 = new B(b1.foobar(123));
+	}
+
+	static void test3() {
+		B b1 = new B();
+		B b8 = b1;
+		B b2 = new B("hello world");
+		B b3 = new B(1234);
+		b3.foobar(10);
+		b3.test(-2);
 	}
 }
 
