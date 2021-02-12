@@ -3,12 +3,15 @@ public class A {
 		test1();
 		test2();
 		test3();
+		test4();
+		test5();
+		test6();
 	}
 
 	static void test1() {
 		int a = 1;
 		int b = a * 2;
-		int c = b;
+		int c = -b;
 		int d = c - 3 * 4;
 	}
 
@@ -24,6 +27,35 @@ public class A {
 		B b3 = new B(1234);
 		b3.foobar(10);
 		b3.test(-2);
+	}
+
+	static void test4() {
+		long a = 1234567;
+		long b = a << 2;
+		long c = b >> 3;
+		long d = c >>> 4;
+	}
+
+	static void test5() {
+		long a = 1234;
+		long b = 5678;
+		boolean f1 = a > b;
+		float c = 1.2F;
+		float d = 3.4F;
+		boolean f2 = c > d;
+		double e = 1.2;
+		double f = 3.4;
+		boolean f3 = e > f;
+		if (b > 4) {
+			a = 0;
+		} else
+			a = 1;
+	}
+
+	static void test6() {
+		int x = 10;
+		int y = 20;
+		boolean f4 = x > y;
 	}
 }
 

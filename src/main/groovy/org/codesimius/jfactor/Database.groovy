@@ -10,6 +10,7 @@ class Database {
 		this.properties.each { prop, val ->
 			if(prop in ["metaClass", "class", "instance", "baseDir"]) return
 			this[prop].delete()
+			this[prop].createNewFile()
 		}
 	}
 
@@ -18,4 +19,5 @@ class Database {
 	File formals = new File(baseDir, "FormalParam.facts")
 	File invocations = new File(baseDir, "Invocation.facts")
 	File allocTypes = new File(baseDir, "AllocType.facts")
+	File labels = new File(baseDir, "Label.facts")
 }

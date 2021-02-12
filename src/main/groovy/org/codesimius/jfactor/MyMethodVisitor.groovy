@@ -35,11 +35,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	// IALOAD, LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD,
 	// SALOAD, IASTORE, LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE, SASTORE,
 	// DUP_X1, DUP_X2, DUP2, DUP2_X1, DUP2_X2, SWAP,
-	// INEG, LNEG, FNEG, DNEG,
-	// ISHL, LSHL, ISHR, LSHR,
-	// IUSHR, LUSHR,
 	// I2L, I2F, I2D, L2I, L2F, L2D, F2I, F2L, F2D, D2I, D2L, D2F, I2B, I2C, I2S,
-	// LCMP, FCMPL, FCMPG, DCMPL, DCMPG,
 	// ARRAYLENGTH, ATHROW,
 	// MONITORENTER, or MONITOREXIT.
 
@@ -82,66 +78,66 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case DUP: rec("dup")
 				break
-			case IADD: rec("X-add")
-				break
-			case LADD: rec("X-add")
-				break
-			case FADD: rec("X-add")
-				break
+			case IADD:
+			case LADD:
+			case FADD:
 			case DADD: rec("X-add")
 				break
-			case ISUB: rec("X-sub")
-				break
-			case LSUB: rec("X-sub")
-				break
-			case FSUB: rec("X-sub")
-				break
+			case ISUB:
+			case LSUB:
+			case FSUB:
 			case DSUB: rec("X-sub")
 				break
-			case IMUL: rec("X-mul")
-				break
-			case LMUL: rec("X-mul")
-				break
-			case FMUL: rec("X-mul")
-				break
+			case IMUL:
+			case LMUL:
+			case FMUL:
 			case DMUL: rec("X-mul")
 				break
-			case IDIV: rec("X-div")
-				break
-			case LDIV: rec("X-div")
-				break
-			case FDIV: rec("X-div")
-				break
+			case IDIV:
+			case LDIV:
+			case FDIV:
 			case DDIV: rec("X-div")
 				break
-			case IREM: rec("X-rem")
-				break
-			case LREM: rec("X-rem")
-				break
-			case FREM: rec("X-rem")
-				break
+			case IREM:
+			case LREM:
+			case FREM:
 			case DREM: rec("X-rem")
 				break
-			case IAND: rec("X-band")
+			case INEG:
+			case LNEG:
+			case FNEG:
+			case DNEG: rec("X-neg")
 				break
+			case IAND:
 			case LAND: rec("X-band")
 				break
-			case IOR: rec("X-bor")
-				break
+			case IOR:
 			case LOR: rec("X-bor")
 				break
-			case IXOR: rec("X-bxor")
-				break
+			case IXOR:
 			case LXOR: rec("X-bxor")
 				break
-			case IRETURN: rec("X-return")
+			case ISHL:
+			case LSHL: rec("X-shl")
 				break
-			case LRETURN: rec("X-return")
+			case ISHR:
+			case LSHR: rec("X-shr")
 				break
-			case FRETURN: rec("X-return")
+			case IUSHR:
+			case LUSHR: rec("X-ushr")
 				break
-			case DRETURN: rec("X-return")
+			case LCMP: rec("lcmp")
 				break
+			case FCMPL:
+			case DCMPL: rec("cmpl") // -1 on NaN
+				break
+			case FCMPG:
+			case DCMPG: rec("cmpg") // 1 on NaN
+				break
+			case IRETURN:
+			case LRETURN:
+			case FRETURN:
+			case DRETURN:
 			case ARETURN: rec("X-return")
 				break
 			case RETURN: rec("X-return-void")
@@ -153,24 +149,16 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitVarInsn(int opcode, int var) {
 		counter++
 		switch (opcode) {
-			case ILOAD: rec("X-load", var)
-				break
-			case LLOAD: rec("X-load", var)
-				break
-			case FLOAD: rec("X-load", var)
-				break
-			case DLOAD: rec("X-load", var)
-				break
+			case ILOAD:
+			case LLOAD:
+			case FLOAD:
+			case DLOAD:
 			case ALOAD: rec("X-load", var)
 				break
-			case ISTORE: rec("X-store", var)
-				break
-			case LSTORE: rec("X-store", var)
-				break
-			case FSTORE: rec("X-store", var)
-				break
-			case DSTORE: rec("X-store", var)
-				break
+			case ISTORE:
+			case LSTORE:
+			case FSTORE:
+			case DSTORE:
 			case ASTORE: rec("X-store", var)
 				break
 			case RET:
@@ -227,8 +215,14 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitJumpInsn(int opcode, Label label) {
 		counter++
 		switch (opcode) {
+			case IF_ICMPLE: rec("if_cmple", label)
+				break
+			case IFLE: rec("ifle", label)
+				break
+			case GOTO: rec("goto", label)
+				break
 			default:
-				throw new RuntimeException()
+				throw new RuntimeException(Integer.toHexString(opcode) )
 		}
 	}
 
@@ -270,14 +264,16 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	void visitLabel(Label label) {
 		if (!firstLabel) firstLabel = label
+		Database.instance.labels << "${methID()}\t$label\t${counter + 1}\n"
+//		Database.instance.opcodes << "${methID()}\t${counter + 1}\t--LABEL--\t$label\n"
 	}
 
 	void visitLineNumber(int line, Label start) {
-		println "----- $line ($start)"
+//		println "----- $line ($start)"
 	}
 
 	void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
-		println "$index Local $descriptor $name ($signature), start: $start, end: $end"
+//		println "$index Local $descriptor $name ($signature), start: $start, end: $end"
 		def (type, rest) = typeFromJVM(descriptor)
 		Database.instance.vars << "${methID()}\t$index\t${varID(name)}\t$name\t$type\n"
 		if (name != "this" && start == firstLabel)
