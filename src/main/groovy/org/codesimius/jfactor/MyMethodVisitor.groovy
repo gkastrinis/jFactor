@@ -70,6 +70,8 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case DCONST_1: rec("X-const", "1.0")
 				break
+			case ACONST_NULL: rec("X-const", "NULL")
+				break
 			case I2D: rec("i2d")
 				break
 			case POP: rec("pop")
@@ -142,7 +144,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case RETURN: rec("X-return-void")
 				break
-			default: throw new RuntimeException()
+			default: throw new RuntimeException(Integer.toHexString(opcode) )
 		}
 	}
 
@@ -209,15 +211,43 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		}
 	}
 
-	// IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE, IF_ICMPEQ, IF_ICMPNE, IF_ICMPLT,
-	// IF_ICMPGE, IF_ICMPGT, IF_ICMPLE, IF_ACMPEQ, IF_ACMPNE, GOTO, JSR, IFNULL or IFNONNULL
+
+	// JSR,
 
 	void visitJumpInsn(int opcode, Label label) {
 		counter++
 		switch (opcode) {
-			case IF_ICMPLE: rec("if_cmple", label)
+			case IFEQ: rec("ifeq", label)
+				break
+			case IFNE: rec("ifne", label)
+				break
+			case IFLT: rec("iflt", label)
+				break
+			case IFGE: rec("ifge", label)
+				break
+			case IFGT: rec("ifgt", label)
 				break
 			case IFLE: rec("ifle", label)
+				break
+			case IF_ICMPEQ: rec("if_icmpeq", label)
+				break
+			case IF_ICMPNE: rec("if_icmpne", label)
+				break
+			case IF_ICMPLT: rec("if_icmplt", label)
+				break
+			case IF_ICMPGE: rec("if_icmpge", label)
+				break
+			case IF_ICMPGT: rec("if_icmpgt", label)
+				break
+			case IF_ICMPLE: rec("if_icmple", label)
+				break
+			case IF_ACMPEQ: rec("if_acmpeq", label)
+				break
+			case IF_ACMPNE: rec("if_acmpne", label)
+				break
+			case IFNULL: rec("ifnull", label)
+				break
+			case IFNONNULL: rec("ifnonnull", label)
 				break
 			case GOTO: rec("goto", label)
 				break

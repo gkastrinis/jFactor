@@ -42,20 +42,29 @@ public class A {
 		boolean f1 = a > b;
 		float c = 1.2F;
 		float d = 3.4F;
-		boolean f2 = c > d;
+		boolean f2 = c <= d;
 		double e = 1.2;
 		double f = 3.4;
-		boolean f3 = e > f;
-		if (b > 4) {
-			a = 0;
-		} else
-			a = 1;
+		boolean f3 = e == f;
 	}
 
 	static void test6() {
 		int x = 10;
 		int y = 20;
-		boolean f4 = x > y;
+		boolean f1 = x > y;
+		if (x > 4) {
+			y = 0;
+		} else
+			y = 1;
+		B b1 = new B();
+		B b2 = new B();
+		boolean f2 = (b1 == b2);
+		B b3 = null;
+		boolean f3;
+		if (b3 == null)
+			f3 = true;
+		else
+			f3 = false;
 	}
 }
 

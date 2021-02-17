@@ -9,6 +9,8 @@
 .decl FORMAL_RET_VOID(method: symbol, index: number)
 .decl ACTUAL_RET(method: symbol, index: number, var: symbol)
 .decl ALLOC(method: symbol, index: number, to: symbol, heap: symbol, type: symbol)
+.decl IF(method: symbol, index: number, toIndex: number)
+.decl GOTO(method: symbol, index: number, toIndex: number)
 .output ASSIGN
 .output OPERAND
 .output OPERATOR
@@ -19,6 +21,8 @@
 .output FORMAL_RET_VOID
 .output ACTUAL_RET
 .output ALLOC
+.output IF
+.output GOTO
 
 // Input
 .decl Opcode(method: symbol, index: number, opcode: symbol, oper: symbol)
@@ -38,7 +42,9 @@
 .decl ConstLoadOpcode(opcode: symbol)
 .decl CallOpcode(opcode: symbol)
 .decl PopOpcode(opcode: symbol)
-.decl CondJumpOpcode(opcode: symbol)
+.decl ZeroCondJumpOpcode(opcode: symbol, op: symbol)
+.decl NullCondJumpOpcode(opcode: symbol, op: symbol)
+.decl CondJumpOpcode(opcode: symbol, op: symbol)
 .decl JumpOpcode(opcode: symbol)
 
 BinOpcode("X-add", "+").
@@ -68,7 +74,22 @@ CallOpcode("X-invokeinit").
 PopOpcode("pop").
 PopOpcode("pop2").
 
-CondJumpOpcode("ifle").
+ZeroCondJumpOpcode("ifeq", "==").
+ZeroCondJumpOpcode("ifne", "!=").
+ZeroCondJumpOpcode("iflt", "<").
+ZeroCondJumpOpcode("ifge", ">=").
+ZeroCondJumpOpcode("ifgt", ">").
+ZeroCondJumpOpcode("ifle", "<=").
+NullCondJumpOpcode("ifnull", "==").
+NullCondJumpOpcode("ifnonnull", "!=").
+CondJumpOpcode("if_icmpeq", "==").
+CondJumpOpcode("if_icmpne", "!=").
+CondJumpOpcode("if_icmplt", "<").
+CondJumpOpcode("if_icmpge", ">=").
+CondJumpOpcode("if_icmpgt", ">").
+CondJumpOpcode("if_icmple", "<=").
+CondJumpOpcode("if_acmpeq", "==").
+CondJumpOpcode("if_acmpne", "!=").
 JumpOpcode("goto").
 
 ///////////////////////////////////////////////////////////////
@@ -94,6 +115,7 @@ DEBUG(m, i, out) :- StackBeforeIndex(m, i, stack), ToSymbol(stack, out).
 .decl __REQ_Operand(method: symbol, index: number, pos: number, value: symbol)
 .decl __VarFromIndex(method: symbol, index: symbol, var: symbol)
 .decl __HeapToIndex(heap: symbol, method: symbol, index: number)
+//.output Next
 
 ///////////////////////////////////////////////////////////////
 
@@ -244,15 +266,35 @@ __REQ_Var(method, i, stack) :-
 //	Opcode(method, i, opcode, _),
 //	PopOpcode(opcode).
 
+// Handle conditional jumps
+IF(method, i, j),
+OPERATOR(method, i, op),
+__REQ_Operand(method, i, 0, oper),
+__REQ_Operand(method, i, 1, oper1),
 __REQ_StackForNext(method, i, stack) :-
-	StackBeforeIndex(method, i, [_, stack]),
+	StackBeforeIndex(method, i, [oper, stack]),
 	Opcode(method, i, opcode, _),
-	CondJumpOpcode(opcode).
+	((ZeroCondJumpOpcode(opcode, op), oper1 = "0") ;
+	 (NullCondJumpOpcode(opcode, op), oper1 = "NULL")),
+	Next(method, i, j).
 
+IF(method, i, j),
+OPERATOR(method, i, op),
+__REQ_Operand(method, i, 0, oper1),
+__REQ_Operand(method, i, 1, oper2),
+__REQ_StackForNext(method, i, stack) :-
+	StackBeforeIndex(method, i, [oper2, [oper1, stack]]),
+	Opcode(method, i, opcode, _),
+	CondJumpOpcode(opcode, op),
+	Next(method, i, j).
+
+// ... and unconditional ones
+GOTO(method, i, j),
 __REQ_StackForNext(method, i, stack) :-
 	StackBeforeIndex(method, i, stack),
 	Opcode(method, i, opcode, _),
-	JumpOpcode(opcode).
+	JumpOpcode(opcode),
+	Next(method, i, j).
 
 ///////////////////////////////////////////////////////////////
 
@@ -260,7 +302,10 @@ __VarFromIndex(method, i, var) :- Var(method, i, var, _, _).
 
 Next(method, i, j) :-
 	Opcode(method, i, opcode, label),
-	(CondJumpOpcode(opcode) ; JumpOpcode(opcode)),
+	(ZeroCondJumpOpcode(opcode, _) ;
+	 NullCondJumpOpcode(opcode, _) ;
+	 CondJumpOpcode(opcode, _) ;
+	 JumpOpcode(opcode)),
 	Label(method, label, j).
 
 Next(method, i, i+1) :-
@@ -278,7 +323,7 @@ ASSIGN(method, i, to) :-
 
 OPERAND(method, i, pos, oper) :-
 	__REQ_Operand(method, i, pos, oper),
-	ASSIGN(method, i, _).
+	(ASSIGN(method, i, _) ; IF(method, i, _)).
 
 ACTUAL_RET(method, i, var) :-
 	__REQ_Assign(method, i, var),
