@@ -174,7 +174,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		switch (opcode) {
 			case NEW:
 				def heap = "${methID()}/new $type/$counter"
-				Database.instance.allocTypes << "${methID()}\t$counter\t$type\n"
+				Database.instance.allocTypes << "${methID()}/$counter\t$type\n"
 				rec("new", heap)
 				break
 			case ANEWARRAY:
@@ -294,13 +294,12 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	void visitLabel(Label label) {
 		if (!firstLabel) firstLabel = label
-		Database.instance.labels << "${methID()}\t$label\t${counter + 1}\n"
-//		Database.instance.opcodes << "${methID()}\t${counter + 1}\t--LABEL--\t$label\n"
+		Database.instance.labels << "${methID()}\t$label\t${methID()}/${counter + 1}\n"
 	}
 
-	void visitLineNumber(int line, Label start) {
+//	void visitLineNumber(int line, Label start) {
 //		println "----- $line ($start)"
-	}
+//	}
 
 	void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
 //		println "$index Local $descriptor $name ($signature), start: $start, end: $end"
@@ -311,7 +310,8 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	}
 
 	void rec(def opcode, def oper = "_") {
-		Database.instance.opcodes << "${methID()}\t$counter\t$opcode\t$oper\n"
+		Database.instance.opcodes << "${methID()}/$counter\t$opcode\t$oper\n"
+		Database.instance.stmts << "${methID()}/$counter\t${methID()}\t$counter\n"
 	}
 
 	def methID() { "<${declaringType} ${name}$desc>" }

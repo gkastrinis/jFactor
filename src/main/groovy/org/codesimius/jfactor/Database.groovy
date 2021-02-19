@@ -20,4 +20,5 @@ class Database {
 	File invocations = new File(baseDir, "Invocation.facts")
 	File allocTypes = new File(baseDir, "AllocType.facts")
 	File labels = new File(baseDir, "Label.facts")
+	File stmts = new File(baseDir, "Stmt.facts")
 }
