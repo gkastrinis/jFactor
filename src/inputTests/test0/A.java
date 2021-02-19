@@ -6,6 +6,7 @@ public class A {
 		test4();
 		test5();
 		test6();
+		test7();
 	}
 
 	static void test1() {
@@ -65,6 +66,16 @@ public class A {
 			f3 = true;
 		else
 			f3 = false;
+	}
+
+	static void test7() {
+		int i = 0;
+		int max = 10;
+		int res = 0;
+		while (i < max) {
+			res += i * i;
+			i++;
+		}
 	}
 }
 
