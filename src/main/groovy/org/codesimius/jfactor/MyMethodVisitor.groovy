@@ -142,7 +142,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 			case DRETURN:
 			case ARETURN: rec("X-return")
 				break
-			case RETURN: rec("X-return-void")
+			case RETURN: rec("return")
 				break
 			default: throw new RuntimeException(Integer.toHexString(opcode) )
 		}
