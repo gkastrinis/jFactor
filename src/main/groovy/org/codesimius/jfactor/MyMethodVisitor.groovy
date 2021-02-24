@@ -304,9 +304,9 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		Database.instance.labels << "${methID()}\t$label\t${methID()}/${counter + 1}\t${counter + 1}\n"
 	}
 
-//	void visitLineNumber(int line, Label start) {
-//		println "----- $line ($start) ${counter + 1}"
-//	}
+	void visitLineNumber(int line, Label start) {
+		Database.instance.lineNumbers << "${methID()}\t${methID()}/${counter + 1}\t$line\n"
+	}
 
 	void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
 		def (type, rest) = typeFromJVM(descriptor)
