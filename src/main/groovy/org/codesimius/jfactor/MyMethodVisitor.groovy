@@ -29,6 +29,9 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		println "$access $name $desc $signature"
 		counter = -1
 		formalCounter = 0
+		exceptions?.each {
+			Database.instance.methodExceptions << "$name\t${it.replace("/", ".")}\n"
+		}
 	}
 
 	// NOP, ACONST_NULL,
@@ -36,7 +39,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	// SALOAD, IASTORE, LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE, SASTORE,
 	// DUP_X1, DUP_X2, DUP2, DUP2_X1, DUP2_X2, SWAP,
 	// I2L, I2F, I2D, L2I, L2F, L2D, F2I, F2L, F2D, D2I, D2L, D2F, I2B, I2C, I2S,
-	// ARRAYLENGTH, ATHROW,
+	// ARRAYLENGTH,
 	// MONITORENTER, or MONITOREXIT.
 
 	void visitInsn(int opcode) {
@@ -143,6 +146,8 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 			case ARETURN: rec("X-return")
 				break
 			case RETURN: rec("return")
+				break
+			case ATHROW: rec("athrow")
 				break
 			default: throw new RuntimeException(Integer.toHexString(opcode) )
 		}
@@ -258,6 +263,8 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	void visitLdcInsn(Object value) {
 		counter++
+		if (value instanceof String)
+			value = "\"${value.replaceAll("\t", "\\\\t")}\""
 		rec("ldc", value)
 	}
 
@@ -294,20 +301,25 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	void visitLabel(Label label) {
 		if (!firstLabel) firstLabel = label
-		Database.instance.labels << "${methID()}\t$label\t${methID()}/${counter + 1}\n"
+		Database.instance.labels << "${methID()}\t$label\t${methID()}/${counter + 1}\t${counter + 1}\n"
 	}
 
 //	void visitLineNumber(int line, Label start) {
-//		println "----- $line ($start)"
+//		println "----- $line ($start) ${counter + 1}"
 //	}
 
 	void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
-//		println "$index Local $descriptor $name ($signature), start: $start, end: $end"
 		def (type, rest) = typeFromJVM(descriptor)
-		Database.instance.vars << "${methID()}\t$index\t${varID(name)}\t$name\t$type\n"
+		Database.instance.vars << "${methID()}\t$index\t${varID(name)}\t$name\t$type\t$start\t$end\n"
 		if (name != "this" && start == firstLabel)
 			Database.instance.formals << "${methID()}\t${formalCounter++}\t${varID(name)}\n"
 	}
+
+	void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
+		def finalType = type ? type.replace("/", ".") : "java.lang.Throwable"
+		Database.instance.handlers << "${methID()}\t$start\t$end\t$handler\t$finalType\n"
+	}
+
 
 	void rec(def opcode, def oper = "_") {
 		Database.instance.opcodes << "${methID()}/$counter\t$opcode\t$oper\n"

@@ -12,6 +12,8 @@
 .decl ACTUAL_PARAM(stmt: symbol, pos: number, op: symbol)
 .decl ACTUAL_RET(stmt: symbol, var: symbol)
 .decl NEXT(fromStmt: symbol, toStmt: symbol)
+.decl THROW(stmt: symbol, var: symbol)
+.decl EXCEPTION_HANDLER(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
 
 .output ASSIGN
 .output VCALL
@@ -26,20 +28,24 @@
 .output ACTUAL_PARAM
 .output ACTUAL_RET
 //.output NEXT
+.output THROW
+.output EXCEPTION_HANDLER
 
 // Input
 .decl Stmt(id: symbol, method: symbol, index: number)
 .decl Opcode(stmt: symbol, opcode: symbol, oper: symbol)
-.decl Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol)
+.decl Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLable: symbol)
 .decl Invocation(sig: symbol, argc: number, retType: symbol)
 .decl AllocType(stmt: symbol, type: symbol)
-.decl Label(method: symbol, label: symbol, stmt: symbol)
+.decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
+.decl Handler(method: symbol, startLabel: symbol, endLabel: symbol, handlerLabel: symbol, type: symbol)
 .input Stmt
 .input Opcode
 .input Var
 .input Invocation
 .input AllocType
 .input Label
+.input Handler
 
 // Opcodes
 .decl BinOpcode(opcode: symbol, op: symbol)
@@ -110,15 +116,39 @@ CondJumpOpcode("if_acmpne", "!=").
 
 StackBeforeStmt(stmt, nil) :- Stmt(stmt, _, 0).
 
-ToSymbol(nil, "=@@=") :- StackBeforeStmt(_, nil).
-ToSymbol([head, stack], cat(head, cat(", ", out0))) :- StackBeforeStmt(_, [head, stack]), ToSymbol(stack, out0).
+ToSymbol(nil, "=@@=") :-
+	StackBeforeStmt(_, nil).
+ToSymbol([head, stack], cat(head, cat(", ", out0))) :-
+	StackBeforeStmt(_, [head, stack]), ToSymbol(stack, out0).
 DEBUG(stmt, out) :- StackBeforeStmt(stmt, stack), ToSymbol(stack, out).
 
+// Match load/store statements to variable scopes
+// The first store statement of a variable is one index
+// before the variable's scope start
+OpcodeExt(stmt, opcode, var) :-
+	Opcode(stmt, opcode, varIndex),
+	(opcode = "X-load" ; opcode = "X-store"),
+	Stmt(stmt, method, index),
+	Var(method, varIndex, var, _, _, startLabel, endLabel),
+	Label(method, startLabel, _, startIndex),
+	Label(method, endLabel, _, endIndex),
+	(startIndex - 1) <= index, index <= endIndex.
+
+// Exception handlers might introduce unnamed variables
 OpcodeExt(stmt, opcode, var) :-
 	Opcode(stmt, opcode, varIndex),
 	(opcode = "X-load" ; opcode = "X-store"),
 	Stmt(stmt, method, _),
-	Var(method, varIndex, var, _, _).
+	!Var(method, varIndex, _, _, _, _, _),
+	var = cat(cat(method, "/"), cat("$throw", varIndex)).
+
+// Assume that the first instruction of a handler is a store
+EXCEPTION_HANDLER(method, startStmt, endStmt, handlerStmt, type, var) :-
+	Handler(method, startLabel, endLabel, handlerLabel, type),
+	Label(method, startLabel, startStmt, _),
+	Label(method, endLabel, endStmt, _),
+	Label(method, handlerLabel, handlerStmt, _),
+	OpcodeExt(handlerStmt, "X-store", var).
 
 IF(stmt, nextStmt),
 NEXT(stmt, nextStmt),
@@ -128,14 +158,14 @@ OpcodeExt(stmt, opcode, nextStmt) :-
 	 NullCondJumpOpcode(opcode, _) ;
 	 CondJumpOpcode(opcode, _)),
 	Stmt(stmt, method, _),
-	Label(method, label, nextStmt).
+	Label(method, label, nextStmt, _).
 
 GOTO(stmt, nextStmt),
 NEXT(stmt, nextStmt),
 OpcodeExt(stmt, "goto", nextStmt) :-
 	Opcode(stmt, "goto", label),
 	Stmt(stmt, method, _),
-	Label(method, label, nextStmt).
+	Label(method, label, nextStmt, _).
 
 OpcodeExt(stmt, opcode, oper) :-
 	Opcode(stmt, opcode, oper),
@@ -321,6 +351,15 @@ __REQ_StackForNext(stmt, stack) :-
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, "goto", _).
+
+// Prepare stack for an exception handler
+StackBeforeStmt(handlerStmt, [type, nil]) :-
+	EXCEPTION_HANDLER(_, _, _, handlerStmt, type, _).
+
+THROW(stmt, var),
+__REQ_StackForNext(stmt, stack) :-
+	StackBeforeStmt(stmt, [var, stack]),
+	OpcodeExt(stmt, "athrow", _).
 
 ///////////////////////////////////////////////////////////////
 

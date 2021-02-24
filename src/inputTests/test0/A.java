@@ -7,6 +7,7 @@ public class A {
 		test5();
 		test6();
 		test7();
+		test8();
 	}
 
 	static void test1() {
@@ -76,6 +77,32 @@ public class A {
 			res += i * i;
 			i++;
 		}
+	}
+
+	static void test8() {
+		boolean error;
+		int done = 0;
+		try {
+			int a = 30, b = 0;
+			int c = a / b;
+			if (c > 2)
+				throw new RuntimeException("fail!!!");
+			//System.out.println ("Result = " + c);
+			error = false;
+		}
+		catch(ArithmeticException e) {
+			System.out.println("Can't 		divide \\\" a \" number by 0");
+			test8_inner();
+			error = true;
+		}
+		finally {
+			done = 10;
+		}
+	}
+
+	static void test8_inner() throws ArithmeticException, NullPointerException {
+		int a = 10;
+		int c = a / 0;
 	}
 }
 
