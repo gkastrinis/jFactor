@@ -8,6 +8,7 @@ public class A {
 		test6();
 		test7();
 		test8();
+		test9();
 	}
 
 	static void test1() {
@@ -103,6 +104,44 @@ public class A {
 	static void test8_inner() throws ArithmeticException, NullPointerException {
 		int a = 10;
 		int c = a / 0;
+	}
+
+	static void test9() {
+		int res = test9_inner1(4);
+		System.out.println(res);
+		test9_inner2(5);
+	}
+
+	static int test9_inner1(int m) {
+		int f0 = 0, f1 = 1, f2 = 0, i;
+		if (m <= 1) {
+			return m;
+		}
+		else {
+			for (i = 2 ; i <= m ; i++) {
+				f2 = f0 + f1;
+				f0 = f1;
+				f1 = f2;
+			}
+			return f2;
+		}
+	}
+
+	static void test9_inner2(int n) {
+		int k = 0;
+		int i = 1;
+		int j = 2;
+		while (i <= n) {
+			j = j * 2;
+			k = 1;
+			i++;
+		}
+		if (k == 1) {
+			System.out.println(j);
+		} else {
+			i = i + 1;
+		}
+		j = i;
 	}
 }
 

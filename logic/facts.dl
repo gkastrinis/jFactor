@@ -179,7 +179,9 @@ OpcodeExt(stmt, opcode, oper) :-
 NEXT(stmt, cat(method, cat("/", to_string(i+1)))) :-
 	Opcode(stmt, opcode, _),
 	Stmt(stmt, method, i),
-	opcode != "goto".
+	opcode != "goto",
+	opcode != "X-return",
+	opcode != "return".
 
 ///////////////////////////////////////////////////////////////
 
@@ -380,3 +382,108 @@ ACTUAL_RET(stmt, var) :-
 	__REQ_Assign(stmt, var),
 	OpcodeExt(stmt, opcode, _),
 	CallOpcode(opcode).
+
+///////////////////////////////////////////////////////////////
+
+// Starting and ending statements for each Basic Block
+.decl BB_Start(method: symbol, stmt: symbol, index: number)
+.decl BB_End(method: symbol, stmt: symbol, index: number)
+.decl BB_Range(startStmt: symbol, endStmt: symbol)
+// Forward paths regarding Basic Blocks
+// Each Basic Block is represented by its starting statement
+// Paths will be used in dominance, hence BB with back-edges
+// certainly do not dominate the head BB
+.decl BB_FW_Edge(fromBB: symbol, toBB: symbol)
+.decl BB_FW_Path(fromBB: symbol, toBB: symbol)
+// fromBB dominates toBB
+.decl BB_DOM_Fail(fromBB: symbol, toBB: symbol)
+.decl BB_DOM(fromBB: symbol, toBB: symbol)
+.decl BB_IDOM_Fail(fromBB: symbol, toBB: symbol)
+.decl BB_IDOM(fromBB: symbol, toBB: symbol)
+.output BB_Range
+//.output BB_DOM_Fail
+.output BB_DOM
+//.output BB_IDOM_Fail
+.output BB_IDOM
+
+// First statement starts a BB
+BB_Start(method, stmt, 0) :- Stmt(stmt, method, 0).
+
+// Return statements end a BB
+BB_End(method, stmt, index) :-
+	(OpcodeExt(stmt, "X-return", _) ;
+	 OpcodeExt(stmt, "return", _)),
+	Stmt(stmt, method, index).
+
+// A BB ends at a jump,
+// and another starts at the target label
+BB_End(method, stmt, index),
+BB_Start(method, targetStmt, targetIndex) :-
+	OpcodeExt(stmt, opcode, targetStmt),
+	(ZeroCondJumpOpcode(opcode, _) ;
+	 NullCondJumpOpcode(opcode, _) ;
+	 CondJumpOpcode(opcode, _) ;
+	 opcode = "goto"),
+	Stmt(stmt, method, index),
+	Stmt(targetStmt, method, targetIndex).
+
+// Whenever a BB ends, another starts
+BB_Start(method, startStmt, startIndex) :-
+	BB_End(method, endStmt, _),
+	NEXT(endStmt, startStmt),
+	Stmt(startStmt, method, startIndex).
+
+// Whenever a BB starts, another ends
+BB_End(method, endStmt, endIndex) :-
+	BB_Start(method, startStmt, _),
+	NEXT(endStmt, startStmt),
+	Stmt(endStmt, method, endIndex).
+
+// The ending statement of a Basic Block is
+// the closest ending statement after the starting statement
+BB_Range(startStmt, endStmt) :-
+	BB_Start(method, startStmt, startIndex),
+	BB_End(method, endStmt, endIndex),
+	endIndex = min index : { BB_End(method, _, index), index > startIndex }.
+
+BB_FW_Edge(fromBB, toBB) :-
+	BB_Range(fromBB, endStmt),
+	Stmt(endStmt, method, endIndex),
+	NEXT(endStmt, toBB),
+	BB_Start(method, toBB, toIndex),
+	endIndex < toIndex.
+
+BB_FW_Path(fromBB, toBB) :-
+	BB_FW_Edge(fromBB, toBB).
+
+BB_FW_Path(fromBB, toBB) :-
+	BB_FW_Path(fromBB, middleBB),
+	BB_FW_Edge(middleBB, toBB).
+
+// There are two paths to `toBB` and
+// one is not a sub-path of the other
+BB_DOM_Fail(fromBB1, toBB),
+BB_DOM_Fail(fromBB1, toBB) :-
+	BB_FW_Path(fromBB1, toBB),
+	BB_FW_Path(fromBB2, toBB),
+	fromBB1 != fromBB2,
+	!BB_FW_Path(fromBB1, fromBB2),
+	!BB_FW_Path(fromBB2, fromBB1).
+
+BB_DOM(fromBB, toBB) :-
+	BB_FW_Path(fromBB, toBB),
+	!BB_DOM_Fail(fromBB, toBB).
+
+BB_IDOM_Fail(fromBB, toBB) :-
+	BB_DOM(fromBB, toBB),
+	BB_DOM(fromBB, middleBB),
+	BB_DOM(middleBB, toBB).
+
+BB_IDOM(fromBB, toBB) :-
+	BB_DOM(fromBB, toBB),
+	!BB_IDOM_Fail(fromBB, toBB).
+
+
+
+
+
