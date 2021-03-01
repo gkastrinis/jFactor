@@ -393,18 +393,31 @@ ACTUAL_RET(stmt, var) :-
 // Each Basic Block is represented by its starting statement
 // Paths will be used in dominance, hence BB with back-edges
 // certainly do not dominate the head BB
-.decl BB_FW_Edge(fromBB: symbol, toBB: symbol)
-.decl BB_FW_Path(fromBB: symbol, toBB: symbol)
-// fromBB dominates toBB
-.decl BB_DOM_Fail(fromBB: symbol, toBB: symbol)
-.decl BB_DOM(fromBB: symbol, toBB: symbol)
-.decl BB_IDOM_Fail(fromBB: symbol, toBB: symbol)
-.decl BB_IDOM(fromBB: symbol, toBB: symbol)
+.decl BB_FW_Edge(from: symbol, to: symbol)
+.decl BB_FW_Path(from: symbol, to: symbol)
+// `from` dominates `to` iff every path from entry to `to` includes `from`
+.decl BB_DOM_Fail(from: symbol, to: symbol)
+.decl BB_DOM(from: symbol, to: symbol)
+// `from` immediate dominates `to` iff `from` dominates `to`
+// and there does not exists a node `middle` such that
+// `from` dominates `middle` and `middle` dominates `to`
+.decl BB_IDOM_Fail(from: symbol, to: symbol)
+.decl BB_IDOM(from: symbol, to: symbol)
+// Calculate the dominance frontier of each basic block
+// Direct computation is quadratic, but a linear algorithm
+// uses two intermediate components, DF_Local and DF_Upto
+// DF(x) = { y | (exists z in Pred(y) such that x dom z) && x !sdom y }
+.decl BB_DF(fromBB: symbol, toBB: symbol)
+.decl BB_DF_Local(fromBB: symbol, toBB: symbol)
+.decl BB_DF_Upto(fromBB: symbol, middleBB: symbol, toBB: symbol)
 .output BB_Range
 //.output BB_DOM_Fail
-.output BB_DOM
+//.output BB_DOM
 //.output BB_IDOM_Fail
 .output BB_IDOM
+.output BB_DF
+//.output BB_DF_Local
+//.output BB_DF_Upto
 
 // First statement starts a BB
 BB_Start(method, stmt, 0) :- Stmt(stmt, method, 0).
@@ -444,46 +457,67 @@ BB_End(method, endStmt, endIndex) :-
 BB_Range(startStmt, endStmt) :-
 	BB_Start(method, startStmt, startIndex),
 	BB_End(method, endStmt, endIndex),
-	endIndex = min index : { BB_End(method, _, index), index > startIndex }.
+	endIndex = min index : { BB_End(method, _, index), index >= startIndex }.
 
-BB_FW_Edge(fromBB, toBB) :-
-	BB_Range(fromBB, endStmt),
+BB_FW_Edge(from, to) :-
+	BB_Range(from, endStmt),
 	Stmt(endStmt, method, endIndex),
-	NEXT(endStmt, toBB),
-	BB_Start(method, toBB, toIndex),
+	NEXT(endStmt, to),
+	BB_Start(method, to, toIndex),
 	endIndex < toIndex.
 
-BB_FW_Path(fromBB, toBB) :-
-	BB_FW_Edge(fromBB, toBB).
+BB_FW_Path(from, to) :-
+	BB_FW_Edge(from, to).
 
-BB_FW_Path(fromBB, toBB) :-
-	BB_FW_Path(fromBB, middleBB),
-	BB_FW_Edge(middleBB, toBB).
+BB_FW_Path(from, to) :-
+	BB_FW_Path(from, middle),
+	BB_FW_Edge(middle, to).
 
-// There are two paths to `toBB` and
+// Simulate forall
+// There are two paths to a basic block and
 // one is not a sub-path of the other
-BB_DOM_Fail(fromBB1, toBB),
-BB_DOM_Fail(fromBB1, toBB) :-
-	BB_FW_Path(fromBB1, toBB),
-	BB_FW_Path(fromBB2, toBB),
-	fromBB1 != fromBB2,
-	!BB_FW_Path(fromBB1, fromBB2),
-	!BB_FW_Path(fromBB2, fromBB1).
+BB_DOM_Fail(from1, to),
+BB_DOM_Fail(from2, to) :-
+	BB_FW_Path(from1, to),
+	BB_FW_Path(from2, to),
+	from1 != from2,
+	!BB_FW_Path(from1, from2),
+	!BB_FW_Path(from2, from1).
 
-BB_DOM(fromBB, toBB) :-
-	BB_FW_Path(fromBB, toBB),
-	!BB_DOM_Fail(fromBB, toBB).
+BB_DOM(from, to) :-
+	BB_FW_Path(from, to),
+	!BB_DOM_Fail(from, to).
 
-BB_IDOM_Fail(fromBB, toBB) :-
-	BB_DOM(fromBB, toBB),
-	BB_DOM(fromBB, middleBB),
-	BB_DOM(middleBB, toBB).
+// Simulate forall
+BB_IDOM_Fail(from, to) :-
+	BB_DOM(from, to),
+	BB_DOM(from, middle),
+	BB_DOM(middle, to).
 
-BB_IDOM(fromBB, toBB) :-
-	BB_DOM(fromBB, toBB),
-	!BB_IDOM_Fail(fromBB, toBB).
+BB_IDOM(from, to) :-
+	BB_DOM(from, to),
+	!BB_IDOM_Fail(from, to).
 
+// DF_Local(x) = { y in Succ(x) | x !idom y }
+BB_DF_Local(x, y) :-
+	BB_Range(x, endStmt),
+	NEXT(endStmt, y),
+	!BB_IDOM(x, y).
 
+// DF_Upto(x, z) = { y in DF(z) | x idom z && x !idom y }
+BB_DF_Upto(x, z, y) :-
+	BB_DF(z, y),
+	BB_IDOM(x, z),
+	!BB_IDOM(x, y).
+
+// DF(x) = DF_Local(x) U ...
+BB_DF(x, y) :-
+	BB_DF_Local(x, y).
+
+// ... U{z such that x idom z} DF_Upto(x, z)
+BB_DF(x, y) :-
+	BB_IDOM(x, z),
+	BB_DF_Upto(x, z, y).
 
 
 

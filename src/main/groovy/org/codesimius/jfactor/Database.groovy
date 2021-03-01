@@ -3,7 +3,7 @@ package org.codesimius.jfactor
 @Singleton
 class Database {
 
-	File baseDir = new File("build/out")
+	File baseDir = new File("build/out_tmp")
 
 	void init() {
 		baseDir.mkdirs()

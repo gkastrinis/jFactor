@@ -110,6 +110,7 @@ public class A {
 		int res = test9_inner1(4);
 		System.out.println(res);
 		test9_inner2(5);
+		test9_inner3(5);
 	}
 
 	static int test9_inner1(int m) {
@@ -142,6 +143,18 @@ public class A {
 			i = i + 1;
 		}
 		j = i;
+	}
+
+	static void test9_inner3(int n) {
+		int x = 1, y;
+		if (n > 10) {
+			if (n > 100) return;
+			else y = 20;
+		} else {
+			if (n < 5) return;
+			else y = -20;
+		}
+		x = y;
 	}
 }
 
