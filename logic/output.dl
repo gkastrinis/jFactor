@@ -1,0 +1,31 @@
+.decl ASSIGN(stmt: symbol, to: symbol)
+.decl VCALL(stmt: symbol, base: symbol, sig: symbol)
+.decl SPCALL(stmt: symbol,  base: symbol, sig: symbol)
+.decl ALLOC(stmt: symbol, to: symbol, heap: symbol, type: symbol)
+.decl IF(stmt: symbol, jumpStmt: symbol)
+.decl GOTO(stmt: symbol, jumpStmt: symbol)
+.decl RET(stmt: symbol)
+.decl RET_VOID(stmt: symbol)
+.decl OPERAND(stmt: symbol, pos: number, from: symbol)
+.decl OPERATOR(stmt: symbol, op: symbol)
+.decl ACTUAL_PARAM(stmt: symbol, pos: number, op: symbol)
+.decl ACTUAL_RET(stmt: symbol, var: symbol)
+.decl NEXT(fromStmt: symbol, toStmt: symbol)
+.decl THROW(stmt: symbol, var: symbol)
+.decl EXCEPTION_HANDLER(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
+
+.output ASSIGN
+.output VCALL
+.output SPCALL
+.output ALLOC
+.output IF
+.output GOTO
+.output RET
+.output RET_VOID
+.output OPERAND
+.output OPERATOR
+.output ACTUAL_PARAM
+.output ACTUAL_RET
+//.output NEXT
+.output THROW
+.output EXCEPTION_HANDLER

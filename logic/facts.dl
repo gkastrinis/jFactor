@@ -1,51 +1,20 @@
-// Output
-.decl ASSIGN(stmt: symbol, to: symbol)
-.decl VCALL(stmt: symbol, base: symbol, sig: symbol)
-.decl SPCALL(stmt: symbol,  base: symbol, sig: symbol)
-.decl ALLOC(stmt: symbol, to: symbol, heap: symbol, type: symbol)
-.decl IF(stmt: symbol, jumpStmt: symbol)
-.decl GOTO(stmt: symbol, jumpStmt: symbol)
-.decl RET(stmt: symbol)
-.decl RET_VOID(stmt: symbol)
-.decl OPERAND(stmt: symbol, pos: number, from: symbol)
-.decl OPERATOR(stmt: symbol, op: symbol)
-.decl ACTUAL_PARAM(stmt: symbol, pos: number, op: symbol)
-.decl ACTUAL_RET(stmt: symbol, var: symbol)
-.decl NEXT(fromStmt: symbol, toStmt: symbol)
-.decl THROW(stmt: symbol, var: symbol)
-.decl EXCEPTION_HANDLER(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
-
-.output ASSIGN
-.output VCALL
-.output SPCALL
-.output ALLOC
-.output IF
-.output GOTO
-.output RET
-.output RET_VOID
-.output OPERAND
-.output OPERATOR
-.output ACTUAL_PARAM
-.output ACTUAL_RET
-//.output NEXT
-.output THROW
-.output EXCEPTION_HANDLER
+#include "output.dl"
 
 // Input
 .decl Stmt(id: symbol, method: symbol, index: number)
-.decl Opcode(stmt: symbol, opcode: symbol, oper: symbol)
 .decl Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLable: symbol)
 .decl Invocation(sig: symbol, argc: number, retType: symbol)
 .decl AllocType(stmt: symbol, type: symbol)
 .decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
 .decl Handler(method: symbol, startLabel: symbol, endLabel: symbol, handlerLabel: symbol, type: symbol)
 .input Stmt
-.input Opcode
 .input Var
 .input Invocation
 .input AllocType
 .input Label
 .input Handler
+.decl __Opcode(stmt: symbol, opcode: symbol, oper: symbol)
+.input __Opcode(filename="Opcode.facts")
 
 // Opcodes
 .decl BinOpcode(opcode: symbol, op: symbol)
@@ -102,11 +71,11 @@ CondJumpOpcode("if_acmpne", "!=").
 .type Stack = [top: symbol, rest: Stack]
 .decl StackBeforeStmt(stmt: symbol, stack: Stack)
 .decl OpcodeExt(stmt: symbol, opcode: symbol, oper: symbol)
-.decl ToSymbol(stack: Stack, out: symbol)
 .decl DEBUG(stmt: symbol, out: symbol)
 .output OpcodeExt
 .output DEBUG
 
+.decl __ToSymbol(stack: Stack, out: symbol)
 .decl __REQ_StackForNext(stmt: symbol, stack: Stack)
 .decl __REQ_Var(stmt: symbol, stack: Stack)
 .decl __RES_Var(stmt: symbol, var: symbol)
@@ -116,17 +85,17 @@ CondJumpOpcode("if_acmpne", "!=").
 
 StackBeforeStmt(stmt, nil) :- Stmt(stmt, _, 0).
 
-ToSymbol(nil, "=@@=") :-
+__ToSymbol(nil, "=@@=") :-
 	StackBeforeStmt(_, nil).
-ToSymbol([head, stack], cat(head, cat(", ", out0))) :-
-	StackBeforeStmt(_, [head, stack]), ToSymbol(stack, out0).
-DEBUG(stmt, out) :- StackBeforeStmt(stmt, stack), ToSymbol(stack, out).
+__ToSymbol([head, stack], cat(head, cat(", ", out0))) :-
+	StackBeforeStmt(_, [head, stack]), __ToSymbol(stack, out0).
+DEBUG(stmt, out) :- StackBeforeStmt(stmt, stack), __ToSymbol(stack, out).
 
 // Match load/store statements to variable scopes
 // The first store statement of a variable is one index
 // before the variable's scope start
 OpcodeExt(stmt, opcode, var) :-
-	Opcode(stmt, opcode, varIndex),
+	__Opcode(stmt, opcode, varIndex),
 	(opcode = "X-load" ; opcode = "X-store" ; opcode = "X-inc" ; opcode = "X-dec"),
 	Stmt(stmt, method, index),
 	Var(method, varIndex, var, _, _, startLabel, endLabel),
@@ -136,7 +105,7 @@ OpcodeExt(stmt, opcode, var) :-
 
 // Exception handlers might introduce unnamed variables
 OpcodeExt(stmt, opcode, var) :-
-	Opcode(stmt, opcode, varIndex),
+	__Opcode(stmt, opcode, varIndex),
 	(opcode = "X-load" ; opcode = "X-store"),
 	Stmt(stmt, method, _),
 	!Var(method, varIndex, _, _, _, _, _),
@@ -153,7 +122,7 @@ EXCEPTION_HANDLER(method, startStmt, endStmt, handlerStmt, type, var) :-
 IF(stmt, nextStmt),
 NEXT(stmt, nextStmt),
 OpcodeExt(stmt, opcode, nextStmt) :-
-	Opcode(stmt, opcode, label),
+	__Opcode(stmt, opcode, label),
 	(ZeroCondJumpOpcode(opcode, _) ;
 	 NullCondJumpOpcode(opcode, _) ;
 	 CondJumpOpcode(opcode, _)),
@@ -163,12 +132,12 @@ OpcodeExt(stmt, opcode, nextStmt) :-
 GOTO(stmt, nextStmt),
 NEXT(stmt, nextStmt),
 OpcodeExt(stmt, "goto", nextStmt) :-
-	Opcode(stmt, "goto", label),
+	__Opcode(stmt, "goto", label),
 	Stmt(stmt, method, _),
 	Label(method, label, nextStmt, _).
 
 OpcodeExt(stmt, opcode, oper) :-
-	Opcode(stmt, opcode, oper),
+	__Opcode(stmt, opcode, oper),
 	opcode != "X-load",
 	opcode != "X-store",
 	opcode != "goto",
@@ -177,7 +146,7 @@ OpcodeExt(stmt, opcode, oper) :-
 	!CondJumpOpcode(opcode, _).
 
 NEXT(stmt, cat(method, cat("/", to_string(i+1)))) :-
-	Opcode(stmt, opcode, _),
+	__Opcode(stmt, opcode, _),
 	Stmt(stmt, method, i),
 	opcode != "goto",
 	opcode != "X-return",
