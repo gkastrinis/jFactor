@@ -34,6 +34,15 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		}
 	}
 
+	void visitIincInsn(int var, int increment) {
+		if (increment == 1)
+			rec("X-inc", var)
+		else if (increment == -1)
+			rec("X-dec", var)
+		else
+			throw new RuntimeException("iinc $increment")
+	}
+
 	// NOP, ACONST_NULL,
 	// IALOAD, LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD,
 	// SALOAD, IASTORE, LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE, SASTORE,

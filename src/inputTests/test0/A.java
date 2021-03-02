@@ -135,26 +135,35 @@ public class A {
 		while (i <= n) {
 			j = j * 2;
 			k = 1;
-			i++;
+			i = i + 1;//i += 1;//i--;
 		}
 		if (k == 1) {
 			System.out.println(j);
 		} else {
-			i = i + 1;
+			i = i - 1;
 		}
 		j = i;
 	}
 
 	static void test9_inner3(int n) {
-		int x = 1, y;
+		int x = 1, y = 2;
 		if (n > 10) {
-			if (n > 100) return;
-			else y = 20;
+			if (n > 100) {
+				y = -2;
+				return;
+			}
+			else {
+				x = 20;
+			}
 		} else {
-			if (n < 5) return;
-			else y = -20;
+			if (n < 5) {
+				return;
+			}
+			else {
+				x = -20;
+			}
 		}
-		x = y;
+		y = x;
 	}
 }
 

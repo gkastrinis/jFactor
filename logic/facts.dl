@@ -127,7 +127,7 @@ DEBUG(stmt, out) :- StackBeforeStmt(stmt, stack), ToSymbol(stack, out).
 // before the variable's scope start
 OpcodeExt(stmt, opcode, var) :-
 	Opcode(stmt, opcode, varIndex),
-	(opcode = "X-load" ; opcode = "X-store"),
+	(opcode = "X-load" ; opcode = "X-store" ; opcode = "X-inc" ; opcode = "X-dec"),
 	Stmt(stmt, method, index),
 	Var(method, varIndex, var, _, _, startLabel, endLabel),
 	Label(method, startLabel, _, startIndex),
@@ -317,6 +317,16 @@ __REQ_Var(stmt, stack) :-
 	StackBeforeStmt(stmt, [oper, stack]),
 	OpcodeExt(stmt, opcode, _),
 	UnaryOpcode(opcode, op).
+
+//// Handle ++ or --
+//ASSIGN(stmt, var),
+//OPERATOR(stmt, op),
+//OPERAND(stmt, 0, var),
+//OPERAND(stmt, 1, "1"),
+//__REQ_StackForNext(stmt, stack) :-
+//	StackBeforeStmt(stmt, stack),
+//	((OpcodeExt(stmt, "X-inc", var), op = "+") ;
+//	 (OpcodeExt(stmt, "X-dec", var), op = "-")).
 
 //// Load static field
 //OPERAND(stmt, 0, oper1),
