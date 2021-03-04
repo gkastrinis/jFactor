@@ -1,4 +1,4 @@
-#include "output.dl"
+#include "schema.dl"
 
 // Input
 .decl Stmt(id: symbol, method: symbol, index: number)
@@ -136,6 +136,7 @@ OpcodeExt(stmt, "goto", nextStmt) :-
 	Stmt(stmt, method, _),
 	Label(method, label, nextStmt, _).
 
+// Anything other than var load/store and jumps
 OpcodeExt(stmt, opcode, oper) :-
 	__Opcode(stmt, opcode, oper),
 	opcode != "X-load",
@@ -145,12 +146,18 @@ OpcodeExt(stmt, opcode, oper) :-
 	!NullCondJumpOpcode(opcode, _),
 	!CondJumpOpcode(opcode, _).
 
+// The next statement, in sequence, is also a successor in most cases
 NEXT(stmt, cat(method, cat("/", to_string(i+1)))) :-
 	__Opcode(stmt, opcode, _),
 	Stmt(stmt, method, i),
 	opcode != "goto",
 	opcode != "X-return",
 	opcode != "return".
+
+// Propagate `stack` to all successors
+StackBeforeStmt(nextStmt, stack) :-
+	__REQ_StackForNext(stmt, stack),
+	NEXT(stmt, nextStmt).
 
 ///////////////////////////////////////////////////////////////
 
@@ -296,7 +303,7 @@ __REQ_Var(stmt, stack) :-
 //	StackBeforeStmt(stmt, stack),
 //	((OpcodeExt(stmt, "X-inc", var), op = "+") ;
 //	 (OpcodeExt(stmt, "X-dec", var), op = "-")).
-
+//
 //// Load static field
 //OPERAND(stmt, 0, oper1),
 //__REQ_Var(stmt, stack) :-
@@ -343,10 +350,6 @@ __REQ_StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, "athrow", _).
 
 ///////////////////////////////////////////////////////////////
-
-StackBeforeStmt(nextStmt, stack) :-
-	__REQ_StackForNext(stmt, stack),
-	NEXT(stmt, nextStmt).
 
 // Approve all assignments, except self-assign ones
 ASSIGN(stmt, to) :-
