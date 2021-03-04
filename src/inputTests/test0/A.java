@@ -8,7 +8,9 @@ public class A {
 		test6();
 		test7();
 		test8();
-		test9();
+		test9(10);
+		test10(10);
+		test11(10);
 	}
 
 	static void test1() {
@@ -106,14 +108,7 @@ public class A {
 		int c = a / 0;
 	}
 
-	static void test9() {
-		int res = test9_inner1(4);
-		System.out.println(res);
-		test9_inner2(5);
-		test9_inner3(5);
-	}
-
-	static int test9_inner1(int m) {
+	static int test9(int m) {
 		int f0 = 0, f1 = 1, f2 = 0, i;
 		if (m <= 1) {
 			return m;
@@ -128,12 +123,13 @@ public class A {
 		}
 	}
 
-	static void test9_inner2(int n) {
+	static void test10(int n) {
 		int k = 0;
 		int i = 1;
 		int j = 2;
 		while (i <= n) {
-			j = j * 2;
+			k = n;
+			j = j + k;
 			k = 1;
 			i = i + 1;//i += 1;//i--;
 		}
@@ -145,7 +141,7 @@ public class A {
 		j = i;
 	}
 
-	static void test9_inner3(int n) {
+	static void test11(int n) {
 		int x = 1, y = 2;
 		if (n > 10) {
 			if (n > 100) {
