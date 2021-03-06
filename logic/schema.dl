@@ -1,4 +1,6 @@
-.decl ASSIGN(stmt: symbol, to: symbol)
+#pragma once
+
+// Output //
 .decl VCALL(stmt: symbol, base: symbol, sig: symbol)
 .decl SPCALL(stmt: symbol,  base: symbol, sig: symbol)
 .decl ALLOC(stmt: symbol, to: symbol, heap: symbol, type: symbol)
@@ -6,7 +8,6 @@
 .decl GOTO(stmt: symbol, jumpStmt: symbol)
 .decl RET(stmt: symbol)
 .decl RET_VOID(stmt: symbol)
-.decl OPERAND(stmt: symbol, pos: number, from: symbol)
 .decl OPERATOR(stmt: symbol, op: symbol)
 .decl ACTUAL_PARAM(stmt: symbol, pos: number, op: symbol)
 .decl ACTUAL_RET(stmt: symbol, var: symbol)
@@ -14,7 +15,6 @@
 .decl THROW(stmt: symbol, var: symbol)
 .decl EXCEPTION_HANDLER(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
 
-.output ASSIGN
 .output VCALL
 .output SPCALL
 .output ALLOC
@@ -22,10 +22,40 @@
 .output GOTO
 .output RET
 .output RET_VOID
-.output OPERAND
 .output OPERATOR
 .output ACTUAL_PARAM
 .output ACTUAL_RET
 //.output NEXT
 .output THROW
 .output EXCEPTION_HANDLER
+
+// Input //
+.decl Stmt(id: symbol, method: symbol, index: number)
+.decl Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLable: symbol)
+.decl Invocation(sig: symbol, argc: number, retType: symbol)
+.decl AllocType(stmt: symbol, type: symbol)
+.decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
+.decl Handler(method: symbol, startLabel: symbol, endLabel: symbol, handlerLabel: symbol, type: symbol)
+.input Stmt
+.input Var
+.input Invocation
+.input AllocType
+.input Label
+.input Handler
+.decl __Opcode(stmt: symbol, opcode: symbol, oper: symbol)
+.input __Opcode(filename="Opcode.facts")
+
+// Core //
+
+.type Stack = [top: symbol, rest: Stack]
+.decl StackBeforeStmt(stmt: symbol, stack: Stack)
+.decl OpcodeExt(stmt: symbol, opcode: symbol, oper: symbol)
+.decl DEBUG(stmt: symbol, out: symbol)
+// Opcodes
+.decl BinOpcode(opcode: symbol, op: symbol)
+.decl UnaryOpcode(opcode: symbol, op: symbol)
+.decl ConstLoadOpcode(opcode: symbol)
+.decl CallOpcode(opcode: symbol)
+.decl ZeroCondJumpOpcode(opcode: symbol, op: symbol)
+.decl NullCondJumpOpcode(opcode: symbol, op: symbol)
+.decl CondJumpOpcode(opcode: symbol, op: symbol)

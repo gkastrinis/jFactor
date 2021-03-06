@@ -1,15 +1,16 @@
-#include "facts.dl"
+#include "schema.dl"
 
 // Starting and ending statements for each Basic Block
 .decl BB_Start(method: symbol, stmt: symbol, index: number)
 .decl BB_End(method: symbol, stmt: symbol, index: number)
-.decl BB_Range(startStmt: symbol, endStmt: symbol)
+.decl BB_Range(method: symbol, startStmt: symbol, endStmt: symbol, startIndex: number, endIndex: number)
 // Forward paths regarding Basic Blocks
 // Each Basic Block is represented by its starting statement
 // Paths will be used in dominance, hence BB with back-edges
 // certainly do not dominate the head BB
 .decl BB_FW_Edge(from: symbol, to: symbol)
 .decl BB_FW_Path(from: symbol, to: symbol)
+/* Chapter 8, Advanced Compiler Design & Implementation, Steven Muchnick */
 // `from` dominates `to` iff every path from entry to `to` includes `from`
 .decl BB_DOM_Fail(from: symbol, to: symbol)
 .decl BB_DOM(from: symbol, to: symbol)
@@ -22,17 +23,9 @@
 // Direct computation is quadratic, but a linear algorithm
 // uses two intermediate components, DF_Local and DF_Upto
 // DF(x) = { y | (exists z in Pred(y) such that x dom z) && x !sdom y }
-.decl BB_DF(fromBB: symbol, toBB: symbol)
+.decl BB_DominanceFrontier(fromBB: symbol, toBB: symbol)
 .decl BB_DF_Local(fromBB: symbol, toBB: symbol)
 .decl BB_DF_Upto(fromBB: symbol, middleBB: symbol, toBB: symbol)
-.output BB_Range
-//.output BB_DOM_Fail
-//.output BB_DOM
-//.output BB_IDOM_Fail
-.output BB_IDOM
-.output BB_DF
-//.output BB_DF_Local
-//.output BB_DF_Upto
 
 // First statement starts a BB
 BB_Start(method, stmt, 0) :- Stmt(stmt, method, 0).
@@ -69,15 +62,14 @@ BB_End(method, endStmt, endIndex) :-
 
 // The ending statement of a Basic Block is
 // the closest ending statement after the starting statement
-BB_Range(startStmt, endStmt) :-
+BB_Range(method, startStmt, endStmt, startIndex, endIndex) :-
 	BB_Start(method, startStmt, startIndex),
 	BB_End(method, endStmt, endIndex),
-endIndex = min index : { BB_End(method, _, index), index >= startIndex }.
+	endIndex = min index : { BB_End(method, _, index), index >= startIndex }.
 
 BB_FW_Edge(from, to) :-
-	BB_Range(from, endStmt),
-	Stmt(endStmt, method, endIndex),
-	NEXT(endStmt, to),
+	BB_Range(method, from, end, _, endIndex),
+	NEXT(end, to),
 	BB_Start(method, to, toIndex),
 	endIndex < toIndex.
 
@@ -115,40 +107,91 @@ BB_IDOM(from, to) :-
 
 // DF_Local(x) = { y in Succ(x) | x !idom y }
 BB_DF_Local(x, y) :-
-	BB_Range(x, endStmt),
-	NEXT(endStmt, y),
+	BB_Range(_, x, end, _, _),
+	NEXT(end, y),
 	!BB_IDOM(x, y).
 
 // DF_Upto(x, z) = { y in DF(z) | x idom z && x !idom y }
 BB_DF_Upto(x, z, y) :-
-	BB_DF(z, y),
+	BB_DominanceFrontier(z, y),
 	BB_IDOM(x, z),
+	x != z,
+	x != y,
 	!BB_IDOM(x, y).
 
 // DF(x) = DF_Local(x) U ...
-BB_DF(x, y) :-
+BB_DominanceFrontier(x, y) :-
 	BB_DF_Local(x, y).
 
 // ... U{z such that x idom z} DF_Upto(x, z)
-BB_DF(x, y) :-
+BB_DominanceFrontier(x, y) :-
 	BB_IDOM(x, z),
 	BB_DF_Upto(x, z, y).
 
 
-.decl DEF_Var_InBB(var: symbol, bb: symbol)
-.output DEF_Var_InBB
+.decl SSA_PHI(inBB: symbol, var: symbol)
+.decl SSA_Assign(stmt: symbol, var: symbol, ssaVar: symbol, index: number, inBB: symbol)
+.decl SSA_Operand(stmt: symbol, pos: number, from: symbol)
+.decl VarAliveAtStartOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
+.decl VarAliveAtEndOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
+.decl OperandHasDefInBB(stmt: symbol, var: symbol, ssaVar: symbol)
+.decl StmtInBB(stmt: symbol, inBB: symbol)
 
-DEF_Var_InBB(var, startStmt) :-
-	ASSIGN(stmt, var),
+// Rename all "normal" var assigns
+SSA_Assign(stmt, var, cat(var, cat("#_", to_string(index))), index, startStmt) :-
+	__Assign(stmt, var),
 	Stmt(stmt, method, index),
-	BB_Range(startStmt, endStmt),
-	Stmt(startStmt, method, startIndex),
-	Stmt(endStmt, method, endIndex),
+	BB_Range(method, startStmt, _, startIndex, endIndex),
 	startIndex <= index, index <= endIndex.
 
-.decl PHI(stmt: symbol, var: symbol)
-.output PHI
+// New var assignment at every Phi
+SSA_PHI(toBB, var),
+SSA_Assign(toBB, var, ssaVar, startIndex, toBB) :-
+	SSA_Assign(_, var, _, _, fromBB),
+	BB_DominanceFrontier(fromBB, toBB),
+	BB_Start(_, toBB, startIndex),
+	ssaVar = cat(var, cat("#_", cat(to_string(startIndex), "_PHI"))).
 
-PHI(toBB, var) :-
-	DEF_Var_InBB(var, bb),
-	BB_DF(bb, toBB).
+VarAliveAtStartOfBB(var, ssaVar, toBB) :-
+	BB_Range(_, fromBB, endStmt, _, _),
+	NEXT(endStmt, toBB),
+	VarAliveAtEndOfBB(var, ssaVar, fromBB).
+
+VarAliveAtEndOfBB(var, ssaVar, inBB) :-
+	SSA_Assign(_, var, ssaVar, maxIndex, inBB),
+	maxIndex = max index : SSA_Assign(_, var, _, index, inBB).
+
+VarAliveAtEndOfBB(var, ssaVar, inBB) :-
+	BB_Start(_, inBB, _),
+	VarAliveAtStartOfBB(var, ssaVar, inBB),
+	!SSA_Assign(_, var, _, _, inBB).
+
+SSA_Operand(inBB, 0, ssaVar) :-
+	SSA_PHI(inBB, var),
+	VarAliveAtStartOfBB(var, ssaVar, inBB).
+
+StmtInBB(stmt, inBB) :-
+	Stmt(stmt, method, index),
+	BB_Range(method, inBB, _, startIndex, endIndex),
+	startIndex <= index, index <= endIndex.
+
+SSA_Operand(stmt, pos, ssaVar),
+OperandHasDefInBB(stmt, var, ssaVar) :-
+	__Operand(stmt, pos, var),
+	Stmt(stmt, _, index),
+	StmtInBB(stmt, inBB),
+	SSA_Assign(_, var, ssaVar, maxMinIndex, inBB),
+	maxMinIndex = max minIndex : { SSA_Assign(_, var, ssaVar, minIndex, inBB), minIndex < index }.
+
+SSA_Operand(stmt, pos, ssaVar) :-
+	__Operand(stmt, pos, var),
+	StmtInBB(stmt, inBB),
+	!OperandHasDefInBB(stmt, var, _),
+	VarAliveAtStartOfBB(var, ssaVar, inBB).
+
+// TODO: more like a hack for other cases
+SSA_Operand(stmt, pos, var) :-
+	__Operand(stmt, pos, var),
+	StmtInBB(stmt, inBB),
+	!OperandHasDefInBB(stmt, var, _),
+	!VarAliveAtStartOfBB(var, _, inBB).

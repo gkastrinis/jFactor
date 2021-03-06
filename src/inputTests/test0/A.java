@@ -130,7 +130,7 @@ public class A {
 		while (i <= n) {
 			k = n;
 			j = j + k;
-			k = 1;
+			k = j;
 			i = i + 1;//i += 1;//i--;
 		}
 		if (k == 1) {
@@ -160,6 +160,24 @@ public class A {
 			}
 		}
 		y = x;
+	}
+
+	static void test12(int n) {
+		int x, y;
+		if (n > 0) {
+			x = 1;
+		} else {
+			x = 2;
+		}
+		y = x;
+		x = 3;
+		if (n % 2 == 0) {
+			x = y;
+		} else {
+			x = 5;
+		}
+		int z = y;
+		int w = x;
 	}
 }
 

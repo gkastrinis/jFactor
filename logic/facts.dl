@@ -1,30 +1,5 @@
 #include "schema.dl"
 
-// Input
-.decl Stmt(id: symbol, method: symbol, index: number)
-.decl Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLable: symbol)
-.decl Invocation(sig: symbol, argc: number, retType: symbol)
-.decl AllocType(stmt: symbol, type: symbol)
-.decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
-.decl Handler(method: symbol, startLabel: symbol, endLabel: symbol, handlerLabel: symbol, type: symbol)
-.input Stmt
-.input Var
-.input Invocation
-.input AllocType
-.input Label
-.input Handler
-.decl __Opcode(stmt: symbol, opcode: symbol, oper: symbol)
-.input __Opcode(filename="Opcode.facts")
-
-// Opcodes
-.decl BinOpcode(opcode: symbol, op: symbol)
-.decl UnaryOpcode(opcode: symbol, op: symbol)
-.decl ConstLoadOpcode(opcode: symbol)
-.decl CallOpcode(opcode: symbol)
-.decl ZeroCondJumpOpcode(opcode: symbol, op: symbol)
-.decl NullCondJumpOpcode(opcode: symbol, op: symbol)
-.decl CondJumpOpcode(opcode: symbol, op: symbol)
-
 BinOpcode("X-add", "+").
 BinOpcode("X-sub", "-").
 BinOpcode("X-mul", "*").
@@ -66,15 +41,6 @@ CondJumpOpcode("if_icmple", "<=").
 CondJumpOpcode("if_acmpeq", "==").
 CondJumpOpcode("if_acmpne", "!=").
 
-///////////////////////////////////////////////////////////////
-
-.type Stack = [top: symbol, rest: Stack]
-.decl StackBeforeStmt(stmt: symbol, stack: Stack)
-.decl OpcodeExt(stmt: symbol, opcode: symbol, oper: symbol)
-.decl DEBUG(stmt: symbol, out: symbol)
-.output OpcodeExt
-.output DEBUG
-
 .decl __ToSymbol(stack: Stack, out: symbol)
 .decl __REQ_StackForNext(stmt: symbol, stack: Stack)
 .decl __REQ_Var(stmt: symbol, stack: Stack)
@@ -82,6 +48,8 @@ CondJumpOpcode("if_acmpne", "!=").
 .decl __REQ_ActualParam(stmt: symbol, pos: number, stack: Stack)
 .decl __REQ_Assign(stmt: symbol, to: symbol)
 .decl __REQ_Operand(stmt: symbol, pos: number, value: symbol)
+.decl __Assign(stmt: symbol, to: symbol)
+.decl __Operand(stmt: symbol, pos: number, from: symbol)
 
 StackBeforeStmt(stmt, nil) :- Stmt(stmt, _, 0).
 
@@ -181,7 +149,7 @@ __REQ_StackForNext(stmt, stack) :-
 
 // return value ->
 RET(stmt),
-OPERAND(stmt, 0, oper),
+__Operand(stmt, 0, oper),
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, [oper, stack]),
 	OpcodeExt(stmt, "X-return", _).
@@ -280,15 +248,15 @@ __REQ_StackForNext(stmt, [var, stack]) :-
 // Compute an intermediate result
 // Swap order of operands due to stack semantics
 OPERATOR(stmt, op),
-OPERAND(stmt, 0, oper0),
-OPERAND(stmt, 1, oper1),
+__Operand(stmt, 0, oper0),
+__Operand(stmt, 1, oper1),
 __REQ_Var(stmt, stack) :-
 	StackBeforeStmt(stmt, [oper1, [oper0, stack]]),
 	OpcodeExt(stmt, opcode, _),
 	BinOpcode(opcode, op).
 
 OPERATOR(stmt, op),
-OPERAND(stmt, 0, oper),
+__Operand(stmt, 0, oper),
 __REQ_Var(stmt, stack) :-
 	StackBeforeStmt(stmt, [oper, stack]),
 	OpcodeExt(stmt, opcode, _),
@@ -319,8 +287,8 @@ __REQ_Var(stmt, stack) :-
 
 // Handle conditional jumps
 OPERATOR(stmt, op),
-OPERAND(stmt, 0, oper0),
-OPERAND(stmt, 1, oper1),
+__Operand(stmt, 0, oper0),
+__Operand(stmt, 1, oper1),
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, [oper0, stack]),
 	OpcodeExt(stmt, opcode, _),
@@ -328,8 +296,8 @@ __REQ_StackForNext(stmt, stack) :-
 	 (NullCondJumpOpcode(opcode, op), oper1 = "NULL")).
 
 OPERATOR(stmt, op),
-OPERAND(stmt, 0, oper0),
-OPERAND(stmt, 1, oper1),
+__Operand(stmt, 0, oper0),
+__Operand(stmt, 1, oper1),
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, [oper1, [oper0, stack]]),
 	OpcodeExt(stmt, opcode, _),
@@ -352,13 +320,13 @@ __REQ_StackForNext(stmt, stack) :-
 ///////////////////////////////////////////////////////////////
 
 // Approve all assignments, except self-assign ones
-ASSIGN(stmt, to) :-
+__Assign(stmt, to) :-
 	__REQ_Assign(stmt, to),
 	!__REQ_Operand(stmt, 0, to).
 
-OPERAND(stmt, pos, oper) :-
+__Operand(stmt, pos, oper) :-
 	__REQ_Operand(stmt, pos, oper),
-	ASSIGN(stmt, _).
+	__Assign(stmt, _).
 
 ACTUAL_RET(stmt, var) :-
 	__REQ_Assign(stmt, var),
