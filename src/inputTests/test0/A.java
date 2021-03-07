@@ -11,6 +11,7 @@ public class A {
 		test9(10);
 		test10(10);
 		test11(10);
+		test12(10);
 	}
 
 	static void test1() {
