@@ -32,16 +32,18 @@
 // Input //
 .decl Stmt(id: symbol, method: symbol, index: number)
 .decl Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLable: symbol)
-.decl Invocation(sig: symbol, argc: number, retType: symbol)
-.decl AllocType(stmt: symbol, type: symbol)
 .decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
 .decl Handler(method: symbol, startLabel: symbol, endLabel: symbol, handlerLabel: symbol, type: symbol)
+.decl Invocation(sig: symbol, argc: number, retType: symbol)
+.decl AllocType(stmt: symbol, type: symbol)
+.decl IncValue(stmt: symbol, value : symbol)
 .input Stmt
 .input Var
-.input Invocation
-.input AllocType
 .input Label
 .input Handler
+.input Invocation
+.input AllocType
+.input IncValue
 .decl __Opcode(stmt: symbol, opcode: symbol, oper: symbol)
 .input __Opcode(filename="Opcode.facts")
 

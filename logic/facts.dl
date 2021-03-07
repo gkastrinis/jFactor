@@ -63,8 +63,10 @@ DEBUG(stmt, out) :- StackBeforeStmt(stmt, stack), __ToSymbol(stack, out).
 // The first store statement of a variable is one index
 // before the variable's scope start
 OpcodeExt(stmt, opcode, var) :-
-	__Opcode(stmt, opcode, varIndex),
-	(opcode = "X-load" ; opcode = "X-store" ; opcode = "X-inc" ; opcode = "X-dec"),
+	((__Opcode(stmt, "X-load", varIndex), opcode = "X-load") ;
+	 (__Opcode(stmt, "X-store", varIndex), opcode = "X-store") ;
+	 (__Opcode(stmt, "X-inc", varIndex), opcode = "X-inc") ;
+	 (__Opcode(stmt, "X-dec", varIndex), opcode = "X-dec")),
 	Stmt(stmt, method, index),
 	Var(method, varIndex, var, _, _, startLabel, endLabel),
 	Label(method, startLabel, _, startIndex),
@@ -73,8 +75,8 @@ OpcodeExt(stmt, opcode, var) :-
 
 // Exception handlers might introduce unnamed variables
 OpcodeExt(stmt, opcode, var) :-
-	__Opcode(stmt, opcode, varIndex),
-	(opcode = "X-load" ; opcode = "X-store"),
+	((__Opcode(stmt, "X-load", varIndex), opcode = "X-load") ;
+	 (__Opcode(stmt, "X-store", varIndex), opcode = "X-store")),
 	Stmt(stmt, method, _),
 	!Var(method, varIndex, _, _, _, _, _),
 	var = cat(cat(method, "/"), cat("$throw", varIndex)).
@@ -109,6 +111,8 @@ OpcodeExt(stmt, opcode, oper) :-
 	__Opcode(stmt, opcode, oper),
 	opcode != "X-load",
 	opcode != "X-store",
+	opcode != "X-inc",
+	opcode != "X-dec",
 	opcode != "goto",
 	!ZeroCondJumpOpcode(opcode, _),
 	!NullCondJumpOpcode(opcode, _),
@@ -262,16 +266,17 @@ __REQ_Var(stmt, stack) :-
 	OpcodeExt(stmt, opcode, _),
 	UnaryOpcode(opcode, op).
 
-//// Handle ++ or --
-//ASSIGN(stmt, var),
-//OPERATOR(stmt, op),
-//OPERAND(stmt, 0, var),
-//OPERAND(stmt, 1, "1"),
-//__REQ_StackForNext(stmt, stack) :-
-//	StackBeforeStmt(stmt, stack),
-//	((OpcodeExt(stmt, "X-inc", var), op = "+") ;
-//	 (OpcodeExt(stmt, "X-dec", var), op = "-")).
-//
+// Handle ++, --, +=, -=
+__Assign(stmt, var),
+OPERATOR(stmt, op),
+__Operand(stmt, 0, var),
+__Operand(stmt, 1, value),
+__REQ_StackForNext(stmt, stack) :-
+	StackBeforeStmt(stmt, stack),
+	((OpcodeExt(stmt, "X-inc", var), op = "+") ;
+	 (OpcodeExt(stmt, "X-dec", var), op = "-")),
+	IncValue(stmt, value).
+
 //// Load static field
 //OPERAND(stmt, 0, oper1),
 //__REQ_Var(stmt, stack) :-

@@ -21,8 +21,10 @@ class Database {
 	File stmts = new File(baseDir, "Stmt.facts")
 	File opcodes = new File(baseDir, "Opcode.facts")
 	File vars = new File(baseDir, "Var.facts")
-	File invocations = new File(baseDir, "Invocation.facts")
-	File allocTypes = new File(baseDir, "AllocType.facts")
 	File labels = new File(baseDir, "Label.facts")
 	File handlers = new File(baseDir, "Handler.facts")
+
+	File invocations = new File(baseDir, "Invocation.facts")
+	File allocTypes = new File(baseDir, "AllocType.facts")
+	File incValues = new File(baseDir, "IncValue.facts")
 }

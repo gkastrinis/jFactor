@@ -183,9 +183,9 @@ public class A {
 	}
 
 	static void test13() {
-		int i = 10, j = 0, k =10;
+		int i = 20, j = 0, k =10;
 		while (i > 0) {
-			i -= 1;
+			i -= 2;
 			j++;
 			--k;
 		}

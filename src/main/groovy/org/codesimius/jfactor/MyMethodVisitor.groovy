@@ -35,12 +35,15 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	}
 
 	void visitIincInsn(int var, int increment) {
-		if (increment == 1)
+		counter++
+		if (increment >= 0) {
+			Database.instance.incValues << "${methID()}/$counter\t$increment\n"
 			rec("X-inc", var)
-		else if (increment == -1)
+		}
+		else {
+			Database.instance.incValues << "${methID()}/$counter\t${-1 * increment}\n"
 			rec("X-dec", var)
-		else
-			throw new RuntimeException("iinc $increment")
+		}
 	}
 
 	// NOP, ACONST_NULL,
