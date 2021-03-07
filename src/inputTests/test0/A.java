@@ -12,6 +12,7 @@ public class A {
 		test10(10);
 		test11(10);
 		test12(10);
+		test13();
 	}
 
 	static void test1() {
@@ -132,7 +133,7 @@ public class A {
 			k = n;
 			j = j + k;
 			k = j;
-			i = i + 1;//i += 1;//i--;
+			i = i + 1;
 		}
 		if (k == 1) {
 			System.out.println(j);
@@ -179,6 +180,18 @@ public class A {
 		}
 		int z = y;
 		int w = x;
+	}
+
+	static void test13() {
+		int i = 10, j = 0, k =10;
+		while (i > 0) {
+			i -= 1;
+			j++;
+			--k;
+		}
+		System.out.println(i);
+		System.out.println(j);
+		System.out.println(k);
 	}
 }
 

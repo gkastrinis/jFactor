@@ -17,5 +17,5 @@
 .output SSA_Operand
 //.output __Assign
 //.output __Operand
-//.output VarAliveAtStartOfBB
-//.output VarAliveAtEndOfBB
+//.output __VarAliveAtStartOfBB
+//.output __VarAliveAtEndOfBB
