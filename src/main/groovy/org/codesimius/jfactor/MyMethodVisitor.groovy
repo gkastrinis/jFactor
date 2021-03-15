@@ -91,8 +91,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case POP: rec("pop")
 				break
-			case POP2: rec("pop2")
-				break
+			case POP2: throw new RuntimeException(Integer.toHexString(opcode) )
 			case DUP: rec("dup")
 				break
 			case IADD:

@@ -55,6 +55,7 @@
 .decl StackBeforeStmt(stmt: symbol, stack: Stack)
 .decl OpcodeExt(stmt: symbol, opcode: symbol, oper: symbol)
 .decl DEBUG(stmt: symbol, out: symbol)
+.decl ERROR(stmt: symbol, msg: symbol)
 // Opcodes
 .decl BinOpcode(opcode: symbol, op: symbol)
 .decl UnaryOpcode(opcode: symbol, op: symbol)

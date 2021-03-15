@@ -171,10 +171,14 @@ __REQ_StackForNext(stmt, [heap, stack]) :-
 	OpcodeExt(stmt, "new", heap).
 
 // Dup should only follow a `new` opcode -- ignore it
-// TODO add some check?
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, "dup", _).
+
+ERROR(stmt, "dup should follow only a `new` opcode") :-
+	OpcodeExt(stmt, "dup", _),
+	NEXT(prev, stmt),
+	!OpcodeExt(prev, "new", _).
 
 
 // Calls...
