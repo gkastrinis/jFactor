@@ -2,9 +2,6 @@
 #include "facts.dl"
 #include "ssa.dl"
 
-.output OpcodeExt
-.output DEBUG
-.output ERROR
 .output BB_Range
 //.output BB_DOM_Fail
 .output BB_DOM

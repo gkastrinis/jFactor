@@ -56,6 +56,11 @@
 .decl OpcodeExt(stmt: symbol, opcode: symbol, oper: symbol)
 .decl DEBUG(stmt: symbol, out: symbol)
 .decl ERROR(stmt: symbol, msg: symbol)
+
+.output OpcodeExt
+.output DEBUG
+.output ERROR
+
 // Opcodes
 .decl BinOpcode(opcode: symbol, op: symbol)
 .decl UnaryOpcode(opcode: symbol, op: symbol)
