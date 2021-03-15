@@ -300,18 +300,16 @@ __REQ_StackForNext(stmt, stack) :-
 	 (OpcodeExt(stmt, "X-dec", var), op = "-")),
 	IncValue(stmt, value).
 
-//// Load static field
-//OPERAND(stmt, 0, oper1),
-//__REQ_Var(stmt, stack) :-
-//	StackBeforeIndex(stmt, stack),
-//	OpcodeExt(stmt, "getstatic", oper1).
-//
-//PopOpcode("pop").
-//PopOpcode("pop2").
-//__StackForNext(method, i, stack) :-
-//	StackBeforeIndex(method, i, [_, stack]),
-//	OpcodeExt(method, i, opcode, _),
-//	PopOpcode(opcode).
+// Load static field
+SLOAD(stmt),
+__Operand(stmt, 0, fld),
+__REQ_Var(stmt, stack) :-
+	StackBeforeStmt(stmt, stack),
+	OpcodeExt(stmt, "getstatic", fld).
+
+__REQ_StackForNext(stmt, stack) :-
+	StackBeforeStmt(stmt, [_, stack]),
+	OpcodeExt(stmt, "pop", _).
 
 // Handle conditional jumps
 OPERATOR(stmt, op),

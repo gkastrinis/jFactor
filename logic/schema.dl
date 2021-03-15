@@ -15,6 +15,7 @@
 .decl NEXT(fromStmt: symbol, toStmt: symbol)
 .decl THROW(stmt: symbol, var: symbol)
 .decl EXCEPTION_HANDLER(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
+.decl SLOAD(stmt: symbol)
 
 .output VCALL
 .output SPCALL
@@ -30,6 +31,7 @@
 //.output NEXT
 .output THROW
 .output EXCEPTION_HANDLER
+.output SLOAD
 
 // Input //
 .decl Stmt(id: symbol, method: symbol, index: number)
