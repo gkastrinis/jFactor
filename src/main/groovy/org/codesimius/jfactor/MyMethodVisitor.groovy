@@ -208,17 +208,15 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
 		counter++
 		def sig = "${owner.replace("/", ".")}.${name}$descriptor"
+		callInfo(sig)
 		switch (opcode) {
 			case INVOKEVIRTUAL:
-				callInfo(sig)
 				rec("invokevirtual", sig)
 				break
 			case INVOKESPECIAL:
-				callInfo(sig)
 				rec(name == "<init>" ? "X-invokeinit" : "invokespecial", sig)
 				break
 			case INVOKESTATIC:
-				callInfo(sig)
 				rec("invokestatic", sig)
 				break
 			case INVOKEINTERFACE:

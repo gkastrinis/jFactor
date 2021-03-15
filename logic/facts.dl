@@ -23,6 +23,7 @@ ConstLoadOpcode("sipush").
 CallOpcode("invokevirtual").
 CallOpcode("invokespecial").
 CallOpcode("X-invokeinit").
+CallOpcode("invokestatic").
 
 ZeroCondJumpOpcode("ifeq", "==").
 ZeroCondJumpOpcode("ifne", "!=").
@@ -170,10 +171,13 @@ __REQ_StackForNext(stmt, [heap, stack]) :-
 	OpcodeExt(stmt, "new", heap).
 
 // Dup should only follow a `new` opcode -- ignore it
+// TODO add some check?
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, "dup", _).
 
+
+// Calls...
 // Pop call arguments from stack
 __REQ_ActualParam(stmt, argc - 1, stack) :-
 	StackBeforeStmt(stmt, stack),
@@ -185,6 +189,20 @@ __REQ_ActualParam(stmt, argc - 1, stack) :-
 __REQ_ActualParam(stmt, pos - 1, stack) :-
 	__REQ_ActualParam(stmt, pos, [_, stack]), pos >= 0.
 
+// index -1 should keep either the receiver object or a heap id
+// index -2 should keep the stack without anything related to the call
+
+// receiver var, or heap allocation ->
+__REQ_ActualParam(stmt, -2, stack) :-
+	__REQ_ActualParam(stmt, -1, [_, stack]),
+	OpcodeExt(stmt, opcode, _),
+	opcode != "invokestatic".
+
+// duplicate stack for index -2 for static calls
+__REQ_ActualParam(stmt, -2, stack) :-
+	__REQ_ActualParam(stmt, -1, stack),
+	OpcodeExt(stmt, "invokestatic", _).
+
 ACTUAL_PARAM(stmt, pos, notHeap) :-
 	__REQ_ActualParam(stmt, pos, [notHeap, _]), pos >= 0,
 	!ALLOC(_, _, notHeap, _).
@@ -193,20 +211,20 @@ ACTUAL_PARAM(stmt, pos, var) :-
 	__REQ_ActualParam(stmt, pos, [heap, _]), pos >= 0,
 	ALLOC(_, var, heap, _).
 
-// receiver object | Class | heap ->
 // -> var to store invocation result
 __REQ_Var(stmt, stack) :-
 	OpcodeExt(stmt, opcode, sig),
 	CallOpcode(opcode),
 	Invocation(sig, _, retType),
 	(retType != "void" ; opcode = "X-invokeinit"),
-	__REQ_ActualParam(stmt, -1, [_, stack]).
+	__REQ_ActualParam(stmt, -2, stack).
 
+// Propagate stack on non-returning calls
 __REQ_StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, opcode, sig),
 	CallOpcode(opcode),
 	Invocation(sig, _, "void"), opcode != "X-invokeinit",
-	__REQ_ActualParam(stmt, -1, [_, stack]).
+	__REQ_ActualParam(stmt, -2, stack).
 
 // Pop receiver object from stack
 ALLOC(allocStmt, base, heap, type),
@@ -226,6 +244,7 @@ SPCALL(stmt, base, sig) :-
 VCALL(stmt, base, sig) :-
 	OpcodeExt(stmt, "invokevirtual", sig),
 	__REQ_ActualParam(stmt, -1, [base, _]).
+
 
 // Store the top of the stack into a var
 // Found in source code

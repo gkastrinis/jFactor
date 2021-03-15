@@ -3,6 +3,7 @@
 // Output //
 .decl VCALL(stmt: symbol, base: symbol, sig: symbol)
 .decl SPCALL(stmt: symbol,  base: symbol, sig: symbol)
+.decl SCALL(stmt: symbol,  sig: symbol)
 .decl ALLOC(stmt: symbol, to: symbol, heap: symbol, type: symbol)
 .decl IF(stmt: symbol, jumpStmt: symbol)
 .decl GOTO(stmt: symbol, jumpStmt: symbol)
@@ -17,6 +18,7 @@
 
 .output VCALL
 .output SPCALL
+.output SCALL
 .output ALLOC
 .output IF
 .output GOTO

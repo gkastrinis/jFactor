@@ -13,6 +13,7 @@ public class A {
 		test11(10);
 		test12(10);
 		test13();
+		test14();
 	}
 
 	static void test1() {
@@ -192,6 +193,14 @@ public class A {
 		System.out.println(i);
 		System.out.println(j);
 		System.out.println(k);
+	}
+
+	static void test14() {
+		int a = 10;
+		int b = a + 20;
+		System.out.println(b);
+		int c = test9(b);
+		Integer d = new Integer(c);
 	}
 }
 
