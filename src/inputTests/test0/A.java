@@ -1,3 +1,6 @@
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
 public class A {
 	public static void main(String args[]){
 		test1();
@@ -86,24 +89,31 @@ public class A {
 	}
 
 	static void test8() {
-		boolean error;
+		int error;
 		int done = 0;
 		try {
 			int a = 30, b = 0;
 			int c = a / b;
-			if (c > 2)
-				throw new RuntimeException("fail!!!");
-			//System.out.println ("Result = " + c);
-			error = false;
+			if (c > 2) {
+				c = 100;
+				throw new RuntimeException("fail!!!"+c);
+			}
+			new SimpleDateFormat("MM, dd, yyyy").parse("invalid-date");
+			System.out.println ("Result = " + c);
+			error = 0;
 		}
 		catch(ArithmeticException e) {
 			System.out.println("Can't 		divide \\\" a \" number by 0");
 			test8_inner();
-			error = true;
+			error = 1;
+		}
+		catch(ParseException e) {
+			error = 2;
 		}
 		finally {
 			done = 10;
 		}
+		System.out.println(error);
 	}
 
 	static void test8_inner() throws ArithmeticException, NullPointerException {
@@ -199,7 +209,8 @@ public class A {
 		int a = 10;
 		int b = a + 20;
 		System.out.println(b);
-		int c = test9(b);
+		int c = test9
+				(b);
 		Integer d = new Integer(c);
 	}
 }

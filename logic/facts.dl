@@ -124,6 +124,7 @@ NEXT(stmt, cat(method, cat("/", to_string(i+1)))) :-
 	__Opcode(stmt, opcode, _),
 	Stmt(stmt, method, i),
 	opcode != "goto",
+	opcode != "athrow",
 	opcode != "X-return",
 	opcode != "return".
 
