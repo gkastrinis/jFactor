@@ -1,11 +1,14 @@
 #include "schema.dl"
-#include "facts.dl"
+#include "setup.dl"
+#include "bytecode.dl"
 #include "ssa.dl"
 
+.output OpcodeExt
+.output DEBUG
+.output ERROR
+
 .output BB_Range
-//.output BB_DOM_Fail
 .output BB_DOM
-//.output BB_IDOM_Fail
 //.output BB_IDOM
 //.output BB_DominanceFrontier
 //.output BB_DF_Local
@@ -13,7 +16,10 @@
 .output SSA_PHI
 .output SSA_Assign
 .output SSA_Operand
+
+//.output BB_DOM_Fail
+//.output BB_IDOM_Fail
 //.output __Assign
 //.output __Operand
-//.output __VarAliveAtStartOfBB
-//.output __VarAliveAtEndOfBB
+.output __VarAliveAtStartOfBB
+.output __VarAliveAtEndOfBB

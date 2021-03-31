@@ -58,10 +58,8 @@
 .decl OpcodeExt(stmt: symbol, opcode: symbol, oper: symbol)
 .decl DEBUG(stmt: symbol, out: symbol)
 .decl ERROR(stmt: symbol, msg: symbol)
-
-.output OpcodeExt
-.output DEBUG
-.output ERROR
+.decl __Assign(stmt: symbol, to: symbol)
+.decl __Operand(stmt: symbol, pos: number, from: symbol)
 
 // Opcodes
 .decl BinOpcode(opcode: symbol, op: symbol)

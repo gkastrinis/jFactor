@@ -1,0 +1,128 @@
+#pragma once
+#include "schema.dl"
+
+BinOpcode("X-add", "+").
+BinOpcode("X-sub", "-").
+BinOpcode("X-mul", "*").
+BinOpcode("X-div", "/").
+BinOpcode("X-rem", "%").
+BinOpcode("X-band", "&").
+BinOpcode("X-bor", "|").
+BinOpcode("X-bxor", "^").
+BinOpcode("X-shl", "<<").
+BinOpcode("X-shr", ">>").
+BinOpcode("X-ushr", ">>>").
+BinOpcode("lcmp", "cmp").
+BinOpcode("cmpl", "cmp").
+BinOpcode("cmpg", "cmp").
+UnaryOpcode("X-neg", "-").
+
+ConstLoadOpcode("X-const").
+ConstLoadOpcode("ldc").
+ConstLoadOpcode("bipush").
+ConstLoadOpcode("sipush").
+CallOpcode("invokevirtual").
+CallOpcode("invokespecial").
+CallOpcode("X-invokeinit").
+CallOpcode("invokestatic").
+
+ZeroCondJumpOpcode("ifeq", "==").
+ZeroCondJumpOpcode("ifne", "!=").
+ZeroCondJumpOpcode("iflt", "<").
+ZeroCondJumpOpcode("ifge", ">=").
+ZeroCondJumpOpcode("ifgt", ">").
+ZeroCondJumpOpcode("ifle", "<=").
+NullCondJumpOpcode("ifnull", "==").
+NullCondJumpOpcode("ifnonnull", "!=").
+CondJumpOpcode("if_icmpeq", "==").
+CondJumpOpcode("if_icmpne", "!=").
+CondJumpOpcode("if_icmplt", "<").
+CondJumpOpcode("if_icmpge", ">=").
+CondJumpOpcode("if_icmpgt", ">").
+CondJumpOpcode("if_icmple", "<=").
+CondJumpOpcode("if_acmpeq", "==").
+CondJumpOpcode("if_acmpne", "!=").
+
+StackBeforeStmt(stmt, nil) :- Stmt(stmt, _, 0).
+
+// Match load/store statements to variable scopes
+// The first store statement of a variable is one index
+// before the variable's scope start
+OpcodeExt(stmt, opcode, var) :-
+	((__Opcode(stmt, "X-load", varIndex), opcode = "X-load") ;
+	 (__Opcode(stmt, "X-store", varIndex), opcode = "X-store") ;
+	 (__Opcode(stmt, "X-inc", varIndex), opcode = "X-inc") ;
+	 (__Opcode(stmt, "X-dec", varIndex), opcode = "X-dec")),
+	Stmt(stmt, method, index),
+	Var(method, varIndex, var, _, _, startLabel, endLabel),
+	Label(method, startLabel, _, startIndex),
+	Label(method, endLabel, _, endIndex),
+	(startIndex - 1) <= index, index <= endIndex.
+
+// Exception handlers might introduce unnamed variables
+OpcodeExt(stmt, opcode, var) :-
+	((__Opcode(stmt, "X-load", varIndex), opcode = "X-load") ;
+	 (__Opcode(stmt, "X-store", varIndex), opcode = "X-store")),
+	Stmt(stmt, method, _),
+	!Var(method, varIndex, _, _, _, _, _),
+	var = cat(cat(method, "/"), cat("$throw", varIndex)).
+
+// Anything other than var load/store and jumps
+OpcodeExt(stmt, opcode, oper) :-
+	__Opcode(stmt, opcode, oper),
+	opcode != "X-load",
+	opcode != "X-store",
+	opcode != "X-inc",
+	opcode != "X-dec",
+	opcode != "goto",
+	!ZeroCondJumpOpcode(opcode, _),
+	!NullCondJumpOpcode(opcode, _),
+	!CondJumpOpcode(opcode, _).
+
+IF(stmt, nextStmt),
+NEXT(stmt, nextStmt),
+OpcodeExt(stmt, opcode, nextStmt) :-
+	__Opcode(stmt, opcode, label),
+	(ZeroCondJumpOpcode(opcode, _) ;
+	 NullCondJumpOpcode(opcode, _) ;
+	 CondJumpOpcode(opcode, _)),
+	Stmt(stmt, method, _),
+	Label(method, label, nextStmt, _).
+
+GOTO(stmt, nextStmt),
+NEXT(stmt, nextStmt),
+OpcodeExt(stmt, "goto", nextStmt) :-
+	__Opcode(stmt, "goto", label),
+	Stmt(stmt, method, _),
+	Label(method, label, nextStmt, _).
+
+// The next statement, in sequence, is also a successor in most cases
+NEXT(stmt, cat(method, cat("/", to_string(i+1)))) :-
+	__Opcode(stmt, opcode, _),
+	Stmt(stmt, method, i),
+	opcode != "goto",
+	opcode != "athrow",
+	opcode != "X-return",
+	opcode != "return".
+
+// Propagate `stack` to all successors
+StackBeforeStmt(nextStmt, stack) :-
+	__REQ_StackForNext(stmt, stack),
+	NEXT(stmt, nextStmt).
+
+// Assume that the first instruction of a handler is a store
+EXCEPTION_HANDLER(method, startStmt, endStmt, handlerStmt, type, var) :-
+	Handler(method, startLabel, endLabel, handlerLabel, type),
+	Label(method, startLabel, startStmt, _),
+	Label(method, endLabel, endStmt, _),
+	Label(method, handlerLabel, handlerStmt, _),
+	OpcodeExt(handlerStmt, "X-store", var).
+
+///////////////////////////////////////////////////////////////
+
+.decl __ToSymbol(stack: Stack, out: symbol)
+__ToSymbol(nil, "=@@=") :-
+	StackBeforeStmt(_, nil).
+__ToSymbol([head, stack], cat(head, cat(", ", out0))) :-
+	StackBeforeStmt(_, [head, stack]), __ToSymbol(stack, out0).
+DEBUG(stmt, out) :- StackBeforeStmt(stmt, stack), __ToSymbol(stack, out).
