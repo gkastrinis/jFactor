@@ -45,6 +45,13 @@ CondJumpOpcode("if_acmpne", "!=").
 
 StackBeforeStmt(stmt, nil) :- Stmt(stmt, _, 0).
 
+// The endIndex in VarRange is not inclusive in the original bytecode
+VAR(method, var, type, name),
+VarRange(var, startIndex, endIndex - 1) :-
+	__Var(method, _, var, name, type, startLabel, endLabel),
+	Label(method, startLabel, _, startIndex),
+	Label(method, endLabel, _, endIndex).
+
 // Match load/store statements to variable scopes
 // The first store statement of a variable is one index
 // before the variable's scope start
@@ -54,9 +61,8 @@ OpcodeExt(stmt, opcode, var) :-
 	 (__Opcode(stmt, "X-inc", varIndex), opcode = "X-inc") ;
 	 (__Opcode(stmt, "X-dec", varIndex), opcode = "X-dec")),
 	Stmt(stmt, method, index),
-	Var(method, varIndex, var, _, _, startLabel, endLabel),
-	Label(method, startLabel, _, startIndex),
-	Label(method, endLabel, _, endIndex),
+	__Var(method, varIndex, var, _, _, _, _),
+	VarRange(var, startIndex, endIndex),
 	(startIndex - 1) <= index, index <= endIndex.
 
 // Exception handlers might introduce unnamed variables
@@ -64,7 +70,7 @@ OpcodeExt(stmt, opcode, var) :-
 	((__Opcode(stmt, "X-load", varIndex), opcode = "X-load") ;
 	 (__Opcode(stmt, "X-store", varIndex), opcode = "X-store")),
 	Stmt(stmt, method, _),
-	!Var(method, varIndex, _, _, _, _, _),
+	!__Var(method, varIndex, _, _, _, _, _),
 	var = cat(cat(method, "/"), cat("$throw", varIndex)).
 
 // Anything other than var load/store and jumps

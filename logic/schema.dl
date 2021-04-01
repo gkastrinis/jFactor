@@ -1,6 +1,7 @@
 #pragma once
 
 // Output //
+.decl VAR(method: symbol, var: symbol, type: symbol, name: symbol)
 .decl VCALL(stmt: symbol, base: symbol, sig: symbol)
 .decl SPCALL(stmt: symbol,  base: symbol, sig: symbol)
 .decl SCALL(stmt: symbol,  sig: symbol)
@@ -17,6 +18,7 @@
 .decl EXCEPTION_HANDLER(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
 .decl SLOAD(stmt: symbol)
 
+.output VAR
 .output VCALL
 .output SPCALL
 .output SCALL
@@ -35,19 +37,19 @@
 
 // Input //
 .decl Stmt(id: symbol, method: symbol, index: number)
-.decl Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLable: symbol)
 .decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
 .decl Handler(method: symbol, startLabel: symbol, endLabel: symbol, handlerLabel: symbol, type: symbol)
 .decl Invocation(sig: symbol, argc: number, retType: symbol)
 .decl AllocType(stmt: symbol, type: symbol)
 .decl IncValue(stmt: symbol, value : symbol)
 .input Stmt
-.input Var
 .input Label
 .input Handler
 .input Invocation
 .input AllocType
 .input IncValue
+.decl __Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLable: symbol)
+.input __Var(filename="Var.facts")
 .decl __Opcode(stmt: symbol, opcode: symbol, oper: symbol)
 .input __Opcode(filename="Opcode.facts")
 
@@ -58,6 +60,7 @@
 .decl OpcodeExt(stmt: symbol, opcode: symbol, oper: symbol)
 .decl DEBUG(stmt: symbol, out: symbol)
 .decl ERROR(stmt: symbol, msg: symbol)
+.decl VarRange(var: symbol, startIndex: number, endIndex: number)
 .decl __Assign(stmt: symbol, to: symbol)
 .decl __Operand(stmt: symbol, pos: number, from: symbol)
 

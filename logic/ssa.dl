@@ -155,18 +155,22 @@ SSA_Assign(stmt, var, cat(var, cat("#_", to_string(index))), index, startStmt) :
 // Add a Phi node only when there are multiple assignments
 SSA_PHI(toBB, var),
 SSA_Assign(toBB, var, ssaVar, startIndex, toBB) :-
-	SSA_Assign(stmt1, var, _, _, fromBB1),
+	SSA_Assign(_, var, _, _, fromBB1),
 	BB_DominanceFrontier(fromBB1, toBB),
-	BB_DominanceFrontier(fromBB2, toBB),
-	SSA_Assign(stmt2, var, _, _, fromBB2),
-	stmt1 != stmt2,
+	SSA_Assign(_, var, _, _, fromBB2),
+	fromBB1 != fromBB2,
+	VarRange(var, varStart, varEnd),
 	BB_Start(_, toBB, startIndex),
+	varStart <= startIndex, startIndex <= varEnd,
 	ssaVar = cat(var, cat("#_", cat(to_string(startIndex), "_PHI"))).
 
 __VarAliveAtStartOfBB(var, ssaVar, toBB) :-
 	BB_Range(_, fromBB, endStmt, _, _),
+	__VarAliveAtEndOfBB(var, ssaVar, fromBB),
 	NEXT(endStmt, toBB),
-	__VarAliveAtEndOfBB(var, ssaVar, fromBB).
+	BB_Start(_, toBB, toBBIndex),
+	VarRange(var, varStart, varEnd),
+	varStart <= toBBIndex, toBBIndex <= varEnd.
 
 __VarAliveAtEndOfBB(var, ssaVar, inBB) :-
 	SSA_Assign(_, var, ssaVar, maxIndex, inBB),

@@ -21,5 +21,6 @@
 //.output BB_IDOM_Fail
 //.output __Assign
 //.output __Operand
-.output __VarAliveAtStartOfBB
-.output __VarAliveAtEndOfBB
+//.output __VarAliveAtStartOfBB
+//.output __VarAliveAtEndOfBB
+//.output VarRange
