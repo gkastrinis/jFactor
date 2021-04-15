@@ -6,7 +6,7 @@ plugins {
 group = "org.codesimius"
 mainClassName = "org.codesimius.jfactor.Main"
 
-wrapper() { gradleVersion = "6.5" }
+wrapper() { gradleVersion = "6.7" }
 
 repositories { mavenCentral() }
 
