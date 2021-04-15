@@ -144,6 +144,12 @@ BB_DominanceFrontier(x, y) :-
 .decl __OperandHasDefInBB(stmt: symbol, var: symbol, ssaVar: symbol)
 .decl __StmtInBB(stmt: symbol, inBB: symbol)
 
+// Mock assignments to formal parameters so they are treated uniformly
+// in the rest of the SSA logic
+SSA_Assign(stmt, var, cat(var, cat("##_", to_string(pos))), 0, stmt) :-
+	FORMAL_PARAM(method, pos, var),
+	Stmt(stmt, method, 0).
+
 // Rename all "normal" var assigns
 SSA_Assign(stmt, var, cat(var, cat("#_", to_string(index))), index, startStmt) :-
 	__Assign(stmt, var),

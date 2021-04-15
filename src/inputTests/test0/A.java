@@ -1,5 +1,8 @@
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class A {
 	public static void main(String args[]){
@@ -17,6 +20,8 @@ public class A {
 		test12(10);
 		test13();
 		test14();
+		test15();
+		test16(5, 10);
 	}
 
 	static void test1() {
@@ -212,6 +217,36 @@ public class A {
 		int c = test9
 				(b);
 		Integer d = new Integer(c);
+	}
+
+	static void test15() {
+//		List<Integer> l = new ArrayList<>();
+//		l.add(1);
+//		l.add(2);
+//		for (Integer i : l) {
+//			System.out.println(i);
+//		}
+//		for (int i = 0 ; i < l.size() ; i++)
+//			System.out.println(l.get(i));
+//		List<Object> i = new ArrayList<>();
+//		i.add("HI");
+//		System.out.println(i.get(0));
+		int sum = 0;
+		for (int i = 0 ; i < 10 ; i++) sum += i;
+		double j = 20;
+		double i = 10.3;
+		System.out.println(sum + " " + i);
+	}
+
+	static int test16(int n, int a) {
+		int i = 0;
+		if (i > n) {
+			n = 0;
+			i = 100;
+		}
+		else
+			i = -100;
+		return i + n + a;
 	}
 }
 

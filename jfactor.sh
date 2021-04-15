@@ -1,6 +1,6 @@
 #!/bin/bash
 BASE=build/out
-filter='\<A test8()V\>'
+filter='\<A test16(II)I\>'
 rm -rf $BASE && mkdir $BASE
 souffle -j4 -F$BASE/../out_tmp -D$BASE logic/jfactor.dl
 if [ -s $BASE/ERROR.csv ] ; then echo "Errors encountered!!!" ; cat $BASE/ERROR.csv ; fi

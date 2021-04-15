@@ -11,6 +11,7 @@
 .decl RET(stmt: symbol)
 .decl RET_VOID(stmt: symbol)
 .decl OPERATOR(stmt: symbol, op: symbol)
+.decl FORMAL_PARAM(method: symbol, pos: number, var: symbol)
 .decl ACTUAL_PARAM(stmt: symbol, pos: number, op: symbol)
 .decl ACTUAL_RET(stmt: symbol, var: symbol)
 .decl NEXT(fromStmt: symbol, toStmt: symbol)
@@ -28,6 +29,7 @@
 .output RET
 .output RET_VOID
 .output OPERATOR
+.output FORMAL_PARAM
 .output ACTUAL_PARAM
 .output ACTUAL_RET
 //.output NEXT
