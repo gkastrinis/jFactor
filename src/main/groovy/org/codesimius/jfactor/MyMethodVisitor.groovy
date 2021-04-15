@@ -273,7 +273,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitLdcInsn(Object value) {
 		counter++
 		if (value instanceof String)
-			value = "\"${value.replaceAll("\t", "\\\\t")}\""
+			value = "\"${value.replaceAll("\t", "\\\\t").replaceAll("\"", "\\\\\"")}\""
 		rec("ldc", value)
 	}
 
