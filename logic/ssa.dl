@@ -28,6 +28,15 @@
 .decl BB_DF_Local(fromBB: symbol, toBB: symbol)
 .decl BB_DF_Upto(fromBB: symbol, middleBB: symbol, toBB: symbol)
 
+#define PROLOGUE_INDEX -1
+
+// Dummy BB before the first, original, one
+NEXT(stmt, firstStmt),
+BB_Start(method, stmt, PROLOGUE_INDEX),
+BB_End(method, stmt, PROLOGUE_INDEX) :-
+	Stmt(firstStmt, method, 0),
+	stmt = cat(method, "/prologue").
+
 // First statement starts a BB
 BB_Start(method, stmt, 0) :- Stmt(stmt, method, 0).
 
@@ -146,9 +155,11 @@ BB_DominanceFrontier(x, y) :-
 
 // Mock assignments to formal parameters so they are treated uniformly
 // in the rest of the SSA logic
-SSA_Assign(stmt, var, cat(var, cat("##_", to_string(pos))), 0, stmt) :-
+// Mock assignments are placed in the fake prologue BB
+SSA_Assign(stmt, var, ssaVar, PROLOGUE_INDEX, stmt) :-
 	FORMAL_PARAM(method, pos, var),
-	Stmt(stmt, method, 0).
+	BB_Start(method, stmt, PROLOGUE_INDEX),
+	ssaVar = cat(var, cat("#_PARAM_", to_string(pos))).
 
 // Rename all "normal" var assigns
 SSA_Assign(stmt, var, cat(var, cat("#_", to_string(index))), index, startStmt) :-
@@ -168,7 +179,7 @@ SSA_Assign(toBB, var, ssaVar, startIndex, toBB) :-
 	VarRange(var, varStart, varEnd),
 	BB_Start(_, toBB, startIndex),
 	varStart <= startIndex, startIndex <= varEnd,
-	ssaVar = cat(var, cat("#_", cat(to_string(startIndex), "_PHI"))).
+	ssaVar = cat(var, cat("#_PHI_", to_string(startIndex))).
 
 __VarAliveAtStartOfBB(var, ssaVar, toBB) :-
 	BB_Range(_, fromBB, endStmt, _, _),
@@ -210,7 +221,7 @@ SSA_Operand(stmt, pos, ssaVar) :-
 	!__OperandHasDefInBB(stmt, var, _),
 	__VarAliveAtStartOfBB(var, ssaVar, inBB).
 
-// TODO: more like a hack for other cases
+// TODO: more like a hack for missing cases
 SSA_Operand(stmt, pos, var) :-
 	__Operand(stmt, pos, var),
 	__StmtInBB(stmt, inBB),

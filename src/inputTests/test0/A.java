@@ -22,6 +22,7 @@ public class A {
 		test14();
 		test15();
 		test16(5, 10);
+		test17(200);
 	}
 
 	static void test1() {
@@ -247,6 +248,14 @@ public class A {
 		else
 			i = -100;
 		return i + n + a;
+	}
+
+	static int test17(int n) {
+		while (n > 0) {
+			System.out.println(n);
+			n--;
+		}
+		return n;
 	}
 }
 
