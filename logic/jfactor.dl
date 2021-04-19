@@ -1,7 +1,27 @@
 #include "schema.dl"
 #include "setup.dl"
 #include "bytecode.dl"
+#include "basic-blocks.dl"
 #include "ssa.dl"
+
+// FACTS //
+.output VAR
+.output VCALL
+.output SPCALL
+.output SCALL
+.output ALLOC
+.output IF
+.output GOTO
+.output RET
+.output RET_VOID
+.output OPERATOR
+.output FORMAL_PARAM
+.output ACTUAL_PARAM
+.output ACTUAL_RET
+//.output NEXT
+.output THROW
+.output EXCEPTION_HANDLER
+.output SLOAD
 
 .output OpcodeExt
 .output DEBUG

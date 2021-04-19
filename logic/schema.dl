@@ -19,24 +19,6 @@
 .decl EXCEPTION_HANDLER(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
 .decl SLOAD(stmt: symbol)
 
-.output VAR
-.output VCALL
-.output SPCALL
-.output SCALL
-.output ALLOC
-.output IF
-.output GOTO
-.output RET
-.output RET_VOID
-.output OPERATOR
-.output FORMAL_PARAM
-.output ACTUAL_PARAM
-.output ACTUAL_RET
-//.output NEXT
-.output THROW
-.output EXCEPTION_HANDLER
-.output SLOAD
-
 // Input //
 .decl Stmt(id: symbol, method: symbol, index: number)
 .decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
@@ -56,7 +38,6 @@
 .input __Opcode(filename="Opcode.facts")
 
 // Core //
-
 .type Stack = [top: symbol, rest: Stack]
 .decl StackBeforeStmt(stmt: symbol, stack: Stack)
 .decl OpcodeExt(stmt: symbol, opcode: symbol, oper: symbol)
