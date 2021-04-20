@@ -23,6 +23,7 @@
 .output THROW
 .output EXCEPTION_HANDLER
 .output SLOAD
+.output Stmt
 
 .output OpcodeExt
 .output DEBUG
@@ -30,18 +31,12 @@
 
 .output BB_Range
 .output BB_DOM
-//.output BB_IDOM
 //.output BB_DominanceFrontier
 //.output BB_DF_Local
 //.output BB_DF_Upto
+
 .output SSA_PHI
 .output SSA_Assign
 .output SSA_Operand
-
-//.output BB_DOM_Fail
-//.output BB_IDOM_Fail
-//.output __Assign
-//.output __Operand
-//.output __VarAliveAtStartOfBB
-//.output __VarAliveAtEndOfBB
-//.output VarRange
+//.output VarAliveAtStartOfBB
+//.output VarAliveAtEndOfBB

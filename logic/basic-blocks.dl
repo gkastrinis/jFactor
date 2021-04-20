@@ -5,6 +5,8 @@
 .decl BB_Start(method: symbol, stmt: symbol, index: number)
 .decl BB_End(method: symbol, stmt: symbol, index: number)
 .decl BB_Range(method: symbol, startStmt: symbol, endStmt: symbol, startIndex: number, endIndex: number)
+// Map each bytecode statement to its basic-block
+.decl BytecodeStmtInBB(stmt: symbol, inBB: symbol)
 // Forward paths regarding Basic Blocks
 // Each Basic Block is represented by its starting statement
 // Paths will be used in dominance, hence BB with back-edges
@@ -76,6 +78,11 @@ BB_End(method, endStmt, endIndex) :-
 BB_Start(method, startStmt, startIndex) :-
 	EXCEPTION_HANDLER(method, _, _, startStmt, _, _),
 	BytecodeStmt(startStmt, method, startIndex).
+
+BytecodeStmtInBB(stmt, inBB) :-
+	BytecodeStmt(stmt, method, index),
+	BB_Range(method, inBB, _, startIndex, endIndex),
+	startIndex <= index, index <= endIndex.
 
 // The ending statement of a Basic Block is
 // the closest ending statement after the starting statement

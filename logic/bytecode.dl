@@ -28,7 +28,7 @@ __REQ_StackForNext(stmt, stack) :-
 
 // return value ->
 RET(stmt),
-__Operand(stmt, 0, oper),
+PHASE1_Operand(stmt, 0, oper),
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, [oper, stack]),
 	OpcodeExt(stmt, "X-return", _).
@@ -149,25 +149,25 @@ __REQ_StackForNext(stmt, [var, stack]) :-
 // Compute an intermediate result
 // Swap order of operands due to stack semantics
 OPERATOR(stmt, op),
-__Operand(stmt, 0, oper0),
-__Operand(stmt, 1, oper1),
+PHASE1_Operand(stmt, 0, oper0),
+PHASE1_Operand(stmt, 1, oper1),
 __REQ_Var(stmt, stack) :-
 	StackBeforeStmt(stmt, [oper1, [oper0, stack]]),
 	OpcodeExt(stmt, opcode, _),
 	BinOpcode(opcode, op).
 
 OPERATOR(stmt, op),
-__Operand(stmt, 0, oper),
+PHASE1_Operand(stmt, 0, oper),
 __REQ_Var(stmt, stack) :-
 	StackBeforeStmt(stmt, [oper, stack]),
 	OpcodeExt(stmt, opcode, _),
 	UnaryOpcode(opcode, op).
 
 // Handle ++, --, +=, -=
-__Assign(stmt, var),
+PHASE1_Assign(stmt, var),
 OPERATOR(stmt, op),
-__Operand(stmt, 0, var),
-__Operand(stmt, 1, value),
+PHASE1_Operand(stmt, 0, var),
+PHASE1_Operand(stmt, 1, value),
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, stack),
 	((OpcodeExt(stmt, "X-inc", var), op = "+") ;
@@ -176,7 +176,7 @@ __REQ_StackForNext(stmt, stack) :-
 
 // Load static field
 SLOAD(stmt),
-__Operand(stmt, 0, fld),
+PHASE1_Operand(stmt, 0, fld),
 __REQ_Var(stmt, stack) :-
 	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, "getstatic", fld).
@@ -187,8 +187,8 @@ __REQ_StackForNext(stmt, stack) :-
 
 // Handle conditional jumps
 OPERATOR(stmt, op),
-__Operand(stmt, 0, oper0),
-__Operand(stmt, 1, oper1),
+PHASE1_Operand(stmt, 0, oper0),
+PHASE1_Operand(stmt, 1, oper1),
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, [oper0, stack]),
 	OpcodeExt(stmt, opcode, _),
@@ -196,8 +196,8 @@ __REQ_StackForNext(stmt, stack) :-
 	 (NullCondJumpOpcode(opcode, op), oper1 = "NULL")).
 
 OPERATOR(stmt, op),
-__Operand(stmt, 0, oper0),
-__Operand(stmt, 1, oper1),
+PHASE1_Operand(stmt, 0, oper0),
+PHASE1_Operand(stmt, 1, oper1),
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, [oper1, [oper0, stack]]),
 	OpcodeExt(stmt, opcode, _),
@@ -220,13 +220,13 @@ __REQ_StackForNext(stmt, stack) :-
 ///////////////////////////////////////////////////////////////
 
 // Approve all assignments, except self-assign ones
-__Assign(stmt, to) :-
+PHASE1_Assign(stmt, to) :-
 	__REQ_Assign(stmt, to),
 	!__REQ_Operand(stmt, 0, to).
 
-__Operand(stmt, pos, oper) :-
+PHASE1_Operand(stmt, pos, oper) :-
 	__REQ_Operand(stmt, pos, oper),
-	__Assign(stmt, _).
+	PHASE1_Assign(stmt, _).
 
 ACTUAL_RET(stmt, var) :-
 	__REQ_Assign(stmt, var),

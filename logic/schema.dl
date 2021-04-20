@@ -18,6 +18,7 @@
 .decl THROW(stmt: symbol, var: symbol)
 .decl EXCEPTION_HANDLER(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
 .decl SLOAD(stmt: symbol)
+.decl Stmt(stmt: symbol, method: symbol, bytecodeIndex: number, index: number)
 
 // Input //
 .decl BytecodeStmt(id: symbol, method: symbol, index: number)
@@ -44,8 +45,8 @@
 .decl DEBUG(stmt: symbol, out: symbol)
 .decl ERROR(stmt: symbol, msg: symbol)
 .decl VarRange(var: symbol, startIndex: number, endIndex: number)
-.decl __Assign(stmt: symbol, to: symbol)
-.decl __Operand(stmt: symbol, pos: number, from: symbol)
+.decl PHASE1_Assign(stmt: symbol, to: symbol)
+.decl PHASE1_Operand(stmt: symbol, pos: number, from: symbol)
 
 // Opcodes
 .decl BinOpcode(opcode: symbol, op: symbol)

@@ -2,13 +2,13 @@
 #include "schema.dl"
 #include "basic-blocks.dl"
 
+// Basic-block `inBB` needs a phi-node for variable `var`
 .decl SSA_PHI(inBB: symbol, var: symbol)
 .decl SSA_Assign(stmt: symbol, var: symbol, ssaVar: symbol, index: number, inBB: symbol)
 .decl SSA_Operand(stmt: symbol, pos: number, from: symbol)
-.decl __VarAliveAtStartOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
-.decl __VarAliveAtEndOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
-.decl __OperandHasDefInBB(stmt: symbol, var: symbol, ssaVar: symbol)
-.decl __StmtInBB(stmt: symbol, inBB: symbol)
+.decl VarAliveAtStartOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
+.decl VarAliveAtEndOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
+.decl OperandHasDefInBB(stmt: symbol, var: symbol, ssaVar: symbol)
 
 // Mock assignments to formal parameters so they are treated uniformly
 // in the rest of the SSA logic
@@ -20,7 +20,7 @@ SSA_Assign(stmt, var, ssaVar, PROLOGUE_INDEX, stmt) :-
 
 // Rename all "normal" var assigns
 SSA_Assign(stmt, var, cat(var, cat("#_", to_string(index))), index, startStmt) :-
-	__Assign(stmt, var),
+	PHASE1_Assign(stmt, var),
 	BytecodeStmt(stmt, method, index),
 	BB_Range(method, startStmt, _, startIndex, endIndex),
 	startIndex <= index, index <= endIndex.
@@ -38,49 +38,44 @@ SSA_Assign(toBB, var, ssaVar, startIndex, toBB) :-
 	varStart <= startIndex, startIndex <= varEnd,
 	ssaVar = cat(var, cat("#_PHI_", to_string(startIndex))).
 
-__VarAliveAtStartOfBB(var, ssaVar, toBB) :-
+VarAliveAtStartOfBB(var, ssaVar, toBB) :-
 	BB_Range(_, fromBB, endStmt, _, _),
-	__VarAliveAtEndOfBB(var, ssaVar, fromBB),
+	VarAliveAtEndOfBB(var, ssaVar, fromBB),
 	NEXT(endStmt, toBB),
 	BB_Start(_, toBB, toBBIndex),
 	VarRange(var, varStart, varEnd),
 	varStart <= toBBIndex, toBBIndex <= varEnd.
 
-__VarAliveAtEndOfBB(var, ssaVar, inBB) :-
+VarAliveAtEndOfBB(var, ssaVar, inBB) :-
 	SSA_Assign(_, var, ssaVar, maxIndex, inBB),
 	maxIndex = max index : SSA_Assign(_, var, _, index, inBB).
 
-__VarAliveAtEndOfBB(var, ssaVar, inBB) :-
+VarAliveAtEndOfBB(var, ssaVar, inBB) :-
 	BB_Start(_, inBB, _),
-	__VarAliveAtStartOfBB(var, ssaVar, inBB),
+	VarAliveAtStartOfBB(var, ssaVar, inBB),
 	!SSA_Assign(_, var, _, _, inBB).
 
 SSA_Operand(inBB, 0, ssaVar) :-
 	SSA_PHI(inBB, var),
-	__VarAliveAtStartOfBB(var, ssaVar, inBB).
-
-__StmtInBB(stmt, inBB) :-
-	BytecodeStmt(stmt, method, index),
-	BB_Range(method, inBB, _, startIndex, endIndex),
-	startIndex <= index, index <= endIndex.
+	VarAliveAtStartOfBB(var, ssaVar, inBB).
 
 SSA_Operand(stmt, pos, ssaVar),
-__OperandHasDefInBB(stmt, var, ssaVar) :-
-	__Operand(stmt, pos, var),
+OperandHasDefInBB(stmt, var, ssaVar) :-
+	PHASE1_Operand(stmt, pos, var),
 	BytecodeStmt(stmt, _, index),
-	__StmtInBB(stmt, inBB),
+	BytecodeStmtInBB(stmt, inBB),
 	SSA_Assign(_, var, ssaVar, maxMinIndex, inBB),
 	maxMinIndex = max minIndex : { SSA_Assign(_, var, ssaVar, minIndex, inBB), minIndex < index }.
 
 SSA_Operand(stmt, pos, ssaVar) :-
-	__Operand(stmt, pos, var),
-	__StmtInBB(stmt, inBB),
-	!__OperandHasDefInBB(stmt, var, _),
-	__VarAliveAtStartOfBB(var, ssaVar, inBB).
+	PHASE1_Operand(stmt, pos, var),
+	BytecodeStmtInBB(stmt, inBB),
+	!OperandHasDefInBB(stmt, var, _),
+	VarAliveAtStartOfBB(var, ssaVar, inBB).
 
 // TODO: more like a hack for missing cases
 SSA_Operand(stmt, pos, var) :-
-	__Operand(stmt, pos, var),
-	__StmtInBB(stmt, inBB),
-	!__OperandHasDefInBB(stmt, var, _),
-	!__VarAliveAtStartOfBB(var, _, inBB).
+	PHASE1_Operand(stmt, pos, var),
+	BytecodeStmtInBB(stmt, inBB),
+	!OperandHasDefInBB(stmt, var, _),
+	!VarAliveAtStartOfBB(var, _, inBB).
