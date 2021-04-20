@@ -1,0 +1,107 @@
+#pragma once
+#include "schema.dl"
+#include "basic-blocks.dl"
+#include "ssa.dl"
+
+.decl Stmt(stmt: symbol, method: symbol, bytecodeIndex: number, index: number)
+// Order vars participating in PHI nodes, for a given basic block
+.decl __PHI_VarToOrd(inBB: symbol, var: symbol, order: number)
+.decl __PHI_SSAVarToOrd(inBB: symbol, var: symbol, ssaVar: symbol, order: number)
+.decl __PHI_NextBaseVar(inBB: symbol, prev: symbol, next: symbol)
+.decl __PHI_NextVar(inBB: symbol, var: symbol, prev: symbol, next: symbol)
+.decl __PHI_Next_AllVars(index: number, inBB: symbol, prev: symbol, next: symbol)
+.decl __PHI_MaxIndex(inBB: symbol, len: number)
+
+.output Stmt
+.output __PHI_VarToOrd
+.output __PHI_SSAVarToOrd
+.output __PHI_NextBaseVar
+.output __PHI_NextVar
+.output __PHI_Next_AllVars
+.output __PHI_MaxIndex
+
+#define NIL "@"
+
+// Arbitrarily order vars, and ssa-variants of the same var
+__PHI_VarToOrd(inBB, var, ord(var)),
+__PHI_SSAVarToOrd(inBB, var, ssaVar, ord(ssaVar)) :-
+	SSA_PHI(inBB, var),
+	__VarAliveAtStartOfBB(var, ssaVar, inBB).
+
+// Order base vars
+__PHI_NextBaseVar(inBB, NIL, var) :-
+	__PHI_VarToOrd(inBB, var, minOrd),
+	minOrd = min ord1 : { __PHI_VarToOrd(inBB, _, ord1) }.
+
+__PHI_NextBaseVar(inBB, prevVar, nextVar) :-
+	__PHI_NextBaseVar(inBB, _, prevVar),
+	__PHI_VarToOrd(inBB, prevVar, prevOrd),
+	__PHI_VarToOrd(inBB, nextVar, nextOrd),
+	nextOrd = min ord1 : { __PHI_VarToOrd(inBB, _, ord1), ord1 > prevOrd }.
+
+// Order ssa-variants, for a given base var
+__PHI_NextVar(inBB, var, NIL, minSsaVar) :-
+	__PHI_SSAVarToOrd(inBB, var, minSsaVar, minOrd),
+	minOrd = min ord1 : { __PHI_SSAVarToOrd(inBB, var, _, ord1) }.
+
+__PHI_NextVar(inBB, var, prevVar, nextVar) :-
+	__PHI_NextVar(inBB, var, _, prevVar),
+	__PHI_SSAVarToOrd(inBB, var, prevVar, prevOrd),
+	__PHI_SSAVarToOrd(inBB, var, nextVar, nextOrd),
+	nextOrd = min ord1 : { __PHI_SSAVarToOrd(inBB, var, _, ord1), ord1 > prevOrd }.
+
+
+// First ssa-variant, of the first var in the basic block
+__PHI_Next_AllVars(0, inBB, NIL, minSsaVar) :-
+	__PHI_NextBaseVar(inBB, NIL, var),
+	__PHI_NextVar(inBB, var, NIL, minSsaVar).
+
+// Next ssa-variant, based on the previous ssa-variant
+__PHI_Next_AllVars(prevIndex + 1, inBB, prevVar, nextVar) :-
+	__PHI_Next_AllVars(prevIndex, inBB, _, prevVar),
+	__PHI_NextVar(inBB, _, prevVar, nextVar).
+
+// Previous ssa-variant has no next variant
+// Move on to the first ssa-variant of the next base var
+__PHI_Next_AllVars(prevIndex + 1, inBB, prevVar, nextVar) :-
+	__PHI_Next_AllVars(prevIndex, inBB, _, prevVar),
+	!__PHI_NextVar(inBB, _, prevVar, _),
+	__PHI_SSAVarToOrd(inBB, baseVar, prevVar, _),
+	__PHI_NextBaseVar(inBB, baseVar, nextBaseVar),
+	__PHI_NextVar(inBB, nextBaseVar, NIL, nextVar).
+
+// Total count of variable in current PHI node
+__PHI_MaxIndex(inBB, lastIndex + 1) :-
+	SSA_PHI(inBB, _),
+	__PHI_Next_AllVars(lastIndex, inBB, _, lastVar),
+	!__PHI_Next_AllVars(lastIndex + 1, inBB, lastVar, _).
+
+// Start from -1, to avoid PHI nodes at the beginning of a method
+Stmt(PROLOGUE_STMT(method), method, -1, -1) :- BytecodeStmt(_, method, _).
+
+// For non-PHI nodes, just increment the index
+Stmt(newStmt, method, bytecodeIndex + 1, prevIndex + 1) :-
+	Stmt(_, method, bytecodeIndex, prevIndex),
+	BytecodeStmt(stmt, method, bytecodeIndex + 1),
+	!SSA_PHI(stmt, _),
+	index = prevIndex + 1,
+	newStmt = cat(method, cat("/", to_string(index))).
+
+// Calculate the index of the first, non-PHI assignment in a PHI node
+Stmt(newStmt, method, bytecodeIndex + 1, index) :-
+	Stmt(_, method, bytecodeIndex, prevIndex),
+	BytecodeStmt(stmt, method, bytecodeIndex + 1),
+	SSA_PHI(stmt, _),
+	__PHI_MaxIndex(stmt, len),
+	index = prevIndex + 1 + len,
+	newStmt = cat(method, cat("/", to_string(index))).
+
+// Give each PHI assignment an index based on ordering
+// -2 for original bytecode index
+Stmt(newStmt, method, -2, index) :-
+	Stmt(_, method, bytecodeIndex, prevIndex),
+	BytecodeStmt(stmt, method, bytecodeIndex + 1),
+	SSA_PHI(stmt, _),
+	__PHI_Next_AllVars(indexInPHI, stmt, _, _),
+	index = prevIndex + 1 + indexInPHI,
+	newStmt = cat(method, cat("/", cat(to_string(index), "/PHI"))).

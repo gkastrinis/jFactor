@@ -29,23 +29,24 @@
 .decl BB_DF_Upto(fromBB: symbol, middleBB: symbol, toBB: symbol)
 
 #define PROLOGUE_INDEX -1
+#define PROLOGUE_STMT(m) cat(m, "/prologue")
 
 // Dummy BB before the first, original, one
 NEXT(stmt, firstStmt),
 BB_Start(method, stmt, PROLOGUE_INDEX),
 BB_End(method, stmt, PROLOGUE_INDEX) :-
-	Stmt(firstStmt, method, 0),
-	stmt = cat(method, "/prologue").
+	BytecodeStmt(firstStmt, method, 0),
+	stmt = PROLOGUE_STMT(method).
 
 // First statement starts a BB
-BB_Start(method, stmt, 0) :- Stmt(stmt, method, 0).
+BB_Start(method, stmt, 0) :- BytecodeStmt(stmt, method, 0).
 
 // Return and throw statements end a BB
 BB_End(method, stmt, index) :-
 	(OpcodeExt(stmt, "X-return", _) ;
 	 OpcodeExt(stmt, "return", _) ;
 	 OpcodeExt(stmt, "athrow", _)),
-	Stmt(stmt, method, index).
+	BytecodeStmt(stmt, method, index).
 
 // A BB ends at a jump,
 // and another starts at the target label
@@ -56,25 +57,25 @@ BB_Start(method, targetStmt, targetIndex) :-
 	 NullCondJumpOpcode(opcode, _) ;
 	 CondJumpOpcode(opcode, _) ;
 	 opcode = "goto"),
-	Stmt(stmt, method, index),
-	Stmt(targetStmt, method, targetIndex).
+	BytecodeStmt(stmt, method, index),
+	BytecodeStmt(targetStmt, method, targetIndex).
 
 // Whenever a BB ends, another starts
 BB_Start(method, startStmt, startIndex) :-
 	BB_End(method, endStmt, _),
 	NEXT(endStmt, startStmt),
-	Stmt(startStmt, method, startIndex).
+	BytecodeStmt(startStmt, method, startIndex).
 
 // Whenever a BB starts, another ends
 BB_End(method, endStmt, endIndex) :-
 	BB_Start(method, startStmt, _),
 	NEXT(endStmt, startStmt),
-	Stmt(endStmt, method, endIndex).
+	BytecodeStmt(endStmt, method, endIndex).
 
 // Each exception handler starts a basic block
 BB_Start(method, startStmt, startIndex) :-
 	EXCEPTION_HANDLER(method, _, _, startStmt, _, _),
-	Stmt(startStmt, method, startIndex).
+	BytecodeStmt(startStmt, method, startIndex).
 
 // The ending statement of a Basic Block is
 // the closest ending statement after the starting statement

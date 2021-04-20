@@ -18,7 +18,7 @@ class Database {
 	File methodExceptions = new File(baseDir, "MethodDeclaresException.facts")
 	File lineNumbers = new File(baseDir, "LineNumber.facts")
 
-	File stmts = new File(baseDir, "Stmt.facts")
+	File stmts = new File(baseDir, "BytecodeStmt.facts")
 	File opcodes = new File(baseDir, "Opcode.facts")
 	File vars = new File(baseDir, "Var.facts")
 	File labels = new File(baseDir, "Label.facts")

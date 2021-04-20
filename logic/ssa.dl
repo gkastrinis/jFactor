@@ -21,7 +21,7 @@ SSA_Assign(stmt, var, ssaVar, PROLOGUE_INDEX, stmt) :-
 // Rename all "normal" var assigns
 SSA_Assign(stmt, var, cat(var, cat("#_", to_string(index))), index, startStmt) :-
 	__Assign(stmt, var),
-	Stmt(stmt, method, index),
+	BytecodeStmt(stmt, method, index),
 	BB_Range(method, startStmt, _, startIndex, endIndex),
 	startIndex <= index, index <= endIndex.
 
@@ -60,14 +60,14 @@ SSA_Operand(inBB, 0, ssaVar) :-
 	__VarAliveAtStartOfBB(var, ssaVar, inBB).
 
 __StmtInBB(stmt, inBB) :-
-	Stmt(stmt, method, index),
+	BytecodeStmt(stmt, method, index),
 	BB_Range(method, inBB, _, startIndex, endIndex),
 	startIndex <= index, index <= endIndex.
 
 SSA_Operand(stmt, pos, ssaVar),
 __OperandHasDefInBB(stmt, var, ssaVar) :-
 	__Operand(stmt, pos, var),
-	Stmt(stmt, _, index),
+	BytecodeStmt(stmt, _, index),
 	__StmtInBB(stmt, inBB),
 	SSA_Assign(_, var, ssaVar, maxMinIndex, inBB),
 	maxMinIndex = max minIndex : { SSA_Assign(_, var, ssaVar, minIndex, inBB), minIndex < index }.

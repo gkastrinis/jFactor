@@ -3,6 +3,7 @@
 #include "bytecode.dl"
 #include "basic-blocks.dl"
 #include "ssa.dl"
+#include "ordering.dl"
 
 // FACTS //
 .output VAR

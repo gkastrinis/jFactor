@@ -43,7 +43,7 @@ CondJumpOpcode("if_icmple", "<=").
 CondJumpOpcode("if_acmpeq", "==").
 CondJumpOpcode("if_acmpne", "!=").
 
-StackBeforeStmt(stmt, nil) :- Stmt(stmt, _, 0).
+StackBeforeStmt(stmt, nil) :- BytecodeStmt(stmt, _, 0).
 
 // The endIndex in VarRange is not inclusive in the original bytecode
 VAR(method, var, type, name),
@@ -66,7 +66,7 @@ OpcodeExt(stmt, opcode, var) :-
 	 (__Opcode(stmt, "X-store", varIndex), opcode = "X-store") ;
 	 (__Opcode(stmt, "X-inc", varIndex), opcode = "X-inc") ;
 	 (__Opcode(stmt, "X-dec", varIndex), opcode = "X-dec")),
-	Stmt(stmt, method, index),
+	BytecodeStmt(stmt, method, index),
 	__Var(method, varIndex, var, _, _, _, _),
 	VarRange(var, startIndex, endIndex),
 	(startIndex - 1) <= index, index <= endIndex.
@@ -75,7 +75,7 @@ OpcodeExt(stmt, opcode, var) :-
 OpcodeExt(stmt, opcode, var) :-
 	((__Opcode(stmt, "X-load", varIndex), opcode = "X-load") ;
 	 (__Opcode(stmt, "X-store", varIndex), opcode = "X-store")),
-	Stmt(stmt, method, _),
+	BytecodeStmt(stmt, method, _),
 	!__Var(method, varIndex, _, _, _, _, _),
 	var = cat(cat(method, "/"), cat("$throw", varIndex)).
 
@@ -98,20 +98,20 @@ OpcodeExt(stmt, opcode, nextStmt) :-
 	(ZeroCondJumpOpcode(opcode, _) ;
 	 NullCondJumpOpcode(opcode, _) ;
 	 CondJumpOpcode(opcode, _)),
-	Stmt(stmt, method, _),
+	BytecodeStmt(stmt, method, _),
 	Label(method, label, nextStmt, _).
 
 GOTO(stmt, nextStmt),
 NEXT(stmt, nextStmt),
 OpcodeExt(stmt, "goto", nextStmt) :-
 	__Opcode(stmt, "goto", label),
-	Stmt(stmt, method, _),
+	BytecodeStmt(stmt, method, _),
 	Label(method, label, nextStmt, _).
 
 // The next statement, in sequence, is also a successor in most cases
 NEXT(stmt, cat(method, cat("/", to_string(i+1)))) :-
 	__Opcode(stmt, opcode, _),
-	Stmt(stmt, method, i),
+	BytecodeStmt(stmt, method, i),
 	opcode != "goto",
 	opcode != "athrow",
 	opcode != "X-return",

@@ -134,7 +134,7 @@ __RES_Var(stmt, var) :-
 // ...or generate a temp one
 __RES_Var(stmt, var) :-
 	__REQ_Var(stmt, _),
-	Stmt(stmt, method, i),
+	BytecodeStmt(stmt, method, i),
 	NEXT(stmt, nextStmt),
 	OpcodeExt(nextStmt, opcode, _),
 	opcode != "X-store",
