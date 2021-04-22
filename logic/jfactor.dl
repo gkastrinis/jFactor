@@ -1,33 +1,34 @@
 #include "schema.dl"
-#include "setup.dl"
 #include "bytecode.dl"
 #include "basic-blocks.dl"
 #include "ssa.dl"
 #include "ordering.dl"
 
-// FACTS //
-.output VAR
-.output VCALL
-.output SPCALL
-.output SCALL
-.output ALLOC
-.output IF
-.output GOTO
-.output RET
-.output RET_VOID
-.output OPERATOR
-.output FORMAL_PARAM
-.output ACTUAL_PARAM
-.output ACTUAL_RET
-//.output NEXT
-.output THROW
-.output EXCEPTION_HANDLER
-.output SLOAD
-.output Stmt
-
-.output OpcodeExt
+.decl DEBUG(stmt: symbol, out: symbol)
 .output DEBUG
 .output ERROR
+.output OpcodeExt
+
+// FACTS //
+.output VAR
+.output FORMAL_PARAM
+.output Stmt
+
+//.output VCALL
+//.output SPCALL
+//.output SCALL
+//.output ALLOC
+//.output IF
+//.output GOTO
+//.output RET
+//.output RET_VOID
+//.output OPERATOR
+//.output ACTUAL_PARAM
+//.output ACTUAL_RET
+//.output NEXT
+//.output THROW
+//.output EXCEPTION_HANDLER
+//.output SLOAD
 
 //.output BB_Range
 //.output BB_DOM
@@ -41,5 +42,16 @@
 //.output VarAliveAtStartOfBB
 //.output VarAliveAtEndOfBB
 
-.output TempVar
-.output PHASE1_Operand_CONST
+.output p1_Operand
+.output __REQ_Operand
+
+.decl __StackForSymbol(stack: Stack)
+__StackForSymbol(stack) :- StackBeforeStmt(_, stack).
+__StackForSymbol(stack) :- __StackForSymbol([_, stack]).
+
+.decl __ToSymbol(stack: Stack, out: symbol)
+__ToSymbol(nil, "=@@=") :- __StackForSymbol(nil).
+__ToSymbol([head, stack], cat(head, cat(", ", out0))) :-
+	__StackForSymbol([head, stack]), __ToSymbol(stack, out0).
+
+DEBUG(stmt, out) :- StackBeforeStmt(stmt, stack), __ToSymbol(stack, out).

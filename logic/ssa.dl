@@ -20,7 +20,7 @@ SSA_Assign(stmt, var, ssaVar, PROLOGUE_INDEX, stmt) :-
 
 // Rename all "normal" var assigns
 SSA_Assign(stmt, var, cat(var, cat("#_", to_string(index))), index, startStmt) :-
-	PHASE1_Assign(stmt, var),
+	p1_Assign(stmt, var),
 	BytecodeStmt(stmt, method, index),
 	BB_Range(method, startStmt, _, startIndex, endIndex),
 	startIndex <= index, index <= endIndex.
@@ -61,21 +61,21 @@ SSA_Operand(inBB, 0, ssaVar) :-
 
 SSA_Operand(stmt, pos, ssaVar),
 OperandHasDefInBB(stmt, var, ssaVar) :-
-	PHASE1_Operand(stmt, pos, var),
+	p1_Operand(stmt, pos, _, var),
 	BytecodeStmt(stmt, _, index),
 	BytecodeStmtInBB(stmt, inBB),
 	SSA_Assign(_, var, ssaVar, maxMinIndex, inBB),
 	maxMinIndex = max minIndex : { SSA_Assign(_, var, ssaVar, minIndex, inBB), minIndex < index }.
 
 SSA_Operand(stmt, pos, ssaVar) :-
-	PHASE1_Operand(stmt, pos, var),
+	p1_Operand(stmt, pos, _, var),
 	BytecodeStmtInBB(stmt, inBB),
 	!OperandHasDefInBB(stmt, var, _),
 	VarAliveAtStartOfBB(var, ssaVar, inBB).
 
 // TODO: more like a hack for missing cases
 SSA_Operand(stmt, pos, var) :-
-	PHASE1_Operand(stmt, pos, var),
+	p1_Operand(stmt, pos, _, var),
 	BytecodeStmtInBB(stmt, inBB),
 	!OperandHasDefInBB(stmt, var, _),
 	!VarAliveAtStartOfBB(var, _, inBB).

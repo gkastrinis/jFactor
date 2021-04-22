@@ -1,8 +1,13 @@
 #pragma once
 
 // Output //
+//.decl VAR(method: symbol, var: symbol, type: symbol, name: symbol)
+// TODO isn't it an input?
+.decl FORMAL_PARAM(method: symbol, pos: number, var: symbol)
+// Stmt with the final ordering
+.decl Stmt(stmt: symbol, method: symbol, bytecodeIndex: number, index: number)
+
 // TODO stmt needs fixing after all the ordering is computed
-.decl VAR(method: symbol, var: symbol, type: symbol, name: symbol)
 .decl VCALL(stmt: symbol, base: symbol, sig: symbol)
 .decl SPCALL(stmt: symbol,  base: symbol, sig: symbol)
 .decl SCALL(stmt: symbol,  sig: symbol)
@@ -11,15 +16,12 @@
 .decl GOTO(stmt: symbol, jumpStmt: symbol)
 .decl RET(stmt: symbol)
 .decl RET_VOID(stmt: symbol)
-.decl OPERATOR(stmt: symbol, op: symbol)
-.decl FORMAL_PARAM(method: symbol, pos: number, var: symbol)
 .decl ACTUAL_PARAM(stmt: symbol, pos: number, op: symbol)
 .decl ACTUAL_RET(stmt: symbol, var: symbol)
 .decl NEXT(fromStmt: symbol, toStmt: symbol)
 .decl THROW(stmt: symbol, var: symbol)
 .decl EXCEPTION_HANDLER(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
 .decl SLOAD(stmt: symbol)
-.decl Stmt(stmt: symbol, method: symbol, bytecodeIndex: number, index: number)
 
 // Input //
 .decl BytecodeStmt(id: symbol, method: symbol, index: number)
@@ -28,37 +30,25 @@
 .decl Invocation(sig: symbol, argc: number, retType: symbol)
 .decl AllocType(stmt: symbol, type: symbol)
 .decl IncValue(stmt: symbol, value : symbol, type: symbol)
+.decl Field(fld: symbol, type: symbol, name: symbol, owner: symbol)
+.decl __Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLable: symbol)
+.decl __Opcode(stmt: symbol, opcode: symbol, oper: symbol)
 .input BytecodeStmt
 .input Label
 .input Handler
 .input Invocation
 .input AllocType
 .input IncValue
-.decl __Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLable: symbol)
-.input __Var(filename="Var.facts")
-.decl __Opcode(stmt: symbol, opcode: symbol, oper: symbol)
-.input __Opcode(filename="Opcode.facts")
-.decl Field(fld: symbol, type: symbol, name: symbol, owner: symbol)
 .input Field
+.input __Var(filename="Var.facts")
+.input __Opcode(filename="Opcode.facts")
 
 // Core //
-.type Stack = [top: symbol, rest: Stack]
-.decl StackBeforeStmt(stmt: symbol, stack: Stack)
-.decl OpcodeExt(stmt: symbol, opcode: symbol, oper: symbol)
-.decl DEBUG(stmt: symbol, out: symbol)
 .decl ERROR(stmt: symbol, msg: symbol)
+.decl OpcodeExt(stmt: symbol, opcode: symbol, oper: symbol)
+.decl p1_Assign(stmt: symbol, to: symbol)
+.decl p1_Operator(stmt: symbol, op: symbol)
+.decl p1_Operand(stmt: symbol, pos: number, type: symbol, oper: symbol)
+
+// TODO doesnt reflect new ordering
 .decl VarRange(var: symbol, startIndex: number, endIndex: number)
-.decl TempVar(method: symbol, var: symbol, name: symbol)
-.decl PHASE1_Assign(stmt: symbol, to: symbol)
-.decl PHASE1_Operand(stmt: symbol, pos: number, oper: symbol)
-.decl PHASE1_Operand_CONST(stmt: symbol, pos: number, constOper: symbol)
-
-.decl TypeToDesc(type: symbol, desc: symbol)
-
-// Opcodes
-.decl BinOpcode(opcode: symbol, op: symbol)
-.decl UnaryOpcode(opcode: symbol, op: symbol)
-.decl ConstLoadOpcode(opcode: symbol, type: symbol)
-.decl CallOpcode(opcode: symbol)
-.decl ImplicitCondJumpOpcode(opcode: symbol, op: symbol, type1: symbol, oper1: symbol)
-.decl CondJumpOpcode(opcode: symbol, op: symbol)

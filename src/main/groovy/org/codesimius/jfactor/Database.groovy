@@ -14,18 +14,17 @@ class Database {
 		}
 	}
 
-	File formals = new File(baseDir, "FormalParam.facts")
-	File methodExceptions = new File(baseDir, "MethodDeclaresException.facts")
-	File lineNumbers = new File(baseDir, "LineNumber.facts")
-
 	File stmts = new File(baseDir, "BytecodeStmt.facts")
-	File opcodes = new File(baseDir, "Opcode.facts")
-	File vars = new File(baseDir, "Var.facts")
 	File labels = new File(baseDir, "Label.facts")
 	File handlers = new File(baseDir, "Handler.facts")
-	File fields = new File(baseDir, "Field.facts")
-
 	File invocations = new File(baseDir, "Invocation.facts")
 	File allocTypes = new File(baseDir, "AllocType.facts")
 	File incValues = new File(baseDir, "IncValue.facts")
+	File fields = new File(baseDir, "Field.facts")
+	File vars = new File(baseDir, "Var.facts")
+	File opcodes = new File(baseDir, "Opcode.facts")
+
+	File formals = new File(baseDir, "FormalParam.facts")
+	File methodExceptions = new File(baseDir, "MethodDeclaresException.facts")
+	File lineNumbers = new File(baseDir, "LineNumber.facts")
 }
