@@ -422,4 +422,8 @@ EXCEPTION_HANDLER(method, startStmt, endStmt, handlerStmt, type, var) :-
 	Label(method, handlerLabel, handlerStmt, _),
 	OpcodeExt(handlerStmt, "X-store", var).
 
-// TODO error
+ERROR(handlerStmt, "first stmt of handler should be a `store` opcode") :-
+	Handler(method, _, _, handlerLabel, _),
+	Label(method, handlerLabel, handlerStmt, _),
+	OpcodeExt(handlerStmt, opcode, _),
+	opcode != "X-store".
