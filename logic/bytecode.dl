@@ -239,7 +239,7 @@ __REQ_Var(stmt, retDesc, stack) :-
 	CallOpcode(opcode),
 	Invocation(sig, _, retType),
 	(retType != "void" ; opcode = "X-invokeinit"),
-	TypeToDesc(retType, retDesc),
+	TDESC(retType, retDesc),
 	__REQ_ActualParam(stmt, -2, stack).
 
 // Propagate stack on void-returning calls (that are not constructors)

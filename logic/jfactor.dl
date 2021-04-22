@@ -42,7 +42,7 @@
 //.output BB_DF_Local
 //.output BB_DF_Upto
 
-.output SSA_PHI
+//.output SSA_PHI
 //.output p2_Assign
 //.output p2_Operand
 //.output VarAliveAtStartOfBB
