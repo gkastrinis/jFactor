@@ -1,0 +1,29 @@
+#pragma once
+
+// Bytecode statement to final statement
+.decl __BCToFinal(bcStmt: symbol, stmt: symbol)
+
+__BCToFinal(bcStmt, stmt) :-
+	BytecodeStmt(bcStmt, method, bcIndex),
+	Stmt(stmt, method, bcIndex, _).
+
+VarRange(var, startIndex, endIndex) :-
+	VAR(method, var, _, _),
+	p1_VarRange(var, bcStartIndex, bcEndIndex),
+	Stmt(_, method, bcStartIndex, startIndex),
+	Stmt(_, method, bcEndIndex, endIndex).
+
+ASSIGN(stmt, to) :- p1_Assign(bcStmt, to), __BCToFinal(bcStmt, stmt).
+
+Operator(stmt, op) :- p1_Operator(bcStmt, op), __BCToFinal(bcStmt, stmt).
+
+Operand_VAR(stmt, pos, type, oper) :-
+	p1_Operand(bcStmt, pos, _, oper),
+	__BCToFinal(bcStmt, stmt),
+	(VAR(_, oper, type, _) ; Field(oper, type, _, _)).
+
+Operand_CONST(stmt, pos, type, oper) :-
+	p1_Operand(bcStmt, pos, type, oper),
+	__BCToFinal(bcStmt, stmt),
+	!VAR(_, oper, _, _),
+	!Field(oper, _, _, _).

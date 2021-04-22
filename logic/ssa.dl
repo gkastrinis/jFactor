@@ -33,7 +33,7 @@ SSA_Assign(toBB, var, ssaVar, startIndex, toBB) :-
 	BB_DominanceFrontier(fromBB1, toBB),
 	SSA_Assign(_, var, _, _, fromBB2),
 	fromBB1 != fromBB2,
-	VarRange(var, varStart, varEnd),
+	p1_VarRange(var, varStart, varEnd),
 	BB_Start(_, toBB, startIndex),
 	varStart <= startIndex, startIndex <= varEnd,
 	ssaVar = cat(var, cat("#_PHI_", to_string(startIndex))).
@@ -43,7 +43,7 @@ VarAliveAtStartOfBB(var, ssaVar, toBB) :-
 	VarAliveAtEndOfBB(var, ssaVar, fromBB),
 	NEXT(endStmt, toBB),
 	BB_Start(_, toBB, toBBIndex),
-	VarRange(var, varStart, varEnd),
+	p1_VarRange(var, varStart, varEnd),
 	varStart <= toBBIndex, toBBIndex <= varEnd.
 
 VarAliveAtEndOfBB(var, ssaVar, inBB) :-
