@@ -12,7 +12,6 @@
 // FACTS //
 //.output VAR
 //.output VarRange
-//.output ConstType
 //.output SSAVarToOriginal
 //.output FORMAL_PARAM
 .output Stmt
@@ -20,7 +19,7 @@
 .output ASSIGN
 //.output Operator
 .output Operand_VAR
-//.output Operand_CONST
+.output Operand_CONST
 //.output SLOAD
 //.output RET
 //.output RET_VOID

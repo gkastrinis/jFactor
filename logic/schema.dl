@@ -8,7 +8,6 @@
 // Output //
 .decl VAR(method: symbol, var: symbol, type: symbol, name: symbol)
 .decl VarRange(var: symbol, startIndex: number, endIndex: number)
-.decl ConstType(const: symbol, type: symbol)
 .decl SSAVarToOriginal(ssaVar: symbol, var: symbol)
 // Stmt with the final ordering
 .decl Stmt(stmt: symbol, method: symbol, bytecodeIndex: number, index: number)
@@ -16,7 +15,7 @@
 .decl ASSIGN(stmt: symbol, to: symbol)
 .decl Operator(stmt: symbol, op: symbol)
 .decl Operand_VAR(stmt: symbol, pos: number, oper: symbol)
-.decl Operand_CONST(stmt: symbol, pos: number, oper: symbol)
+.decl Operand_CONST(stmt: symbol, pos: number, oper: symbol, type: symbol)
 .decl SLOAD(stmt: symbol, fld: symbol)
 .decl RET(stmt: symbol)
 .decl RET_VOID(stmt: symbol)

@@ -41,16 +41,12 @@ Operand_VAR(stmt, pos, oper) :-
 	BCToFinal(bcStmt, stmt),
 	VAR(_, oper, _, _).
 
-Operand_CONST(stmt, pos, oper) :-
+Operand_CONST(stmt, pos, oper, type) :-
 	p2_Operand(bcStmt, pos, oper),
+	p1_Operand(bcStmt, pos, tDesc, oper),
 	BCToFinal(bcStmt, stmt),
-	!VAR(_, oper, _, _).
-
-// TODO needs refinement
-ConstType(const, type) :-
-	p1_Operand(_, _, desc, const),
-	!VAR(_, const, _, _),
-	(TypeToDesc(type, desc) ; (!TypeToDesc(_, desc), type = desc)).
+	!VAR(_, oper, _, _),
+	(TypeToDesc(type, tDesc) ; (!TypeToDesc(_, tDesc), type = tDesc)).
 
 SLOAD(stmt, fld) :- p1_Sload(bcStmt, fld), BCToFinal(bcStmt, stmt).
 
@@ -74,7 +70,7 @@ ALLOC(stmt, ssaTo, heap, type) :-
 	BCToFinal(bcStmt, stmt).
 
 // TODO with const args / or SSA
-ACTUAL_PARAM(stmt, pos, param):-
+ACTUAL_PARAM(stmt, pos, param) :-
 	p1_ActualParam(bcStmt, pos, param),
 	BCToFinal(bcStmt, stmt).
 

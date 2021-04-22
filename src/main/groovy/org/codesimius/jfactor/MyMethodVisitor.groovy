@@ -61,19 +61,19 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitInsn(int opcode) {
 		counter++
 		switch (opcode) {
-			case ICONST_M1: rec("X-Iconst", "-1")
+			case ICONST_M1: rec("X-Bconst", "-1")
 				break
-			case ICONST_0: rec("X-Iconst", "0")
+			case ICONST_0: rec("X-Bconst", "0")
 				break
-			case ICONST_1: rec("X-Iconst", "1")
+			case ICONST_1: rec("X-Bconst", "1")
 				break
-			case ICONST_2: rec("X-Iconst", "2")
+			case ICONST_2: rec("X-Bconst", "2")
 				break
-			case ICONST_3: rec("X-Iconst", "3")
+			case ICONST_3: rec("X-Bconst", "3")
 				break
-			case ICONST_4: rec("X-Iconst", "4")
+			case ICONST_4: rec("X-Bconst", "4")
 				break
-			case ICONST_5: rec("X-Iconst", "5")
+			case ICONST_5: rec("X-Bconst", "5")
 				break
 			case LCONST_0: rec("X-Lconst", "0L")
 				break
