@@ -16,9 +16,13 @@ p2_Assign(stmt, var, ssaVar, PROLOGUE_INDEX, stmt) :-
 	BB_Start(method, stmt, PROLOGUE_INDEX),
 	ssaVar = cat(var, cat("#_PARAM_", to_string(pos))).
 
-// Rename all "normal" var assigns
+// Rename all various "source" var assigns
 p2_Assign(stmt, var, ssaVar, index, startStmt) :-
-	p1_Assign(stmt, var),
+	(p1_Assign(stmt, var) ;
+	 p1_Alloc(stmt, var, _, _) ;
+	 p1_VCall(stmt, var, _) ;
+	 p1_SPCall(stmt, var, _) ;
+	 p1_Throw(stmt, var)),
 	BytecodeStmt(stmt, method, index),
 	BB_Range(method, startStmt, _, startIndex, endIndex),
 	startIndex <= index, index <= endIndex,

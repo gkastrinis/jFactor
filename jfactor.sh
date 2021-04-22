@@ -1,6 +1,6 @@
 #!/bin/bash
 BASE=build/out
-filter='\<A test8()V\>'
+filter='\<A test18(I)V\>'
 rm -rf $BASE && mkdir $BASE
 echo "Souffle..."
 time souffle -j4 -F$BASE/../out_tmp -D$BASE logic/jfactor.dl

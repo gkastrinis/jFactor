@@ -23,6 +23,8 @@ public class A {
 		test15();
 		test16(5, 10);
 		test17(200);
+		test18(100);
+		test19(2);
 	}
 
 	static void test1() {
@@ -258,6 +260,20 @@ public class A {
 			n = n + a;
 		}
 		return n;
+	}
+
+	static void test18(int n) {
+		int a = test19(n + 1);
+		RuntimeException e;
+		if (a > 10) e = new RuntimeException("abc");
+		else e = new RuntimeException("def");
+		throw e;
+	}
+
+	static int test19(int c) {
+		int a = c;
+		int b = a + 20;
+		return a * b;
 	}
 }
 

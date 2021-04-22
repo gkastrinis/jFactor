@@ -68,9 +68,9 @@ GOTO(stmt, jumpStmt) :-
 	BCToFinal(bcStmt, stmt),
 	BCToFinal(bcJumpStmt, jumpStmt).
 
-// TODO deals with `to` in SSA
-ALLOC(stmt, to, heap, type) :-
+ALLOC(stmt, ssaTo, heap, type) :-
 	p1_Alloc(bcStmt, to, heap, type),
+	p2_Assign(bcStmt, to, ssaTo, _, _),
 	BCToFinal(bcStmt, stmt).
 
 // TODO with const args / or SSA
@@ -78,29 +78,28 @@ ACTUAL_PARAM(stmt, pos, param):-
 	p1_ActualParam(bcStmt, pos, param),
 	BCToFinal(bcStmt, stmt).
 
-// TODO deals with `var` in SSA
-ACTUAL_RET(stmt, var) :-
-	p1_ActualRet(bsStmt, var),
-	BCToFinal(bsStmt, stmt).
-
-// TODO deals with `base` in SSA
-VCALL(stmt, base, sig) :-
-	p1_VCall(bcStmt, base, sig),
+ACTUAL_RET(stmt, ssaVar) :-
+	p1_ActualRet(bcStmt, var),
+	p2_Assign(bcStmt, var, ssaVar, _, _),
 	BCToFinal(bcStmt, stmt).
 
-// TODO deals with `base` in SSA
-SPCALL(stmt, base, sig) :-
+VCALL(stmt, ssaBase, sig) :-
+	p1_VCall(bcStmt, base, sig),
+	p2_Assign(bcStmt, base, ssaBase, _, _),
+	BCToFinal(bcStmt, stmt).
+
+SPCALL(stmt, ssaBase, sig) :-
 	p1_SPCall(bcStmt, base, sig),
+	p2_Assign(bcStmt, base, ssaBase, _, _),
 	BCToFinal(bcStmt, stmt).
 
 SCALL(stmt, sig) :- p1_SCall(bcStmt, sig), BCToFinal(bcStmt, stmt).
 
-// TODO deals with `var` in SSA
-THROW(stmt, var) :-
+THROW(stmt, ssaVar) :-
 	p1_Throw(bcStmt, var),
+	p2_Assign(bcStmt, var, ssaVar, _, _),
 	BCToFinal(bcStmt, stmt).
 
-// TODO deals with `var` in SSA
 EXCEPTION_HANDLER(method, fromStmt, toStmt, handlerStmt, type, var) :-
 	p1_ExceptionHandler(method, bcFromStmt, bcToStmt, bcHandlerStmt, type, var),
 	BCToFinal(bcFromStmt, fromStmt),
