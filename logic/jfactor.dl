@@ -21,6 +21,7 @@
 //.output Operator
 .output Operand_VAR
 .output Operand_CONST
+//.output SLOAD
 
 //.output VCALL
 //.output SPCALL
@@ -36,7 +37,6 @@
 //.output NEXT
 //.output THROW
 //.output EXCEPTION_HANDLER
-//.output SLOAD
 
 //.output BB_Range
 //.output BB_DOM
@@ -44,9 +44,9 @@
 //.output BB_DF_Local
 //.output BB_DF_Upto
 
-//.output SSA_PHI
-//.output SSA_Assign
-//.output SSA_Operand
+.output SSA_PHI
+.output SSA_Assign
+.output SSA_Operand
 //.output VarAliveAtStartOfBB
 //.output VarAliveAtEndOfBB
 

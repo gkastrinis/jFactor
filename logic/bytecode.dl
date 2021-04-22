@@ -148,8 +148,7 @@ __REQ_StackForNext(stmt, TOP(type, var, stack)) :-
 // Fields... ///////////////////////////////////////////////////
 
 // Load static field
-SLOAD(stmt),
-p1_Operand(stmt, 0, tDesc, fld),
+p1_Sload(stmt, fld),
 __REQ_Var(stmt, tDesc, stack) :-
 	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, "getstatic", fld),

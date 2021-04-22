@@ -73,7 +73,7 @@ SSA_Operand(stmt, pos, ssaVar) :-
 	!OperandHasDefInBB(stmt, var, _),
 	VarAliveAtStartOfBB(var, ssaVar, inBB).
 
-// TODO: more like a hack for missing cases
+// Deal with constant operands
 SSA_Operand(stmt, pos, var) :-
 	p1_Operand(stmt, pos, _, var),
 	BytecodeStmtInBB(stmt, inBB),

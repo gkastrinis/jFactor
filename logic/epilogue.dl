@@ -20,10 +20,14 @@ Operator(stmt, op) :- p1_Operator(bcStmt, op), __BCToFinal(bcStmt, stmt).
 Operand_VAR(stmt, pos, type, oper) :-
 	p1_Operand(bcStmt, pos, _, oper),
 	__BCToFinal(bcStmt, stmt),
-	(VAR(_, oper, type, _) ; Field(oper, type, _, _)).
+	VAR(_, oper, type, _).
 
 Operand_CONST(stmt, pos, type, oper) :-
-	p1_Operand(bcStmt, pos, type, oper),
+	p1_Operand(bcStmt, pos, tDesc, oper),
 	__BCToFinal(bcStmt, stmt),
 	!VAR(_, oper, _, _),
-	!Field(oper, _, _, _).
+	(TypeToDesc(type, tDesc) ; (!TypeToDesc(_, tDesc), type = tDesc)).
+
+SLOAD(stmt, fld) :-
+	p1_Sload(bcStmt, fld),
+	__BCToFinal(bcStmt, stmt).
