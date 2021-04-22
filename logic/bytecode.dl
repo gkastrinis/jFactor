@@ -24,11 +24,6 @@
 .decl __REQ_Assign(stmt: symbol, to: symbol)
 .decl __REQ_Operand(stmt: symbol, pos: number, type: symbol, value: symbol)
 
-#define BIN_OPERATION(stmt, op, type0, oper0, type1, oper1) \
-p1_Operator(stmt, op), \
-__REQ_Operand(stmt, 0, type0, oper0), \
-__REQ_Operand(stmt, 1, type1, oper1)
-
 #define TDESC(type, desc) \
 (TypeToDesc(type, desc) ; (!TypeToDesc(type, _), desc = type))
 
@@ -71,7 +66,9 @@ __REQ_StackForNext(stmt, stack) :-
 
 // Compute an intermediate result
 // Swap order of operands due to stack semantics
-BIN_OPERATION(stmt, op, type0, oper0, type1, oper1),
+p1_Operator(stmt, op),
+__REQ_Operand(stmt, 0, type0, oper0),
+__REQ_Operand(stmt, 1, type1, oper1),
 __REQ_Var(stmt, type, stack) :-
 	StackBeforeStmt(stmt, TOP(type1, oper1, TOP(type0, oper0, stack))),
 	OpcodeExt(stmt, opcode, _),
@@ -88,7 +85,9 @@ __REQ_Var(stmt, type, stack) :-
 
 // Handle ++, --, +=, -=
 p1_Assign(stmt, var),
-BIN_OPERATION(stmt, op, tDesc0, var, tDesc1, value),
+p1_Operator(stmt, op),
+p1_Operand(stmt, 0, tDesc0, var),
+p1_Operand(stmt, 1, tDesc1, value),
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, stack),
 	((OpcodeExt(stmt, "X-inc", var), op = "+") ;
@@ -98,14 +97,18 @@ __REQ_StackForNext(stmt, stack) :-
 
 // Handle conditional jumps
 IF(stmt, nextStmt),
-BIN_OPERATION(stmt, op, type0, oper0, type1, oper1),
+p1_Operator(stmt, op),
+p1_Operand(stmt, 0, type0, oper0),
+p1_Operand(stmt, 1, type1, oper1),
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, TOP(type0, oper0, stack)),
 	OpcodeExt(stmt, opcode, nextStmt),
 	ImplicitCondJumpOpcode(opcode, op, type1, oper1).
 
 IF(stmt, nextStmt),
-BIN_OPERATION(stmt, op, type0, oper0, type1, oper1),
+p1_Operator(stmt, op),
+p1_Operand(stmt, 0, type0, oper0),
+p1_Operand(stmt, 1, type1, oper1),
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, TOP(type1, oper1, TOP(type0, oper0, stack))),
 	OpcodeExt(stmt, opcode, nextStmt),
@@ -267,10 +270,14 @@ StackBeforeStmt(handlerStmt, [type, nil]) :-
 ///////////////////////////////////////////////////////////////
 
 // Approve all assignments, except self-assign ones
-// TODO x = x op ...
 p1_Assign(stmt, to) :-
 	__REQ_Assign(stmt, to),
 	!__REQ_Operand(stmt, 0, _, to).
+
+p1_Assign(stmt, to) :-
+	__REQ_Assign(stmt, to),
+	__REQ_Operand(stmt, 0, _, to),
+	__REQ_Operand(stmt, 1, _, _).
 
 p1_Operand(stmt, pos, type, oper) :-
 	__REQ_Operand(stmt, pos, type, oper),

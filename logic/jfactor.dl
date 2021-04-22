@@ -10,7 +10,7 @@
 .output OpcodeExt
 
 // FACTS //
-.output VAR
+//.output VAR
 .output FORMAL_PARAM
 .output Stmt
 
@@ -42,8 +42,8 @@
 //.output VarAliveAtStartOfBB
 //.output VarAliveAtEndOfBB
 
+.output p1_Assign
 .output p1_Operand
-.output __REQ_Operand
 
 .decl __StackForSymbol(stack: Stack)
 __StackForSymbol(stack) :- StackBeforeStmt(_, stack).
