@@ -302,13 +302,13 @@ TypeToDesc("long", ";J").
 TypeToDesc("short", ";S").
 TypeToDesc("void", ";V").
 
-ConstLoadOpcode("X-Bconst", desc) :- TypeToDesc("byte", desc).
-ConstLoadOpcode("X-Cconst", desc) :- TypeToDesc("char", desc).
-ConstLoadOpcode("X-Dconst", desc) :- TypeToDesc("double", desc).
-ConstLoadOpcode("X-Fconst", desc) :- TypeToDesc("float", desc).
-ConstLoadOpcode("X-Iconst", desc) :- TypeToDesc("int", desc).
-ConstLoadOpcode("X-Jconst", desc) :- TypeToDesc("long", desc).
-ConstLoadOpcode("X-Sconst", desc) :- TypeToDesc("short", desc).
+ConstLoadOpcode("X-Bconst", ";B").
+ConstLoadOpcode("X-Cconst", ";C").
+ConstLoadOpcode("X-Dconst", ";D").
+ConstLoadOpcode("X-Fconst", ";F").
+ConstLoadOpcode("X-Iconst", ";I").
+ConstLoadOpcode("X-Jconst", ";J").
+ConstLoadOpcode("X-Sconst", ";S").
 ConstLoadOpcode("X-Lconst", ";L"). // string literals or NULL
 
 BinOpcode("X-add", "+").
@@ -332,12 +332,12 @@ CallOpcode("invokespecial").
 CallOpcode("X-invokeinit").
 CallOpcode("invokestatic").
 
-ImplicitCondJumpOpcode("ifeq", "==", "I", "0").
-ImplicitCondJumpOpcode("ifne", "!=", "I", "0").
-ImplicitCondJumpOpcode("iflt", "<", "I", "0").
-ImplicitCondJumpOpcode("ifge", ">=", "I", "0").
-ImplicitCondJumpOpcode("ifgt", ">", "I", "0").
-ImplicitCondJumpOpcode("ifle", "<=", "I", "0").
+ImplicitCondJumpOpcode("ifeq", "==", ";B", "0").
+ImplicitCondJumpOpcode("ifne", "!=", ";B", "0").
+ImplicitCondJumpOpcode("iflt", "<", ";B", "0").
+ImplicitCondJumpOpcode("ifge", ">=", ";B", "0").
+ImplicitCondJumpOpcode("ifgt", ">", ";B", "0").
+ImplicitCondJumpOpcode("ifle", "<=", ";B", "0").
 ImplicitCondJumpOpcode("ifnull", "==", ";L", "NULL").
 ImplicitCondJumpOpcode("ifnonnull", "!=", ";L", "NULL").
 
