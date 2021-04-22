@@ -309,7 +309,7 @@ ConstLoadOpcode("X-Fconst", desc) :- TypeToDesc("float", desc).
 ConstLoadOpcode("X-Iconst", desc) :- TypeToDesc("int", desc).
 ConstLoadOpcode("X-Jconst", desc) :- TypeToDesc("long", desc).
 ConstLoadOpcode("X-Sconst", desc) :- TypeToDesc("short", desc).
-ConstLoadOpcode("X-Lconst", ";L"). // string literals
+ConstLoadOpcode("X-Lconst", ";L"). // string literals or NULL
 
 BinOpcode("X-add", "+").
 BinOpcode("X-sub", "-").
@@ -338,8 +338,8 @@ ImplicitCondJumpOpcode("iflt", "<", "I", "0").
 ImplicitCondJumpOpcode("ifge", ">=", "I", "0").
 ImplicitCondJumpOpcode("ifgt", ">", "I", "0").
 ImplicitCondJumpOpcode("ifle", "<=", "I", "0").
-ImplicitCondJumpOpcode("ifnull", "==", "n", "NULL").
-ImplicitCondJumpOpcode("ifnonnull", "!=", "n", "NULL").
+ImplicitCondJumpOpcode("ifnull", "==", ";L", "NULL").
+ImplicitCondJumpOpcode("ifnonnull", "!=", ";L", "NULL").
 
 CondJumpOpcode("if_icmpeq", "==").
 CondJumpOpcode("if_icmpne", "!=").

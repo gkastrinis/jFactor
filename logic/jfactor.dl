@@ -13,6 +13,8 @@
 // FACTS //
 //.output VAR
 //.output VarRange
+//.output ConstType
+//.output SSAVarToOriginal
 //.output FORMAL_PARAM
 .output Stmt
 .output ASSIGN
@@ -35,6 +37,7 @@
 //.output NEXT
 //.output THROW
 //.output EXCEPTION_HANDLER
+
 
 //.output BB_Range
 //.output BB_DOM

@@ -13,7 +13,9 @@ VarRange(var, startIndex, endIndex) :-
 	Stmt(_, method, bcStartIndex, startIndex),
 	Stmt(_, method, bcEndIndex, endIndex).
 
-ASSIGN(stmt, to) :- p2_Assign(bcStmt, _, to, _, _), __BCToFinal(bcStmt, stmt).
+SSAVarToOriginal(ssaVar, var) :- p2_Assign(_, var, ssaVar, _, _), !TempVar(_, var, _).
+
+ASSIGN(stmt, ssaTo) :- p2_Assign(bcStmt, _, ssaTo, _, _), __BCToFinal(bcStmt, stmt).
 
 Operator(stmt, op) :- p1_Operator(bcStmt, op), __BCToFinal(bcStmt, stmt).
 
@@ -26,6 +28,12 @@ Operand_CONST(stmt, pos, oper) :-
 	p2_Operand(bcStmt, pos, oper),
 	__BCToFinal(bcStmt, stmt),
 	!VAR(_, oper, _, _).
+
+// TODO needs refinement
+ConstType(const, type) :-
+	p1_Operand(_, _, desc, const),
+	!VAR(_, const, _, _),
+	(TypeToDesc(type, desc) ; (!TypeToDesc(_, desc), type = desc)).
 
 SLOAD(stmt, fld) :-
 	p1_Sload(bcStmt, fld),
