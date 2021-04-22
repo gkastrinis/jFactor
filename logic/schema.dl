@@ -60,6 +60,7 @@
 .decl ERROR(stmt: symbol, msg: symbol)
 .decl OpcodeExt(stmt: symbol, opcode: symbol, oper: symbol)
 // Bytecode phase
+.decl p1_Var(method: symbol, var: symbol, type: symbol, name: symbol)
 .decl p1_VarRange(var: symbol, startIndex: number, endIndex: number)
 .decl p1_Assign(stmt: symbol, to: symbol)
 .decl p1_Operator(stmt: symbol, op: symbol)

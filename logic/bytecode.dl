@@ -40,7 +40,7 @@ __REQ_StackForNext(stmt, TOP(tDesc, const, stack)) :-
 __REQ_StackForNext(stmt, TOP(tDesc, var, stack)) :-
 	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, "X-load", var),
-	VAR(_, var, type, _), TDESC(type, tDesc).
+	p1_Var(_, var, type, _), TDESC(type, tDesc).
 
 // value ->
 __REQ_Assign(stmt, var),
@@ -92,7 +92,7 @@ __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, stack),
 	((OpcodeExt(stmt, "X-inc", var), op = "+") ;
 	 (OpcodeExt(stmt, "X-dec", var), op = "-")),
-	VAR(_, var, type0, _), TDESC(type0, tDesc0),
+	p1_Var(_, var, type0, _), TDESC(type0, tDesc0),
 	IncValue(stmt, value, type1), TDESC(type1, tDesc1).
 
 // Handle conditional jumps
@@ -128,7 +128,7 @@ __RES_Var(stmt, var) :-
 	OpcodeExt(nextStmt, "X-store", var).
 
 // ...or generate a temp one
-VAR(method, var, type, varName),
+p1_Var(method, var, type, varName),
 TempVar(method, var, varName),
 __RES_Var(stmt, var) :-
 	__REQ_Var(stmt, type, _),
@@ -353,7 +353,7 @@ CondJumpOpcode("if_acmpne", "!=").
 ///////////////////////////////////////////////////////////////
 
 // The endIndex in VarRange is not inclusive in the original bytecode
-VAR(method, var, type, name),
+p1_Var(method, var, type, name),
 p1_VarRange(var, startIndex, endIndex - 1) :-
 	p0_Var(method, _, var, name, type, startLabel, endLabel),
 	Label(method, startLabel, _, startIndex),

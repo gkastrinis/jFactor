@@ -17,11 +17,12 @@ p2_Assign(stmt, var, ssaVar, PROLOGUE_INDEX, stmt) :-
 	ssaVar = cat(var, cat("#_PARAM_", to_string(pos))).
 
 // Rename all "normal" var assigns
-p2_Assign(stmt, var, cat(var, cat("#_", to_string(index))), index, startStmt) :-
+p2_Assign(stmt, var, ssaVar, index, startStmt) :-
 	p1_Assign(stmt, var),
 	BytecodeStmt(stmt, method, index),
 	BB_Range(method, startStmt, _, startIndex, endIndex),
-	startIndex <= index, index <= endIndex.
+	startIndex <= index, index <= endIndex,
+	ssaVar = cat(var, cat("#_", to_string(index))).
 
 // New var assignment at every Phi
 // Add a Phi node only when there are multiple assignments

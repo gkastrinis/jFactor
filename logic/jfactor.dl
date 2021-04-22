@@ -46,8 +46,8 @@
 //.output BB_DF_Upto
 
 .output SSA_PHI
-.output p2_Assign
-.output p2_Operand
+//.output p2_Assign
+//.output p2_Operand
 //.output VarAliveAtStartOfBB
 //.output VarAliveAtEndOfBB
 

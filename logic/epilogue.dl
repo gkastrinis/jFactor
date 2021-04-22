@@ -8,16 +8,30 @@ __BCToFinal(bcStmt, stmt) :-
 	Stmt(stmt, method, bcIndex, _).
 
 VarRange(var, startIndex, endIndex) :-
-	VAR(method, var, _, _),
+	p1_Var(method, var, _, _),
 	p1_VarRange(var, bcStartIndex, bcEndIndex),
 	Stmt(_, method, bcStartIndex, startIndex),
 	Stmt(_, method, bcEndIndex, endIndex).
 
-SSAVarToOriginal(ssaVar, var) :- p2_Assign(_, var, ssaVar, _, _), !TempVar(_, var, _).
+Operator(stmt, op) :-
+	p1_Operator(bcStmt, op),
+	__BCToFinal(bcStmt, stmt).
 
-ASSIGN(stmt, ssaTo) :- p2_Assign(bcStmt, _, ssaTo, _, _), __BCToFinal(bcStmt, stmt).
+VAR(method, ssaVar, type, name) :-
+	p1_Var(method, var, type, name),
+	p2_Assign(_, var, ssaVar, _, _).
 
-Operator(stmt, op) :- p1_Operator(bcStmt, op), __BCToFinal(bcStmt, stmt).
+VAR(method, var, type, name) :-
+	p1_Var(method, var, type, name),
+	!p2_Assign(_, var, _, _, _).
+
+SSAVarToOriginal(ssaVar, var) :-
+	p2_Assign(_, var, ssaVar, _, _),
+	!TempVar(_, var, _).
+
+ASSIGN(stmt, ssaTo) :-
+	p2_Assign(bcStmt, _, ssaTo, _, _),
+	__BCToFinal(bcStmt, stmt).
 
 Operand_VAR(stmt, pos, oper) :-
 	p2_Operand(bcStmt, pos, oper),
