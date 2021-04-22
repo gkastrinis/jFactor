@@ -26,7 +26,6 @@
 //.output IF
 //.output GOTO
 //.output ALLOC
-.output ACTUAL_PARAM
 //.output ACTUAL_RET
 //.output VCALL
 //.output SPCALL

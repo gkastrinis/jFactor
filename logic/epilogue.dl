@@ -46,7 +46,7 @@ Operand_CONST(stmt, pos, oper, type) :-
 	p1_Operand(bcStmt, pos, tDesc, oper),
 	BCToFinal(bcStmt, stmt),
 	!VAR(_, oper, _, _),
-	(TypeToDesc(type, tDesc) ; (!TypeToDesc(_, tDesc), type = tDesc)).
+	DESC2T(type, tDesc).
 
 SLOAD(stmt, fld) :- p1_Sload(bcStmt, fld), BCToFinal(bcStmt, stmt).
 
@@ -67,11 +67,6 @@ GOTO(stmt, jumpStmt) :-
 ALLOC(stmt, ssaTo, heap, type) :-
 	p1_Alloc(bcStmt, to, heap, type),
 	p2_Assign(bcStmt, to, ssaTo, _, _),
-	BCToFinal(bcStmt, stmt).
-
-// TODO with const args / or SSA
-ACTUAL_PARAM(stmt, pos, param) :-
-	p1_ActualParam(bcStmt, pos, param),
 	BCToFinal(bcStmt, stmt).
 
 ACTUAL_RET(stmt, ssaVar) :-
