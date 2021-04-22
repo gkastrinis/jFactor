@@ -232,6 +232,8 @@ SPCALL(stmt, base, sig) :-
 	OpcodeExt(stmt, "invokespecial", sig),
 	__REQ_ActualParam(stmt, -1, TOP(_, base, _)).
 
+SCALL(stmt, sig) :- OpcodeExt(stmt, "invokestatic", sig).
+
 // -> var to store invocation result
 __REQ_Var(stmt, retDesc, stack) :-
 	OpcodeExt(stmt, opcode, sig),
