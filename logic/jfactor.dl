@@ -29,14 +29,17 @@
 .output DEBUG
 .output ERROR
 
-.output BB_Range
-.output BB_DOM
+//.output BB_Range
+//.output BB_DOM
 //.output BB_DominanceFrontier
 //.output BB_DF_Local
 //.output BB_DF_Upto
 
-.output SSA_PHI
-.output SSA_Assign
-.output SSA_Operand
+//.output SSA_PHI
+//.output SSA_Assign
+//.output SSA_Operand
 //.output VarAliveAtStartOfBB
 //.output VarAliveAtEndOfBB
+
+.output TempVar
+.output PHASE1_Operand_CONST

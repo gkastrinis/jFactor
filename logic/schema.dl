@@ -1,6 +1,7 @@
 #pragma once
 
 // Output //
+// TODO stmt needs fixing after all the ordering is computed
 .decl VAR(method: symbol, var: symbol, type: symbol, name: symbol)
 .decl VCALL(stmt: symbol, base: symbol, sig: symbol)
 .decl SPCALL(stmt: symbol,  base: symbol, sig: symbol)
@@ -26,7 +27,7 @@
 .decl Handler(method: symbol, startLabel: symbol, endLabel: symbol, handlerLabel: symbol, type: symbol)
 .decl Invocation(sig: symbol, argc: number, retType: symbol)
 .decl AllocType(stmt: symbol, type: symbol)
-.decl IncValue(stmt: symbol, value : symbol)
+.decl IncValue(stmt: symbol, value : symbol, type: symbol)
 .input BytecodeStmt
 .input Label
 .input Handler
@@ -37,6 +38,8 @@
 .input __Var(filename="Var.facts")
 .decl __Opcode(stmt: symbol, opcode: symbol, oper: symbol)
 .input __Opcode(filename="Opcode.facts")
+.decl Field(fld: symbol, type: symbol, name: symbol, owner: symbol)
+.input Field
 
 // Core //
 .type Stack = [top: symbol, rest: Stack]
@@ -45,14 +48,17 @@
 .decl DEBUG(stmt: symbol, out: symbol)
 .decl ERROR(stmt: symbol, msg: symbol)
 .decl VarRange(var: symbol, startIndex: number, endIndex: number)
+.decl TempVar(method: symbol, var: symbol, name: symbol)
 .decl PHASE1_Assign(stmt: symbol, to: symbol)
-.decl PHASE1_Operand(stmt: symbol, pos: number, from: symbol)
+.decl PHASE1_Operand(stmt: symbol, pos: number, oper: symbol)
+.decl PHASE1_Operand_CONST(stmt: symbol, pos: number, constOper: symbol)
+
+.decl TypeToDesc(type: symbol, desc: symbol)
 
 // Opcodes
 .decl BinOpcode(opcode: symbol, op: symbol)
 .decl UnaryOpcode(opcode: symbol, op: symbol)
-.decl ConstLoadOpcode(opcode: symbol)
+.decl ConstLoadOpcode(opcode: symbol, type: symbol)
 .decl CallOpcode(opcode: symbol)
-.decl ZeroCondJumpOpcode(opcode: symbol, op: symbol)
-.decl NullCondJumpOpcode(opcode: symbol, op: symbol)
+.decl ImplicitCondJumpOpcode(opcode: symbol, op: symbol, type1: symbol, oper1: symbol)
 .decl CondJumpOpcode(opcode: symbol, op: symbol)

@@ -4,6 +4,8 @@ import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 
+import javax.xml.crypto.Data
+
 class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	int access
@@ -36,14 +38,15 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	void visitIincInsn(int var, int increment) {
 		counter++
-		if (increment >= 0) {
-			Database.instance.incValues << "${methID()}/$counter\t$increment\n"
-			rec("X-inc", var)
-		}
-		else {
-			Database.instance.incValues << "${methID()}/$counter\t${-1 * increment}\n"
-			rec("X-dec", var)
-		}
+		rec(increment >= 0 ? "X-inc" : "X-dec", var)
+		increment = Math.abs(increment)
+		def type
+		if (increment <= Byte.MAX_VALUE) type = "byte"
+		else if (increment <= Short.MAX_VALUE) type = "short"
+		else if (increment <= Integer.MAX_VALUE) type = "int"
+		else if (increment <= Long.MAX_VALUE) type = "long"
+		else throw new RuntimeException("weird size")
+		Database.instance.incValues << "${methID()}/$counter\t$increment\t$type\n"
 	}
 
 	// NOP, ACONST_NULL,
@@ -57,35 +60,35 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitInsn(int opcode) {
 		counter++
 		switch (opcode) {
-			case ICONST_M1: rec("X-const", "-1")
+			case ICONST_M1: rec("X-Iconst", "-1")
 				break
-			case ICONST_0: rec("X-const", "0")
+			case ICONST_0: rec("X-Iconst", "0")
 				break
-			case ICONST_1: rec("X-const", "1")
+			case ICONST_1: rec("X-Iconst", "1")
 				break
-			case ICONST_2: rec("X-const", "2")
+			case ICONST_2: rec("X-Iconst", "2")
 				break
-			case ICONST_3: rec("X-const", "3")
+			case ICONST_3: rec("X-Iconst", "3")
 				break
-			case ICONST_4: rec("X-const", "4")
+			case ICONST_4: rec("X-Iconst", "4")
 				break
-			case ICONST_5: rec("X-const", "5")
+			case ICONST_5: rec("X-Iconst", "5")
 				break
-			case LCONST_0: rec("X-const", "0L")
+			case LCONST_0: rec("X-Lconst", "0L")
 				break
-			case LCONST_1: rec("X-const", "1L")
+			case LCONST_1: rec("X-Jconst", "1L")
 				break
-			case FCONST_0: rec("X-const", "0.0f")
+			case FCONST_0: rec("X-Jconst", "0.0f")
 				break
-			case FCONST_1: rec("X-const", "1.0f")
+			case FCONST_1: rec("X-Fconst", "1.0f")
 				break
-			case FCONST_2: rec("X-const", "2.0f")
+			case FCONST_2: rec("X-Fconst", "2.0f")
 				break
-			case DCONST_0: rec("X-const", "0.0")
+			case DCONST_0: rec("X-Dconst", "0.0")
 				break
-			case DCONST_1: rec("X-const", "1.0")
+			case DCONST_1: rec("X-Dconst", "1.0")
 				break
-			case ACONST_NULL: rec("X-const", "NULL")
+			case ACONST_NULL: rec("X-Lconst", "NULL")
 				break
 			case I2D: rec("i2d")
 				break
@@ -272,22 +275,45 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	void visitLdcInsn(Object value) {
 		counter++
-		if (value instanceof String)
+		def cmd
+		if (value instanceof Byte)
+			rec("X-Bconst", value)
+		else if (value instanceof Character)
+			rec("X-Cconst", value)
+		else if (value instanceof Float)
+			rec("X-Fconst", value)
+		else if (value instanceof Double)
+			rec("X-Dconst", value)
+		else if (value instanceof Integer)
+			rec("X-Iconst", value)
+		else if (value instanceof Long)
+			rec("X-Jconst", value)
+		else if (value instanceof Short)
+			rec("X-Sconst", value)
+		else if (value instanceof String) {
 			value = "\"${value.replaceAll("\t", "\\\\t").replaceAll("\"", "\\\\\"")}\""
-		rec("ldc", value)
+			rec("X-Lconst", value)
+		} else
+			throw new RuntimeException("Should handle type: " + value.class)
 	}
 
 	void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
 		counter++
+		owner = owner.replace("/", ".")
+		def (type, rest) = typeFromJVM(descriptor)
+		def fld = "<$owner: $type $name>"
+		// TODO avoid duplicates
+		Database.instance.fields << "$fld\t$type\t$name\t$owner\n"
 		switch (opcode) {
-			case GETSTATIC: rec("getstatic", "<$owner: $descriptor $name>")
+			case GETSTATIC:
+				rec("getstatic", fld)
 				break
 			case PUTSTATIC:
 				throw new RuntimeException()
 			case GETFIELD:
 				rec(opcode, "??")
 				break//throw new RuntimeException()
-			case PUTFIELD: rec("putfield", "<$owner: $descriptor $name>")
+			case PUTFIELD: rec("putfield", fld)
 				break
 			default: rec(opcode, "??")
 				break
@@ -297,9 +323,9 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitIntInsn(int opcode, int operand) {
 		counter++
 		switch (opcode) {
-			case BIPUSH: rec("bipush", operand)
+			case BIPUSH: rec("X-Bconst", operand)
 				break
-			case SIPUSH: rec("sipush", operand)
+			case SIPUSH: rec("X-Sconst", operand)
 				break
 			case NEWARRAY:
 				throw new RuntimeException()
@@ -339,7 +365,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	def varID(def name) { "${methID()}/$name" }
 
-	static def typeFromJVM(String str) {
+	static List typeFromJVM(String str) {
 		switch (str[0]) {
 			case 'B': return ["byte", str.drop(1)]
 			case 'C': return ["char", str.drop(1)]

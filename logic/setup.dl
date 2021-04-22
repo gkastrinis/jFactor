@@ -1,6 +1,24 @@
 #pragma once
 #include "schema.dl"
 
+TypeToDesc("byte", ";B").
+TypeToDesc("char", ";C").
+TypeToDesc("double", ";D").
+TypeToDesc("float", ";F").
+TypeToDesc("int", ";I").
+TypeToDesc("long", ";J").
+TypeToDesc("short", ";S").
+TypeToDesc("void", ";V").
+
+ConstLoadOpcode("X-Bconst", desc) :- TypeToDesc("byte", desc).
+ConstLoadOpcode("X-Cconst", desc) :- TypeToDesc("char", desc).
+ConstLoadOpcode("X-Dconst", desc) :- TypeToDesc("double", desc).
+ConstLoadOpcode("X-Fconst", desc) :- TypeToDesc("float", desc).
+ConstLoadOpcode("X-Iconst", desc) :- TypeToDesc("int", desc).
+ConstLoadOpcode("X-Jconst", desc) :- TypeToDesc("long", desc).
+ConstLoadOpcode("X-Sconst", desc) :- TypeToDesc("short", desc).
+ConstLoadOpcode("X-Lconst", ";L"). // string literals
+
 BinOpcode("X-add", "+").
 BinOpcode("X-sub", "-").
 BinOpcode("X-mul", "*").
@@ -17,23 +35,20 @@ BinOpcode("cmpl", "cmp").
 BinOpcode("cmpg", "cmp").
 UnaryOpcode("X-neg", "-").
 
-ConstLoadOpcode("X-const").
-ConstLoadOpcode("ldc").
-ConstLoadOpcode("bipush").
-ConstLoadOpcode("sipush").
 CallOpcode("invokevirtual").
 CallOpcode("invokespecial").
 CallOpcode("X-invokeinit").
 CallOpcode("invokestatic").
 
-ZeroCondJumpOpcode("ifeq", "==").
-ZeroCondJumpOpcode("ifne", "!=").
-ZeroCondJumpOpcode("iflt", "<").
-ZeroCondJumpOpcode("ifge", ">=").
-ZeroCondJumpOpcode("ifgt", ">").
-ZeroCondJumpOpcode("ifle", "<=").
-NullCondJumpOpcode("ifnull", "==").
-NullCondJumpOpcode("ifnonnull", "!=").
+ImplicitCondJumpOpcode("ifeq", "==", "I", "0").
+ImplicitCondJumpOpcode("ifne", "!=", "I", "0").
+ImplicitCondJumpOpcode("iflt", "<", "I", "0").
+ImplicitCondJumpOpcode("ifge", ">=", "I", "0").
+ImplicitCondJumpOpcode("ifgt", ">", "I", "0").
+ImplicitCondJumpOpcode("ifle", "<=", "I", "0").
+ImplicitCondJumpOpcode("ifnull", "==", "n", "NULL").
+ImplicitCondJumpOpcode("ifnonnull", "!=", "n", "NULL").
+
 CondJumpOpcode("if_icmpeq", "==").
 CondJumpOpcode("if_icmpne", "!=").
 CondJumpOpcode("if_icmplt", "<").
@@ -43,7 +58,6 @@ CondJumpOpcode("if_icmple", "<=").
 CondJumpOpcode("if_acmpeq", "==").
 CondJumpOpcode("if_acmpne", "!=").
 
-StackBeforeStmt(stmt, nil) :- BytecodeStmt(stmt, _, 0).
 
 // The endIndex in VarRange is not inclusive in the original bytecode
 VAR(method, var, type, name),
@@ -87,21 +101,17 @@ OpcodeExt(stmt, opcode, oper) :-
 	opcode != "X-inc",
 	opcode != "X-dec",
 	opcode != "goto",
-	!ZeroCondJumpOpcode(opcode, _),
-	!NullCondJumpOpcode(opcode, _),
+	!ImplicitCondJumpOpcode(opcode, _, _, _),
 	!CondJumpOpcode(opcode, _).
 
-IF(stmt, nextStmt),
 NEXT(stmt, nextStmt),
 OpcodeExt(stmt, opcode, nextStmt) :-
 	__Opcode(stmt, opcode, label),
-	(ZeroCondJumpOpcode(opcode, _) ;
-	 NullCondJumpOpcode(opcode, _) ;
+	(ImplicitCondJumpOpcode(opcode, _, _, _) ;
 	 CondJumpOpcode(opcode, _)),
 	BytecodeStmt(stmt, method, _),
 	Label(method, label, nextStmt, _).
 
-GOTO(stmt, nextStmt),
 NEXT(stmt, nextStmt),
 OpcodeExt(stmt, "goto", nextStmt) :-
 	__Opcode(stmt, "goto", label),
@@ -117,11 +127,6 @@ NEXT(stmt, cat(method, cat("/", to_string(i+1)))) :-
 	opcode != "X-return",
 	opcode != "return".
 
-// Propagate `stack` to all successors
-StackBeforeStmt(nextStmt, stack) :-
-	__REQ_StackForNext(stmt, stack),
-	NEXT(stmt, nextStmt).
-
 // Assume that the first instruction of a handler is a store
 EXCEPTION_HANDLER(method, startStmt, endStmt, handlerStmt, type, var) :-
 	Handler(method, startLabel, endLabel, handlerLabel, type),
@@ -132,9 +137,13 @@ EXCEPTION_HANDLER(method, startStmt, endStmt, handlerStmt, type, var) :-
 
 ///////////////////////////////////////////////////////////////
 
+.decl __StackForSymbol(stack: Stack)
+__StackForSymbol(stack) :- StackBeforeStmt(_, stack).
+__StackForSymbol(stack) :- __StackForSymbol([_, stack]).
+
 .decl __ToSymbol(stack: Stack, out: symbol)
-__ToSymbol(nil, "=@@=") :-
-	StackBeforeStmt(_, nil).
+__ToSymbol(nil, "=@@=") :- __StackForSymbol(nil).
 __ToSymbol([head, stack], cat(head, cat(", ", out0))) :-
-	StackBeforeStmt(_, [head, stack]), __ToSymbol(stack, out0).
+	__StackForSymbol([head, stack]), __ToSymbol(stack, out0).
+
 DEBUG(stmt, out) :- StackBeforeStmt(stmt, stack), __ToSymbol(stack, out).

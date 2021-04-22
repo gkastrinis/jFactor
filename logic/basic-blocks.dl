@@ -55,8 +55,7 @@ BB_End(method, stmt, index) :-
 BB_End(method, stmt, index),
 BB_Start(method, targetStmt, targetIndex) :-
 	OpcodeExt(stmt, opcode, targetStmt),
-	(ZeroCondJumpOpcode(opcode, _) ;
-	 NullCondJumpOpcode(opcode, _) ;
+	(ImplicitCondJumpOpcode(opcode, _, _, _) ;
 	 CondJumpOpcode(opcode, _) ;
 	 opcode = "goto"),
 	BytecodeStmt(stmt, method, index),

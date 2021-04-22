@@ -1,36 +1,55 @@
 #pragma once
 #include "schema.dl"
 
+// Annotate operands on the stack with type information
+#define TOP(type, oper, stack) [type, [oper, stack]]
+
+#define BIN_OPERATION(stmt, op, type0, oper0, type1, oper1) \
+OPERATOR(stmt, op), \
+__REQ_Operand2(stmt, 0, type0, oper0), \
+__REQ_Operand2(stmt, 1, type1, oper1)
+
+#define TDESC(type, desc) \
+(TypeToDesc(type, desc) ; (!TypeToDesc(type, _), desc = type))
+
+
 .decl __REQ_StackForNext(stmt: symbol, stack: Stack)
-.decl __REQ_Var(stmt: symbol, stack: Stack)
+.decl __REQ_Var(stmt: symbol, type: symbol, stack: Stack)
 .decl __RES_Var(stmt: symbol, var: symbol)
+
 .decl __REQ_ActualParam(stmt: symbol, pos: number, stack: Stack)
 .decl __REQ_Assign(stmt: symbol, to: symbol)
 .decl __REQ_Operand(stmt: symbol, pos: number, value: symbol)
+.decl __REQ_Operand2(stmt: symbol, pos: number, type: symbol, value: symbol)
+.output __REQ_Operand2
+
 
 // -> constant value
-__REQ_StackForNext(stmt, [const, stack]) :-
+__REQ_StackForNext(stmt, TOP(tDesc, const, stack)) :-
 	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, opcode, const),
-	ConstLoadOpcode(opcode).
+	ConstLoadOpcode(opcode, type), TDESC(type, tDesc).
 
 // -> value
-__REQ_StackForNext(stmt, [var, stack]) :-
+__REQ_StackForNext(stmt, TOP(tDesc, var, stack)) :-
 	StackBeforeStmt(stmt, stack),
-	OpcodeExt(stmt, "X-load", var).
+	OpcodeExt(stmt, "X-load", var),
+	VAR(_, var, type, _), TDESC(type, tDesc).
 
 // value ->
 __REQ_Assign(stmt, var),
 __REQ_Operand(stmt, 0, oper),
 __REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, [oper, stack]),
+	StackBeforeStmt(stmt, TOP(_, oper, stack)),
 	OpcodeExt(stmt, "X-store", var).
+// TODO compare types
+//	VAR(_, var, type, _).
 
 // return value ->
 RET(stmt),
 PHASE1_Operand(stmt, 0, oper),
 __REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, [oper, stack]),
+	StackBeforeStmt(stmt, TOP(_, oper, stack)),
 	OpcodeExt(stmt, "X-return", _).
 
 // return void
@@ -39,10 +58,96 @@ __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, "return", _).
 
-// -> heap id
-__REQ_StackForNext(stmt, [heap, stack]) :-
+// Compute an intermediate result
+// Swap order of operands due to stack semantics
+BIN_OPERATION(stmt, op, type0, oper0, type1, oper1),
+__REQ_Var(stmt, type, stack) :-
+	StackBeforeStmt(stmt, TOP(type1, oper1, TOP(type0, oper0, stack))),
+	OpcodeExt(stmt, opcode, _),
+	BinOpcode(opcode, op),
+	type = ";I". // todo infer type based on type1 and type0
+
+OPERATOR(stmt, op),
+__REQ_Operand2(stmt, 0, type0, oper0),
+__REQ_Var(stmt, type, stack) :-
+	StackBeforeStmt(stmt, TOP(type0, oper0, stack)),
+	OpcodeExt(stmt, opcode, _),
+	UnaryOpcode(opcode, op),
+	type = ";I". // todo infer type based on type1
+
+// Handle ++, --, +=, -=
+PHASE1_Assign(stmt, var),
+BIN_OPERATION(stmt, op, tDesc0, var, tDesc1, value),
+__REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, stack),
-	OpcodeExt(stmt, "new", heap).
+	((OpcodeExt(stmt, "X-inc", var), op = "+") ;
+	 (OpcodeExt(stmt, "X-dec", var), op = "-")),
+	VAR(_, var, type0, _), TDESC(type0, tDesc0),
+	IncValue(stmt, value, type1), TDESC(type1, tDesc1).
+
+// Handle conditional jumps
+IF(stmt, nextStmt),
+BIN_OPERATION(stmt, op, type0, oper0, type1, oper1),
+__REQ_StackForNext(stmt, stack) :-
+	StackBeforeStmt(stmt, TOP(type0, oper0, stack)),
+	OpcodeExt(stmt, opcode, nextStmt),
+	ImplicitCondJumpOpcode(opcode, op, type1, oper1).
+
+IF(stmt, nextStmt),
+BIN_OPERATION(stmt, op, type0, oper0, type1, oper1),
+__REQ_StackForNext(stmt, stack) :-
+	StackBeforeStmt(stmt, TOP(type1, oper1, TOP(type0, oper0, stack))),
+	OpcodeExt(stmt, opcode, nextStmt),
+	CondJumpOpcode(opcode, op).
+
+// ... and unconditional ones
+GOTO(stmt, nextStmt),
+__REQ_StackForNext(stmt, stack) :-
+	StackBeforeStmt(stmt, stack),
+	OpcodeExt(stmt, "goto", nextStmt).
+
+// Store the top of the stack into a var
+// Found in source code
+__RES_Var(stmt, var) :-
+	__REQ_Var(stmt, _, _), // TODO type check
+	NEXT(stmt, nextStmt),
+	OpcodeExt(nextStmt, "X-store", var).
+
+// ...or generate a temp one
+VAR(method, var, type, varName),
+TempVar(method, var, varName),
+__RES_Var(stmt, var) :-
+	__REQ_Var(stmt, type, _),
+	BytecodeStmt(stmt, method, i),
+	NEXT(stmt, nextStmt),
+	OpcodeExt(nextStmt, opcode, _),
+	opcode != "X-store",
+	varName = cat("$r", to_string(i)),
+	var = cat(cat(method, "/"), varName).
+
+// Handle all assignments to temp or source code vars
+__REQ_Assign(stmt, var),
+__REQ_StackForNext(stmt, TOP(type, var, stack)) :-
+	__REQ_Var(stmt, type, stack),
+	__RES_Var(stmt, var).
+
+// Fields... ///////////////////////////////////////////////////
+
+// Load static field
+SLOAD(stmt),
+PHASE1_Operand(stmt, 0, fld),
+__REQ_Var(stmt, type, stack) :-
+	StackBeforeStmt(stmt, stack),
+	OpcodeExt(stmt, "getstatic", fld),
+	Field(fld, type, _, _).
+
+///////////////////////////////////////////////////////////////
+
+// -> heap id
+__REQ_StackForNext(stmt, TOP(type, heap, stack)) :-
+	StackBeforeStmt(stmt, stack),
+	OpcodeExt(stmt, "new", heap),
+	AllocType(stmt, type).
 
 // Dup should only follow a `new` opcode -- ignore it
 __REQ_StackForNext(stmt, stack) :-
@@ -54,8 +159,12 @@ ERROR(stmt, "dup should follow only a `new` opcode") :-
 	NEXT(prev, stmt),
 	!OpcodeExt(prev, "new", _).
 
+__REQ_StackForNext(stmt, stack) :-
+	StackBeforeStmt(stmt, [_, stack]),
+	OpcodeExt(stmt, "pop", _).
 
-// Calls...
+// Calls... ///////////////////////////////////////////////////
+
 // Pop call arguments from stack
 __REQ_ActualParam(stmt, argc - 1, stack) :-
 	StackBeforeStmt(stmt, stack),
@@ -63,16 +172,16 @@ __REQ_ActualParam(stmt, argc - 1, stack) :-
 	CallOpcode(opcode),
 	Invocation(sig, argc, _).
 
-// actual arg1, arg2, ... ->
-__REQ_ActualParam(stmt, pos - 1, stack) :-
-	__REQ_ActualParam(stmt, pos, [_, stack]), pos >= 0.
-
 // index -1 should keep either the receiver object or a heap id
 // index -2 should keep the stack without anything related to the call
 
+// actual arg1, arg2, ... ->
+__REQ_ActualParam(stmt, pos - 1, stack) :-
+	__REQ_ActualParam(stmt, pos, TOP(_, _, stack)), pos >= 0.
+
 // receiver var, or heap allocation ->
 __REQ_ActualParam(stmt, -2, stack) :-
-	__REQ_ActualParam(stmt, -1, [_, stack]),
+	__REQ_ActualParam(stmt, -1, TOP(_, _, stack)),
 	OpcodeExt(stmt, opcode, _),
 	opcode != "invokestatic".
 
@@ -81,141 +190,68 @@ __REQ_ActualParam(stmt, -2, stack) :-
 	__REQ_ActualParam(stmt, -1, stack),
 	OpcodeExt(stmt, "invokestatic", _).
 
+// TODO do something with the type?
 ACTUAL_PARAM(stmt, pos, notHeap) :-
-	__REQ_ActualParam(stmt, pos, [notHeap, _]), pos >= 0,
+	__REQ_ActualParam(stmt, pos, TOP(_, notHeap, _)), pos >= 0,
 	!ALLOC(_, _, notHeap, _).
 
+// Use the var instead of the heap id, as argument
 ACTUAL_PARAM(stmt, pos, var) :-
-	__REQ_ActualParam(stmt, pos, [heap, _]), pos >= 0,
+	__REQ_ActualParam(stmt, pos, TOP(_, heap, _)), pos >= 0,
 	ALLOC(_, var, heap, _).
 
+// Pop receiver object from stack
+VCALL(stmt, base, sig) :-
+	OpcodeExt(stmt, "invokevirtual", sig),
+	__REQ_ActualParam(stmt, -1, TOP(_, base, _)).
+
+// Pop receiver object from stack
+ALLOC(allocStmt, base, heap, type),
+SPCALL(stmt, base, sig) :-
+	OpcodeExt(stmt, "X-invokeinit", sig),
+	__REQ_ActualParam(stmt, -1, TOP(type, heap, _)),
+	OpcodeExt(allocStmt, "new", heap),
+	__RES_Var(stmt, base).
+
+// Pop receiver object from stack
+SPCALL(stmt, base, sig) :-
+	OpcodeExt(stmt, "invokespecial", sig),
+	__REQ_ActualParam(stmt, -1, TOP(_, base, _)).
+
 // -> var to store invocation result
-__REQ_Var(stmt, stack) :-
+__REQ_Var(stmt, retDesc, stack) :-
 	OpcodeExt(stmt, opcode, sig),
 	CallOpcode(opcode),
 	Invocation(sig, _, retType),
 	(retType != "void" ; opcode = "X-invokeinit"),
+	TypeToDesc(retType, retDesc),
 	__REQ_ActualParam(stmt, -2, stack).
 
-// Propagate stack on non-returning calls
+// Propagate stack on void-returning calls (that are not constructors)
 __REQ_StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, opcode, sig),
 	CallOpcode(opcode),
 	Invocation(sig, _, "void"), opcode != "X-invokeinit",
 	__REQ_ActualParam(stmt, -2, stack).
 
-// Pop receiver object from stack
-ALLOC(allocStmt, base, heap, type),
-SPCALL(stmt, base, sig) :-
-	OpcodeExt(stmt, "X-invokeinit", sig),
-	__REQ_ActualParam(stmt, -1, [heap, _]),
-	OpcodeExt(allocStmt, "new", heap),
-	__RES_Var(stmt, base),
-	AllocType(allocStmt, type).
+///////////////////////////////////////////////////////////////
 
-// Pop receiver object from stack
-SPCALL(stmt, base, sig) :-
-	OpcodeExt(stmt, "invokespecial", sig),
-	__REQ_ActualParam(stmt, -1, [base, _]).
-
-// Pop receiver object from stack
-VCALL(stmt, base, sig) :-
-	OpcodeExt(stmt, "invokevirtual", sig),
-	__REQ_ActualParam(stmt, -1, [base, _]).
-
-
-// Store the top of the stack into a var
-// Found in source code
-__RES_Var(stmt, var) :-
-	__REQ_Var(stmt, _),
-	NEXT(stmt, nextStmt),
-	OpcodeExt(nextStmt, "X-store", var).
-
-// ...or generate a temp one
-__RES_Var(stmt, var) :-
-	__REQ_Var(stmt, _),
-	BytecodeStmt(stmt, method, i),
-	NEXT(stmt, nextStmt),
-	OpcodeExt(nextStmt, opcode, _),
-	opcode != "X-store",
-	var = cat(cat(method, "/"), cat("$r", to_string(i))).
-
-// Handle all assignments to temp or source code vars
-__REQ_Assign(stmt, var),
-__REQ_StackForNext(stmt, [var, stack]) :-
-	__REQ_Var(stmt, stack),
-	__RES_Var(stmt, var).
-
-// Compute an intermediate result
-// Swap order of operands due to stack semantics
-OPERATOR(stmt, op),
-PHASE1_Operand(stmt, 0, oper0),
-PHASE1_Operand(stmt, 1, oper1),
-__REQ_Var(stmt, stack) :-
-	StackBeforeStmt(stmt, [oper1, [oper0, stack]]),
-	OpcodeExt(stmt, opcode, _),
-	BinOpcode(opcode, op).
-
-OPERATOR(stmt, op),
-PHASE1_Operand(stmt, 0, oper),
-__REQ_Var(stmt, stack) :-
-	StackBeforeStmt(stmt, [oper, stack]),
-	OpcodeExt(stmt, opcode, _),
-	UnaryOpcode(opcode, op).
-
-// Handle ++, --, +=, -=
-PHASE1_Assign(stmt, var),
-OPERATOR(stmt, op),
-PHASE1_Operand(stmt, 0, var),
-PHASE1_Operand(stmt, 1, value),
+THROW(stmt, var),
 __REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, stack),
-	((OpcodeExt(stmt, "X-inc", var), op = "+") ;
-	 (OpcodeExt(stmt, "X-dec", var), op = "-")),
-	IncValue(stmt, value).
+	StackBeforeStmt(stmt, TOP(_, var, stack)),
+	OpcodeExt(stmt, "athrow", _).
 
-// Load static field
-SLOAD(stmt),
-PHASE1_Operand(stmt, 0, fld),
-__REQ_Var(stmt, stack) :-
-	StackBeforeStmt(stmt, stack),
-	OpcodeExt(stmt, "getstatic", fld).
+// Initialize stack for first statement
+StackBeforeStmt(stmt, nil) :- BytecodeStmt(stmt, _, 0).
 
-__REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, [_, stack]),
-	OpcodeExt(stmt, "pop", _).
-
-// Handle conditional jumps
-OPERATOR(stmt, op),
-PHASE1_Operand(stmt, 0, oper0),
-PHASE1_Operand(stmt, 1, oper1),
-__REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, [oper0, stack]),
-	OpcodeExt(stmt, opcode, _),
-	((ZeroCondJumpOpcode(opcode, op), oper1 = "0") ;
-	 (NullCondJumpOpcode(opcode, op), oper1 = "NULL")).
-
-OPERATOR(stmt, op),
-PHASE1_Operand(stmt, 0, oper0),
-PHASE1_Operand(stmt, 1, oper1),
-__REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, [oper1, [oper0, stack]]),
-	OpcodeExt(stmt, opcode, _),
-	CondJumpOpcode(opcode, op).
-
-// ... and unconditional ones
-__REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, stack),
-	OpcodeExt(stmt, "goto", _).
+// Propagate stack to all successors
+StackBeforeStmt(nextStmt, stack) :-
+	__REQ_StackForNext(stmt, stack),
+	NEXT(stmt, nextStmt).
 
 // Prepare stack for an exception handler
 StackBeforeStmt(handlerStmt, [type, nil]) :-
 	EXCEPTION_HANDLER(_, _, _, handlerStmt, type, _).
-
-THROW(stmt, var),
-__REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, [var, stack]),
-	OpcodeExt(stmt, "athrow", _).
 
 ///////////////////////////////////////////////////////////////
 
@@ -227,6 +263,13 @@ PHASE1_Assign(stmt, to) :-
 PHASE1_Operand(stmt, pos, oper) :-
 	__REQ_Operand(stmt, pos, oper),
 	PHASE1_Assign(stmt, _).
+
+PHASE1_Operand(stmt, pos, oper) :-
+	__REQ_Operand2(stmt, pos, "v", oper).
+
+PHASE1_Operand(stmt, pos, oper),
+PHASE1_Operand_CONST(stmt, pos, oper) :-
+	__REQ_Operand2(stmt, pos, type, oper), type != "v".
 
 ACTUAL_RET(stmt, var) :-
 	__REQ_Assign(stmt, var),

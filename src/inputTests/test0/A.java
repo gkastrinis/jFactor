@@ -251,9 +251,11 @@ public class A {
 	}
 
 	static int test17(int n) {
-		while (n > 0) {
+		while (n > 10) {
+			int a = 20;
 			System.out.println(n);
-			n--;
+			n-=11232;
+			n = n + a;
 		}
 		return n;
 	}
