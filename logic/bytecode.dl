@@ -52,14 +52,14 @@ __REQ_StackForNext(stmt, stack) :-
 //	VAR(_, var, type, _).
 
 // return value ->
-RET(stmt),
+p1_Ret(stmt),
 p1_Operand(stmt, 0, type, oper),
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, TOP(type, oper, stack)),
 	OpcodeExt(stmt, "X-return", _).
 
 // return void
-RET_VOID(stmt),
+p1_RetVoid(stmt),
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, "return", _).
@@ -96,7 +96,7 @@ __REQ_StackForNext(stmt, stack) :-
 	IncValue(stmt, value, type1), TDESC(type1, tDesc1).
 
 // Handle conditional jumps
-IF(stmt, nextStmt),
+p1_If(stmt, nextStmt),
 p1_Operator(stmt, op),
 p1_Operand(stmt, 0, type0, oper0),
 p1_Operand(stmt, 1, type1, oper1),
@@ -105,7 +105,7 @@ __REQ_StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, opcode, nextStmt),
 	ImplicitCondJumpOpcode(opcode, op, type1, oper1).
 
-IF(stmt, nextStmt),
+p1_If(stmt, nextStmt),
 p1_Operator(stmt, op),
 p1_Operand(stmt, 0, type0, oper0),
 p1_Operand(stmt, 1, type1, oper1),
@@ -115,7 +115,7 @@ __REQ_StackForNext(stmt, stack) :-
 	CondJumpOpcode(opcode, op).
 
 // ... and unconditional ones
-GOTO(stmt, nextStmt),
+p1_Goto(stmt, nextStmt),
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, "goto", nextStmt).
@@ -124,7 +124,7 @@ __REQ_StackForNext(stmt, stack) :-
 // Found in source code
 __RES_Var(stmt, var) :-
 	__REQ_Var(stmt, _, _), // TODO type check
-	NEXT(stmt, nextStmt),
+	p1_Next(stmt, nextStmt),
 	OpcodeExt(nextStmt, "X-store", var).
 
 // ...or generate a temp one
@@ -133,7 +133,7 @@ TempVar(method, var, varName),
 __RES_Var(stmt, var) :-
 	__REQ_Var(stmt, type, _),
 	BytecodeStmt(stmt, method, i),
-	NEXT(stmt, nextStmt),
+	p1_Next(stmt, nextStmt),
 	OpcodeExt(nextStmt, opcode, _),
 	opcode != "X-store",
 	varName = cat("$r", to_string(i)),
@@ -169,7 +169,7 @@ __REQ_StackForNext(stmt, stack) :-
 
 ERROR(stmt, "dup should follow only a `new` opcode") :-
 	OpcodeExt(stmt, "dup", _),
-	NEXT(prev, stmt),
+	p1_Next(prev, stmt),
 	!OpcodeExt(prev, "new", _).
 
 __REQ_StackForNext(stmt, stack) :-
@@ -204,34 +204,34 @@ __REQ_ActualParam(stmt, -2, stack) :-
 	OpcodeExt(stmt, "invokestatic", _).
 
 // TODO do something with the type?
-ACTUAL_PARAM(stmt, pos, notHeap) :-
+p1_ActualParam(stmt, pos, notHeap) :-
 	__REQ_ActualParam(stmt, pos, TOP(_, notHeap, _)), pos >= 0,
-	!ALLOC(_, _, notHeap, _).
+	!p1_Alloc(_, _, notHeap, _).
 
 // Use the var instead of the heap id, as argument
-ACTUAL_PARAM(stmt, pos, var) :-
+p1_ActualParam(stmt, pos, var) :-
 	__REQ_ActualParam(stmt, pos, TOP(_, heap, _)), pos >= 0,
-	ALLOC(_, var, heap, _).
+	p1_Alloc(_, var, heap, _).
 
 // Pop receiver object from stack
-VCALL(stmt, base, sig) :-
+p1_VCall(stmt, base, sig) :-
 	OpcodeExt(stmt, "invokevirtual", sig),
 	__REQ_ActualParam(stmt, -1, TOP(_, base, _)).
 
 // Pop receiver object from stack
-ALLOC(allocStmt, base, heap, type),
-SPCALL(stmt, base, sig) :-
+p1_Alloc(allocStmt, base, heap, type),
+p1_SPCall(stmt, base, sig) :-
 	OpcodeExt(stmt, "X-invokeinit", sig),
 	__REQ_ActualParam(stmt, -1, TOP(type, heap, _)),
 	OpcodeExt(allocStmt, "new", heap),
 	__RES_Var(stmt, base).
 
 // Pop receiver object from stack
-SPCALL(stmt, base, sig) :-
+p1_SPCall(stmt, base, sig) :-
 	OpcodeExt(stmt, "invokespecial", sig),
 	__REQ_ActualParam(stmt, -1, TOP(_, base, _)).
 
-SCALL(stmt, sig) :- OpcodeExt(stmt, "invokestatic", sig).
+p1_SCall(stmt, sig) :- OpcodeExt(stmt, "invokestatic", sig).
 
 // -> var to store invocation result
 __REQ_Var(stmt, retDesc, stack) :-
@@ -251,7 +251,7 @@ __REQ_StackForNext(stmt, stack) :-
 
 ///////////////////////////////////////////////////////////////
 
-THROW(stmt, var),
+p1_Throw(stmt, var),
 __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, TOP(_, var, stack)),
 	OpcodeExt(stmt, "athrow", _).
@@ -262,11 +262,11 @@ StackBeforeStmt(stmt, nil) :- BytecodeStmt(stmt, _, 0).
 // Propagate stack to all successors
 StackBeforeStmt(nextStmt, stack) :-
 	__REQ_StackForNext(stmt, stack),
-	NEXT(stmt, nextStmt).
+	p1_Next(stmt, nextStmt).
 
 // Prepare stack for an exception handler
 StackBeforeStmt(handlerStmt, [type, nil]) :-
-	EXCEPTION_HANDLER(_, _, _, handlerStmt, type, _).
+	p1_ExceptionHandler(_, _, _, handlerStmt, type, _).
 
 ///////////////////////////////////////////////////////////////
 
@@ -284,7 +284,7 @@ p1_Operand(stmt, pos, type, oper) :-
 	__REQ_Operand(stmt, pos, type, oper),
 	p1_Assign(stmt, _).
 
-ACTUAL_RET(stmt, var) :-
+p1_ActualRet(stmt, var) :-
 	__REQ_Assign(stmt, var),
 	OpcodeExt(stmt, opcode, _),
 	CallOpcode(opcode).
@@ -393,7 +393,7 @@ OpcodeExt(stmt, opcode, oper) :-
 	!ImplicitCondJumpOpcode(opcode, _, _, _),
 	!CondJumpOpcode(opcode, _).
 
-NEXT(stmt, nextStmt),
+p1_Next(stmt, nextStmt),
 OpcodeExt(stmt, opcode, nextStmt) :-
 	p0_Opcode(stmt, opcode, label),
 	(ImplicitCondJumpOpcode(opcode, _, _, _) ;
@@ -401,14 +401,14 @@ OpcodeExt(stmt, opcode, nextStmt) :-
 	BytecodeStmt(stmt, method, _),
 	Label(method, label, nextStmt, _).
 
-NEXT(stmt, nextStmt),
+p1_Next(stmt, nextStmt),
 OpcodeExt(stmt, "goto", nextStmt) :-
 	p0_Opcode(stmt, "goto", label),
 	BytecodeStmt(stmt, method, _),
 	Label(method, label, nextStmt, _).
 
 // The next statement, in sequence, is also a successor in most cases
-NEXT(stmt, cat(method, cat("/", to_string(i+1)))) :-
+p1_Next(stmt, cat(method, cat("/", to_string(i + 1)))) :-
 	p0_Opcode(stmt, opcode, _),
 	BytecodeStmt(stmt, method, i),
 	opcode != "goto",
@@ -417,7 +417,7 @@ NEXT(stmt, cat(method, cat("/", to_string(i+1)))) :-
 	opcode != "return".
 
 // Assume that the first instruction of a handler is a store
-EXCEPTION_HANDLER(method, startStmt, endStmt, handlerStmt, type, var) :-
+p1_ExceptionHandler(method, startStmt, endStmt, handlerStmt, type, var) :-
 	Handler(method, startLabel, endLabel, handlerLabel, type),
 	Label(method, startLabel, startStmt, _),
 	Label(method, endLabel, endStmt, _),

@@ -34,7 +34,7 @@
 #define PROLOGUE_STMT(m) cat(m, "/prologue")
 
 // Dummy BB before the first, original, one
-NEXT(stmt, firstStmt),
+p1_Next(stmt, firstStmt),
 BB_Start(method, stmt, PROLOGUE_INDEX),
 BB_End(method, stmt, PROLOGUE_INDEX) :-
 	BytecodeStmt(firstStmt, method, 0),
@@ -64,18 +64,18 @@ BB_Start(method, targetStmt, targetIndex) :-
 // Whenever a BB ends, another starts
 BB_Start(method, startStmt, startIndex) :-
 	BB_End(method, endStmt, _),
-	NEXT(endStmt, startStmt),
+	p1_Next(endStmt, startStmt),
 	BytecodeStmt(startStmt, method, startIndex).
 
 // Whenever a BB starts, another ends
 BB_End(method, endStmt, endIndex) :-
 	BB_Start(method, startStmt, _),
-	NEXT(endStmt, startStmt),
+	p1_Next(endStmt, startStmt),
 	BytecodeStmt(endStmt, method, endIndex).
 
 // Each exception handler starts a basic block
 BB_Start(method, startStmt, startIndex) :-
-	EXCEPTION_HANDLER(method, _, _, startStmt, _, _),
+	p1_ExceptionHandler(method, _, _, startStmt, _, _),
 	BytecodeStmt(startStmt, method, startIndex).
 
 BytecodeStmtInBB(stmt, inBB) :-
@@ -92,7 +92,7 @@ endIndex = min index : { BB_End(method, _, index), index >= startIndex }.
 
 BB_FW_Edge(from, to) :-
 	BB_Range(method, from, end, _, endIndex),
-	NEXT(end, to),
+	p1_Next(end, to),
 	BB_Start(method, to, toIndex),
 	endIndex < toIndex.
 
@@ -131,7 +131,7 @@ BB_IDOM(from, to) :-
 // DF_Local(x) = { y in Succ(x) | x !idom y }
 BB_DF_Local(x, y) :-
 	BB_Range(_, x, end, _, _),
-	NEXT(end, y),
+	p1_Next(end, y),
 	!BB_IDOM(x, y).
 
 // DF_Upto(x, z) = { y in DF(z) | x idom z && x !idom y }

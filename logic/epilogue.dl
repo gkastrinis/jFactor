@@ -1,11 +1,16 @@
 #pragma once
 
 // Bytecode statement to final statement
-.decl __BCToFinal(bcStmt: symbol, stmt: symbol)
+.decl BCToFinal(bcStmt: symbol, stmt: symbol)
 
-__BCToFinal(bcStmt, stmt) :-
+BCToFinal(bcStmt, stmt) :-
 	BytecodeStmt(bcStmt, method, bcIndex),
 	Stmt(stmt, method, bcIndex, _).
+
+NextStmt(fromStmt, toStmt) :-
+	p1_Next(bcFromStmt, bcToStmt),
+	BCToFinal(bcFromStmt, fromStmt),
+	BCToFinal(bcToStmt, toStmt).
 
 VarRange(var, startIndex, endIndex) :-
 	p1_Var(method, var, _, _),
@@ -13,9 +18,7 @@ VarRange(var, startIndex, endIndex) :-
 	Stmt(_, method, bcStartIndex, startIndex),
 	Stmt(_, method, bcEndIndex, endIndex).
 
-Operator(stmt, op) :-
-	p1_Operator(bcStmt, op),
-	__BCToFinal(bcStmt, stmt).
+Operator(stmt, op) :- p1_Operator(bcStmt, op), BCToFinal(bcStmt, stmt).
 
 VAR(method, ssaVar, type, name) :-
 	p1_Var(method, var, type, name),
@@ -31,16 +34,16 @@ SSAVarToOriginal(ssaVar, var) :-
 
 ASSIGN(stmt, ssaTo) :-
 	p2_Assign(bcStmt, _, ssaTo, _, _),
-	__BCToFinal(bcStmt, stmt).
+	BCToFinal(bcStmt, stmt).
 
 Operand_VAR(stmt, pos, oper) :-
 	p2_Operand(bcStmt, pos, oper),
-	__BCToFinal(bcStmt, stmt),
+	BCToFinal(bcStmt, stmt),
 	VAR(_, oper, _, _).
 
 Operand_CONST(stmt, pos, oper) :-
 	p2_Operand(bcStmt, pos, oper),
-	__BCToFinal(bcStmt, stmt),
+	BCToFinal(bcStmt, stmt),
 	!VAR(_, oper, _, _).
 
 // TODO needs refinement
@@ -49,6 +52,57 @@ ConstType(const, type) :-
 	!VAR(_, const, _, _),
 	(TypeToDesc(type, desc) ; (!TypeToDesc(_, desc), type = desc)).
 
-SLOAD(stmt, fld) :-
-	p1_Sload(bcStmt, fld),
-	__BCToFinal(bcStmt, stmt).
+SLOAD(stmt, fld) :- p1_Sload(bcStmt, fld), BCToFinal(bcStmt, stmt).
+
+RET(stmt) :- p1_Ret(bcStmt), BCToFinal(bcStmt, stmt).
+
+RET_VOID(stmt) :- p1_RetVoid(bcStmt), BCToFinal(bcStmt, stmt).
+
+IF(stmt, jumpStmt) :-
+	p1_If(bcStmt, bcJumpStmt),
+	BCToFinal(bcStmt, stmt),
+	BCToFinal(bcJumpStmt, jumpStmt).
+
+GOTO(stmt, jumpStmt) :-
+	p1_Goto(bcStmt, bcJumpStmt),
+	BCToFinal(bcStmt, stmt),
+	BCToFinal(bcJumpStmt, jumpStmt).
+
+// TODO deals with `to` in SSA
+ALLOC(stmt, to, heap, type) :-
+	p1_Alloc(bcStmt, to, heap, type),
+	BCToFinal(bcStmt, stmt).
+
+// TODO with const args / or SSA
+ACTUAL_PARAM(stmt, pos, param):-
+	p1_ActualParam(bcStmt, pos, param),
+	BCToFinal(bcStmt, stmt).
+
+// TODO deals with `var` in SSA
+ACTUAL_RET(stmt, var) :-
+	p1_ActualRet(bsStmt, var),
+	BCToFinal(bsStmt, stmt).
+
+// TODO deals with `base` in SSA
+VCALL(stmt, base, sig) :-
+	p1_VCall(bcStmt, base, sig),
+	BCToFinal(bcStmt, stmt).
+
+// TODO deals with `base` in SSA
+SPCALL(stmt, base, sig) :-
+	p1_SPCall(bcStmt, base, sig),
+	BCToFinal(bcStmt, stmt).
+
+SCALL(stmt, sig) :- p1_SCall(bcStmt, sig), BCToFinal(bcStmt, stmt).
+
+// TODO deals with `var` in SSA
+THROW(stmt, var) :-
+	p1_Throw(bcStmt, var),
+	BCToFinal(bcStmt, stmt).
+
+// TODO deals with `var` in SSA
+EXCEPTION_HANDLER(method, fromStmt, toStmt, handlerStmt, type, var) :-
+	p1_ExceptionHandler(method, bcFromStmt, bcToStmt, bcHandlerStmt, type, var),
+	BCToFinal(bcFromStmt, fromStmt),
+	BCToFinal(bcToStmt, toStmt),
+	BCToFinal(bcHandlerStmt, handlerStmt).

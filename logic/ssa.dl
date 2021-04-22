@@ -40,7 +40,7 @@ p2_Assign(toBB, var, ssaVar, startIndex, toBB) :-
 VarAliveAtStartOfBB(var, ssaVar, toBB) :-
 	BB_Range(_, fromBB, endStmt, _, _),
 	VarAliveAtEndOfBB(var, ssaVar, fromBB),
-	NEXT(endStmt, toBB),
+	p1_Next(endStmt, toBB),
 	BB_Start(_, toBB, toBBIndex),
 	p1_VarRange(var, varStart, varEnd),
 	varStart <= toBBIndex, toBBIndex <= varEnd.

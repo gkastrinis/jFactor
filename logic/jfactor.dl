@@ -17,27 +17,24 @@
 //.output SSAVarToOriginal
 //.output FORMAL_PARAM
 .output Stmt
+//.output NextStmt
 .output ASSIGN
 //.output Operator
 .output Operand_VAR
 .output Operand_CONST
 //.output SLOAD
-
+//.output RET
+//.output RET_VOID
+//.output IF
+//.output GOTO
+//.output ALLOC
+//.output ACTUAL_PARAM
+//.output ACTUAL_RET
 //.output VCALL
 //.output SPCALL
 //.output SCALL
-//.output ALLOC
-//.output IF
-//.output GOTO
-//.output RET
-//.output RET_VOID
-//.output OPERATOR
-//.output ACTUAL_PARAM
-//.output ACTUAL_RET
-//.output NEXT
-//.output THROW
-//.output EXCEPTION_HANDLER
-
+.output THROW
+.output EXCEPTION_HANDLER
 
 //.output BB_Range
 //.output BB_DOM
