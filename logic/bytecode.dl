@@ -265,7 +265,7 @@ StackBeforeStmt(nextStmt, stack) :-
 	p1_Next(stmt, nextStmt).
 
 // Prepare stack for an exception handler
-StackBeforeStmt(handlerStmt, [type, nil]) :-
+StackBeforeStmt(handlerStmt, TOP(type, type, nil)) :-
 	p1_ExceptionHandler(_, _, _, handlerStmt, type, _).
 
 ///////////////////////////////////////////////////////////////
@@ -373,6 +373,7 @@ OpcodeExt(stmt, opcode, var) :-
 	(startIndex - 1) <= index, index <= endIndex.
 
 // Exception handlers might introduce unnamed variables
+p1_Var(method, var, "java.lang.Throwable", varName),
 TempVar(method, var, varName),
 OpcodeExt(stmt, opcode, var) :-
 	((p0_Opcode(stmt, "X-load", varIndex), opcode = "X-load");
