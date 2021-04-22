@@ -69,11 +69,6 @@ ALLOC(stmt, ssaTo, heap, type) :-
 	p2_Assign(bcStmt, to, ssaTo, _, _),
 	BCToFinal(bcStmt, stmt).
 
-ACTUAL_RET(stmt, ssaVar) :-
-	p1_ActualRet(bcStmt, var),
-	p2_Assign(bcStmt, var, ssaVar, _, _),
-	BCToFinal(bcStmt, stmt).
-
 VCALL(stmt, ssaBase, sig) :-
 	p1_VCall(bcStmt, base, sig),
 	p2_Assign(bcStmt, base, ssaBase, _, _),

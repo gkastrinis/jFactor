@@ -288,8 +288,10 @@ p1_Operand(stmt, pos, type, oper) :-
 	__REQ_Operand(stmt, pos, type, oper),
 	p1_Assign(stmt, _).
 
-p1_ActualRet(stmt, var) :-
+// Treat assigned return values as operands in pos -1
+p1_Operand(stmt, -1, type, var) :-
 	__REQ_Assign(stmt, var),
+	p1_Var(_, var, type, _),
 	OpcodeExt(stmt, opcode, _),
 	CallOpcode(opcode).
 
