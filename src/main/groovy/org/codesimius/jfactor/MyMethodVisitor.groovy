@@ -349,8 +349,10 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
 		def (type, rest) = typeFromJVM(descriptor)
 		Database.instance.vars << "${methID()}\t$index\t${varID(name)}\t$name\t$type\t$start\t$end\n"
-		if (name != "this" && start == firstLabel)
-			Database.instance.formals << "${methID()}\t${formalCounter++}\t${varID(name)}\n"
+		if (start == firstLabel) {
+			def pos = name == "this" ? -1 : formalCounter++
+			Database.instance.formals << "${methID()}\t$pos\t${varID(name)}\n"
+		}
 	}
 
 	void visitTryCatchBlock(Label start, Label end, Label handler, String type) {

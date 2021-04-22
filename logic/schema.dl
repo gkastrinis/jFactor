@@ -1,9 +1,7 @@
 #pragma once
 
 // Output //
-//.decl VAR(method: symbol, var: symbol, type: symbol, name: symbol)
-// TODO isn't it an input?
-.decl FORMAL_PARAM(method: symbol, pos: number, var: symbol)
+.decl VAR(method: symbol, var: symbol, type: symbol, name: symbol)
 // Stmt with the final ordering
 .decl Stmt(stmt: symbol, method: symbol, bytecodeIndex: number, index: number)
 
@@ -24,6 +22,8 @@
 .decl SLOAD(stmt: symbol)
 
 // Input //
+.decl FORMAL_PARAM(method: symbol, pos: number, var: symbol)
+
 .decl BytecodeStmt(id: symbol, method: symbol, index: number)
 .decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
 .decl Handler(method: symbol, startLabel: symbol, endLabel: symbol, handlerLabel: symbol, type: symbol)
@@ -33,6 +33,7 @@
 .decl Field(fld: symbol, type: symbol, name: symbol, owner: symbol)
 .decl __Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLable: symbol)
 .decl __Opcode(stmt: symbol, opcode: symbol, oper: symbol)
+.input FORMAL_PARAM
 .input BytecodeStmt
 .input Label
 .input Handler

@@ -351,12 +351,6 @@ VarRange(var, startIndex, endIndex - 1) :-
 	Label(method, startLabel, _, startIndex),
 	Label(method, endLabel, _, endIndex).
 
-// Formal params are alive from the beginning of the method
-// Assume slot order (i.e., index) reflects parameter order
-FORMAL_PARAM(method, to_number(pos), var) :-
-	__Var(method, pos, var, _, _, startLabel, _),
-	Label(method, startLabel, _, 0).
-
 // Match load/store statements to variable scopes
 // The first store statement of a variable is located
 // one index before the variable's scope start
