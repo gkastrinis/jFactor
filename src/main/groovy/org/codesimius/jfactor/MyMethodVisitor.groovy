@@ -13,14 +13,14 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	String desc
 	String signature
 	String[] exceptions
-
 	String declaringType
-	int counter
+	Set<String> visitedFlds
 
+	int counter
 	Label firstLabel
 	int formalCounter
 
-	MyMethodVisitor(int access, String name, String desc, String signature, String[] exceptions, String declaringType) {
+	MyMethodVisitor(int access, String name, String desc, String signature, String[] exceptions, String declaringType, Set<String> visitedFlds) {
 		super(ASM9)
 		this.access = access
 		this.name = name
@@ -28,7 +28,8 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		this.signature = signature
 		this.exceptions = exceptions
 		this.declaringType = declaringType
-		println "$access $name $desc $signature"
+		this.visitedFlds = visitedFlds
+		//println "$access $name $desc $signature"
 		counter = -1
 		formalCounter = 0
 		exceptions?.each {
@@ -302,8 +303,10 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		owner = owner.replace("/", ".")
 		def (type, rest) = typeFromJVM(descriptor)
 		def fld = "<$owner: $type $name>"
-		// TODO avoid duplicates
-		Database.instance.fields << "$fld\t$type\t$name\t$owner\n"
+		if (fld !in visitedFlds) {
+			Database.instance.fields << "$fld\t$type\t$name\t$owner\n"
+			visitedFlds << fld
+		}
 		switch (opcode) {
 			case GETSTATIC:
 				rec("getstatic", fld)
