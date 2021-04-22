@@ -4,8 +4,6 @@
 
 // Basic-block `inBB` needs a phi-node for variable `var`
 .decl SSA_PHI(inBB: symbol, var: symbol)
-.decl SSA_Assign(stmt: symbol, var: symbol, ssaVar: symbol, index: number, inBB: symbol)
-.decl SSA_Operand(stmt: symbol, pos: number, from: symbol)
 .decl VarAliveAtStartOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
 .decl VarAliveAtEndOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
 .decl OperandHasDefInBB(stmt: symbol, var: symbol, ssaVar: symbol)
@@ -13,13 +11,13 @@
 // Mock assignments to formal parameters so they are treated uniformly
 // in the rest of the SSA logic
 // Mock assignments are placed in the fake prologue BB
-SSA_Assign(stmt, var, ssaVar, PROLOGUE_INDEX, stmt) :-
+p2_Assign(stmt, var, ssaVar, PROLOGUE_INDEX, stmt) :-
 	FORMAL_PARAM(method, pos, var),
 	BB_Start(method, stmt, PROLOGUE_INDEX),
 	ssaVar = cat(var, cat("#_PARAM_", to_string(pos))).
 
 // Rename all "normal" var assigns
-SSA_Assign(stmt, var, cat(var, cat("#_", to_string(index))), index, startStmt) :-
+p2_Assign(stmt, var, cat(var, cat("#_", to_string(index))), index, startStmt) :-
 	p1_Assign(stmt, var),
 	BytecodeStmt(stmt, method, index),
 	BB_Range(method, startStmt, _, startIndex, endIndex),
@@ -28,10 +26,10 @@ SSA_Assign(stmt, var, cat(var, cat("#_", to_string(index))), index, startStmt) :
 // New var assignment at every Phi
 // Add a Phi node only when there are multiple assignments
 SSA_PHI(toBB, var),
-SSA_Assign(toBB, var, ssaVar, startIndex, toBB) :-
-	SSA_Assign(_, var, _, _, fromBB1),
+p2_Assign(toBB, var, ssaVar, startIndex, toBB) :-
+	p2_Assign(_, var, _, _, fromBB1),
 	BB_DominanceFrontier(fromBB1, toBB),
-	SSA_Assign(_, var, _, _, fromBB2),
+	p2_Assign(_, var, _, _, fromBB2),
 	fromBB1 != fromBB2,
 	p1_VarRange(var, varStart, varEnd),
 	BB_Start(_, toBB, startIndex),
@@ -47,34 +45,34 @@ VarAliveAtStartOfBB(var, ssaVar, toBB) :-
 	varStart <= toBBIndex, toBBIndex <= varEnd.
 
 VarAliveAtEndOfBB(var, ssaVar, inBB) :-
-	SSA_Assign(_, var, ssaVar, maxIndex, inBB),
-	maxIndex = max index : SSA_Assign(_, var, _, index, inBB).
+	p2_Assign(_, var, ssaVar, maxIndex, inBB),
+	maxIndex = max index : p2_Assign(_, var, _, index, inBB).
 
 VarAliveAtEndOfBB(var, ssaVar, inBB) :-
 	BB_Start(_, inBB, _),
 	VarAliveAtStartOfBB(var, ssaVar, inBB),
-	!SSA_Assign(_, var, _, _, inBB).
+	!p2_Assign(_, var, _, _, inBB).
 
-SSA_Operand(inBB, 0, ssaVar) :-
+p2_Operand(inBB, 0, ssaVar) :-
 	SSA_PHI(inBB, var),
 	VarAliveAtStartOfBB(var, ssaVar, inBB).
 
-SSA_Operand(stmt, pos, ssaVar),
+p2_Operand(stmt, pos, ssaVar),
 OperandHasDefInBB(stmt, var, ssaVar) :-
 	p1_Operand(stmt, pos, _, var),
 	BytecodeStmt(stmt, _, index),
 	BytecodeStmtInBB(stmt, inBB),
-	SSA_Assign(_, var, ssaVar, maxMinIndex, inBB),
-	maxMinIndex = max minIndex : { SSA_Assign(_, var, ssaVar, minIndex, inBB), minIndex < index }.
+	p2_Assign(_, var, ssaVar, maxMinIndex, inBB),
+	maxMinIndex = max minIndex : { p2_Assign(_, var, ssaVar, minIndex, inBB), minIndex < index }.
 
-SSA_Operand(stmt, pos, ssaVar) :-
+p2_Operand(stmt, pos, ssaVar) :-
 	p1_Operand(stmt, pos, _, var),
 	BytecodeStmtInBB(stmt, inBB),
 	!OperandHasDefInBB(stmt, var, _),
 	VarAliveAtStartOfBB(var, ssaVar, inBB).
 
 // Deal with constant operands
-SSA_Operand(stmt, pos, var) :-
+p2_Operand(stmt, pos, var) :-
 	p1_Operand(stmt, pos, _, var),
 	BytecodeStmtInBB(stmt, inBB),
 	!OperandHasDefInBB(stmt, var, _),

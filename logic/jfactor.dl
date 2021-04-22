@@ -9,8 +9,6 @@
 .output DEBUG
 .output ERROR
 .output OpcodeExt
-.output p1_Assign
-.output p1_Operand
 
 // FACTS //
 //.output VAR
@@ -45,8 +43,8 @@
 //.output BB_DF_Upto
 
 .output SSA_PHI
-.output SSA_Assign
-.output SSA_Operand
+.output p2_Assign
+.output p2_Operand
 //.output VarAliveAtStartOfBB
 //.output VarAliveAtEndOfBB
 

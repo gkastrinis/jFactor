@@ -13,20 +13,19 @@ VarRange(var, startIndex, endIndex) :-
 	Stmt(_, method, bcStartIndex, startIndex),
 	Stmt(_, method, bcEndIndex, endIndex).
 
-ASSIGN(stmt, to) :- p1_Assign(bcStmt, to), __BCToFinal(bcStmt, stmt).
+ASSIGN(stmt, to) :- p2_Assign(bcStmt, _, to, _, _), __BCToFinal(bcStmt, stmt).
 
 Operator(stmt, op) :- p1_Operator(bcStmt, op), __BCToFinal(bcStmt, stmt).
 
-Operand_VAR(stmt, pos, type, oper) :-
-	p1_Operand(bcStmt, pos, _, oper),
+Operand_VAR(stmt, pos, oper) :-
+	p2_Operand(bcStmt, pos, oper),
 	__BCToFinal(bcStmt, stmt),
-	VAR(_, oper, type, _).
+	VAR(_, oper, _, _).
 
-Operand_CONST(stmt, pos, type, oper) :-
-	p1_Operand(bcStmt, pos, tDesc, oper),
+Operand_CONST(stmt, pos, oper) :-
+	p2_Operand(bcStmt, pos, oper),
 	__BCToFinal(bcStmt, stmt),
-	!VAR(_, oper, _, _),
-	(TypeToDesc(type, tDesc) ; (!TypeToDesc(_, tDesc), type = tDesc)).
+	!VAR(_, oper, _, _).
 
 SLOAD(stmt, fld) :-
 	p1_Sload(bcStmt, fld),
