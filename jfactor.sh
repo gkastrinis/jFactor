@@ -8,5 +8,6 @@ if [ -s $BASE/ERROR.csv ] ; then echo "Errors encountered!!!" ; cat $BASE/ERROR.
 sort -V $BASE/OpcodeExt.csv | grep "$filter" > $BASE/OpcodeExt.facts
 rm $BASE/OpcodeExt.csv
 for f in $BASE/*csv ; do
+  if ! [ -s $f ] ; then continue ; fi
   (echo $f ; sort -V $f | grep "$filter"; echo) >> $BASE/all.txt
 done
