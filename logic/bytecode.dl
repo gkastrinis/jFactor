@@ -429,3 +429,7 @@ ERROR(handlerStmt, "first stmt of handler should be a `store` opcode") :-
 	Label(method, handlerLabel, handlerStmt, _),
 	OpcodeExt(handlerStmt, opcode, _),
 	opcode != "X-store".
+
+ERROR(stmt, cat("stmt is not associated with a stack for: ", opcode)) :-
+	OpcodeExt(stmt, opcode, _),
+	!StackBeforeStmt(stmt, _).
