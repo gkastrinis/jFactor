@@ -5,10 +5,9 @@
 #include "ordering.dl"
 #include "epilogue.dl"
 
-.decl DEBUG(stmt: symbol, out: symbol)
-.output DEBUG
 .output ERROR
 .output OpcodeExt
+.output StackBeforeStmt
 
 // FACTS //
 //.output VAR
@@ -47,14 +46,3 @@
 //.output p2_Operand
 //.output VarAliveAtStartOfBB
 //.output VarAliveAtEndOfBB
-
-.decl __StackForSymbol(stack: Stack)
-__StackForSymbol(stack) :- StackBeforeStmt(_, stack).
-__StackForSymbol(stack) :- __StackForSymbol([_, stack]).
-
-.decl __ToSymbol(stack: Stack, out: symbol)
-__ToSymbol(nil, "=@@=") :- __StackForSymbol(nil).
-__ToSymbol([head, stack], cat(head, cat(", ", out0))) :-
-	__StackForSymbol([head, stack]), __ToSymbol(stack, out0).
-
-DEBUG(stmt, out) :- StackBeforeStmt(stmt, stack), __ToSymbol(stack, out).
