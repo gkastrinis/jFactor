@@ -9,7 +9,7 @@
 
 CallStmt(stmt, sig) :- VCALL(stmt, _, sig) ; SPCALL(stmt, _, sig) ; SCALL(stmt, sig).
 
-// Ignore index == -1, that stores the receiver object of a call
+// Ignore `pos` == -1, that stores the receiver object of a call
 OperandStr(stmt, pos, name) :-
 	Operand_VAR(stmt, pos, var), pos >= 0,
 	VAR(_, var, _, name, _).
