@@ -9,29 +9,29 @@
 .decl VarAliveAtStartOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
 .decl VarAliveAtEndOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
 .decl OperandHasDefInBB(stmt: symbol, var: symbol, ssaVar: symbol)
-.decl __Rename(stmt: symbol, var: symbol, ssaVar: symbol, ssaName: symbol, index: number, inBB: symbol)
+.decl ToRename(stmt: symbol, var: symbol, ssaVar: symbol, ssaName: symbol, index: number, inBB: symbol)
 
 p2_VarInfo(ssaVar, ssaName, var),
 p2_Assign(stmt, var, ssaVar, index, inBB) :-
-	__Rename(stmt, var, ssaVar, ssaName, index, inBB),
+	ToRename(stmt, var, ssaVar, ssaName, index, inBB),
 	!TempVar(var, _).
 
 // Skip renaming of temp vars. They are assigned only once
 p2_VarInfo(var, name, var),
 p2_Assign(stmt, var, var, index, inBB) :-
-	__Rename(stmt, var, _, _, index, inBB),
+	ToRename(stmt, var, _, _, index, inBB),
 	TempVar(var, name).
 
 // Mock assignments to formal parameters,
 // so they are treated uniformly in the rest of the SSA logic
 // Mock assignments are placed in the fake prologue BB
-__Rename(stmt, var, var, name, PROLOGUE_INDEX, stmt) :-
+ToRename(stmt, var, var, name, PROLOGUE_INDEX, stmt) :-
 	FORMAL_PARAM(method, _, var),
 	BB_Start(method, stmt, PROLOGUE_INDEX),
 	p1_Var(_, var, _, name).
 
 // Rename all various "source" var assigns
-__Rename(stmt, var, ssaVar, ssaName, index, startStmt) :-
+ToRename(stmt, var, ssaVar, ssaName, index, startStmt) :-
 	(p1_Assign(stmt, var) ;
 	 p1_Alloc(stmt, var, _, _)),
 //	 p1_VCall(stmt, var, _) ;
@@ -47,7 +47,7 @@ __Rename(stmt, var, ssaVar, ssaName, index, startStmt) :-
 // New var assignment at every Phi
 // Add a Phi node only when there are multiple assignments
 PHI_HyperStmt(toBB, var),
-__Rename(toBB, var, ssaVar, ssaName, startIndex, toBB) :-
+ToRename(toBB, var, ssaVar, ssaName, startIndex, toBB) :-
 	p2_Assign(_, var, _, _, fromBB1),
 	BB_DominanceFrontier(fromBB1, toBB),
 	p2_Assign(_, var, _, _, fromBB2),

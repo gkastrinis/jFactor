@@ -69,7 +69,7 @@ TAC_RHS(stmt, fld) :- SLOAD(stmt, fld).
 
 
 
-#define ASSIGN_STR(stmt, to) __OperandStr(stmt, -3, to)
+#define ASSIGN_STR(stmt, to) OperandStr(stmt, -3, to)
 
 TAC(method, index, tac) :-
 	ASSIGN_STR(stmt, to),
