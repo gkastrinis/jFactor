@@ -4,6 +4,7 @@
 #include "ssa.dl"
 #include "ordering.dl"
 #include "epilogue.dl"
+#include "tac.dl"
 
 .output ERROR
 .output OpcodeExt
@@ -17,7 +18,7 @@
 .output Stmt
 //.output NextStmt
 .output ASSIGN
-//.output Operator
+.output Operator
 .output Operand_VAR
 .output Operand_CONST
 //.output SLOAD
@@ -41,3 +42,7 @@
 .output PHI_HyperStmt
 //.output VarAliveAtStartOfBB
 //.output VarAliveAtEndOfBB
+
+.output TAC
+
+// TODO profile rules

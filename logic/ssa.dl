@@ -18,6 +18,7 @@ p2_Assign(stmt, var, ssaVar, PROLOGUE_INDEX, stmt) :-
 	BB_Start(method, stmt, PROLOGUE_INDEX),
 	ssaVar = cat(var, cat("#_PARAM_", to_string(pos))).
 
+// TODO skip rename for temp vars -- they are used only once
 // Rename all various "source" var assigns
 p2_Assign(stmt, var, ssaVar, index, startStmt) :-
 	(p1_Assign(stmt, var) ;

@@ -34,7 +34,7 @@
 .decl BytecodeStmt(id: symbol, method: symbol, index: number)
 .decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
 .decl Handler(method: symbol, startLabel: symbol, endLabel: symbol, handlerLabel: symbol, type: symbol)
-.decl Invocation(sig: symbol, argc: number, retType: symbol)
+.decl Invocation(sig: symbol, argc: number, retType: symbol, qualifiedName: symbol)
 .decl AllocType(stmt: symbol, type: symbol)
 .decl IncValue(stmt: symbol, value : symbol, type: symbol)
 .decl Field(fld: symbol, type: symbol, name: symbol, owner: symbol)

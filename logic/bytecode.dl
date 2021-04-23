@@ -186,7 +186,7 @@ __REQ_ActualParam(stmt, argc - 1, stack) :-
 	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, opcode, sig),
 	CallOpcode(opcode),
-	Invocation(sig, argc, _).
+	Invocation(sig, argc, _, _).
 
 // index -1 should keep either the receiver object or a heap id
 // index -2 should keep the stack without anything related to the call
@@ -223,6 +223,7 @@ p1_VCall(stmt, base, sig) :-
 	__REQ_ActualParam(stmt, -1, TOP(_, base, _)).
 
 // Pop receiver object from stack
+p1_Assign(allocStmt, base),
 p1_Alloc(allocStmt, base, heap, type),
 p1_SPCall(stmt, base, sig) :-
 	OpcodeExt(stmt, "X-invokeinit", sig),
@@ -241,7 +242,7 @@ p1_SCall(stmt, sig) :- OpcodeExt(stmt, "invokestatic", sig).
 __REQ_Var(stmt, retDesc, stack) :-
 	OpcodeExt(stmt, opcode, sig),
 	CallOpcode(opcode),
-	Invocation(sig, _, retType),
+	Invocation(sig, _, retType, _),
 	(retType != "void" ; opcode = "X-invokeinit"),
 	T2DESC(retType, retDesc),
 	__REQ_ActualParam(stmt, -2, stack).
@@ -250,7 +251,7 @@ __REQ_Var(stmt, retDesc, stack) :-
 __REQ_StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, opcode, sig),
 	CallOpcode(opcode),
-	Invocation(sig, _, "void"), opcode != "X-invokeinit",
+	Invocation(sig, _, "void", _), opcode != "X-invokeinit",
 	__REQ_ActualParam(stmt, -2, stack).
 
 ///////////////////////////////////////////////////////////////

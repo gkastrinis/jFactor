@@ -211,7 +211,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
 		counter++
 		def sig = "${owner.replace("/", ".")}.${name}$descriptor"
-		callInfo(sig)
+		callInfo(sig, owner, name)
 		switch (opcode) {
 			case INVOKEVIRTUAL:
 				rec("invokevirtual", sig)
@@ -391,7 +391,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		}
 	}
 
-	static void callInfo(String sig) {
+	static void callInfo(String sig, String owner, String name) {
 		int argc = 0
 		def origSig = sig
 		sig = sig[(sig.indexOf("(") + 1)..-1]
@@ -402,6 +402,6 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 			sig = rest
 		}
 		def (retType, rest) = typeFromJVM(sig.drop(1))
-		Database.instance.invocations << "$origSig\t$argc\t$retType\n"
+		Database.instance.invocations << "$origSig\t$argc\t$retType\t$owner::$name\n"
 	}
 }

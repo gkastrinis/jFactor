@@ -1,0 +1,123 @@
+#pragma once
+#include "ordering.dl"
+
+.decl TAC(method: symbol, index: number, tac: symbol)
+.decl __OperandStr(stmt: symbol, pos: number, out: symbol)
+.decl __AllOperandsStrDownTo(stmt: symbol, pos: number, out: symbol)
+
+.decl TAC_RHS(stmt: symbol, out: symbol)
+
+// TODO fix ssaNames
+__OperandStr(stmt, pos, name) :-
+	Operand_VAR(stmt, pos, var),
+	Stmt(stmt, method, _, _),
+	VAR(method, var, _, name).
+
+__OperandStr(stmt, pos, const) :-
+	Operand_CONST(stmt, pos, const, _).
+
+// Put `to` variable in index -3
+__OperandStr(stmt, -3, name) :-
+	ASSIGN(stmt, to),
+	Stmt(stmt, method, _, _),
+	VAR(method, to, _, name).
+
+// BINOP
+TAC_RHS(stmt, out) :-
+	Operator(stmt, op),
+	__OperandStr(stmt, 0, out0),
+	__OperandStr(stmt, 1, out1),
+	out = cat(out0, cat(cat(" ", cat(op, " ")), out1)).
+
+// UNOP
+TAC_RHS(stmt, out) :-
+	Operator(stmt, op),
+	__OperandStr(stmt, 0, out0),
+	!__OperandStr(stmt, 1, _),
+	out = cat(cat(op, " "), out0).
+
+// Call parameters
+// Start from the last operand
+__AllOperandsStrDownTo(stmt, pos - 1, out) :-
+	__OperandStr(stmt, pos, out),
+	!Operator(stmt, _),
+	!__OperandStr(stmt, pos + 1, _).
+
+__AllOperandsStrDownTo(stmt, pos - 1, out) :-
+	__AllOperandsStrDownTo(stmt, pos, out0),
+	__OperandStr(stmt, pos, out1),
+	out = cat(out1, cat(", ", out0)).
+
+TAC_RHS(stmt, out) :-
+	(VCALL(stmt, base, sig) ; SPCALL(stmt, base, sig)),
+	__AllOperandsStrDownTo(stmt, -1, out0),
+	Invocation(sig, _, _, qualifiedName),
+	out = cat(cat(cat(base, "."), cat(qualifiedName, "(")), cat(out0, ")")).
+
+TAC_RHS(stmt, out) :-
+	SCALL(stmt, sig),
+	Invocation(sig, _, _, qualifiedName),
+	__AllOperandsStrDownTo(stmt, -1, out0),
+	out = cat(cat(qualifiedName, "("), cat(out0, ")")).
+
+// Allocations
+TAC_RHS(stmt, out) :-
+	ALLOC(stmt, _, _, type),
+	out = cat("new ", type).
+
+// Static field load
+TAC_RHS(stmt, fld) :- SLOAD(stmt, fld).
+
+
+
+#define ASSIGN_STR(stmt, to) __OperandStr(stmt, -3, to)
+
+TAC(method, index, tac) :-
+	ASSIGN_STR(stmt, to),
+	Stmt(stmt, method, _, index),
+	TAC_RHS(stmt, out0),
+	tac = cat(cat(to, " = "), out0).
+
+// Calls without a return value
+TAC(method, index, tac) :-
+	(VCALL(stmt, _, _) ;
+	 SPCALL(stmt, _, _) ;
+	 SCALL(stmt, _)),
+	Stmt(stmt, method, _, index),
+	TAC_RHS(stmt, tac),
+	!ASSIGN_STR(stmt, _).
+
+TAC(method, index, "return") :-
+	Stmt(stmt, method, _, index),
+	RET_VOID(stmt).
+
+TAC(method, index, tac) :-
+	Stmt(stmt, method, _, index),
+	RET(stmt),
+	__OperandStr(stmt, 0, out),
+	tac = cat("return ", out).
+
+TAC(method, index, tac) :-
+	Stmt(stmt, method, _, index),
+	GOTO(stmt, jumpStmt),
+	Stmt(jumpStmt, method, _, jumpIndex),
+	tac = cat("goto ", to_string(jumpIndex)).
+
+TAC(method, index, tac) :-
+	Stmt(stmt, method, _, index),
+	IF(stmt, jumpStmt),
+	Stmt(jumpStmt, method, _, jumpIndex),
+	TAC_RHS(stmt, out0),
+	tac = cat(cat("if (", out0), cat(") jump ", to_string(jumpIndex))).
+
+// TODO fix name
+TAC(method, index, tac) :-
+	Stmt(stmt, method, _, index),
+	THROW(stmt, var),
+	tac = cat("throw ", var).
+
+
+
+
+
+
