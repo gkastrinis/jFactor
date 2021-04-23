@@ -9,33 +9,45 @@
 .decl VarAliveAtStartOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
 .decl VarAliveAtEndOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
 .decl OperandHasDefInBB(stmt: symbol, var: symbol, ssaVar: symbol)
+.decl __Rename(stmt: symbol, var: symbol, ssaVar: symbol, ssaName: symbol, index: number, inBB: symbol)
+
+p2_VarInfo(ssaVar, ssaName, var),
+p2_Assign(stmt, var, ssaVar, index, inBB) :-
+	__Rename(stmt, var, ssaVar, ssaName, index, inBB),
+	!TempVar(var, _).
+
+// Skip renaming of temp vars. They are assigned only once
+p2_VarInfo(var, name, var),
+p2_Assign(stmt, var, var, index, inBB) :-
+	__Rename(stmt, var, _, _, index, inBB),
+	TempVar(var, name).
 
 // Mock assignments to formal parameters,
 // so they are treated uniformly in the rest of the SSA logic
 // Mock assignments are placed in the fake prologue BB
-SSA_VarInfo(var, name, var),
-p2_Assign(stmt, var, var, PROLOGUE_INDEX, stmt) :-
+__Rename(stmt, var, var, name, PROLOGUE_INDEX, stmt) :-
 	FORMAL_PARAM(method, _, var),
 	BB_Start(method, stmt, PROLOGUE_INDEX),
 	p1_Var(_, var, _, name).
 
-// TODO skip rename for temp vars -- they are used only once
 // Rename all various "source" var assigns
-p2_Assign(stmt, var, ssaVar, index, startStmt) :-
+__Rename(stmt, var, ssaVar, ssaName, index, startStmt) :-
 	(p1_Assign(stmt, var) ;
-	 p1_Alloc(stmt, var, _, _) ;
-	 p1_VCall(stmt, var, _) ;
-	 p1_SPCall(stmt, var, _) ;
-	 p1_Throw(stmt, var)),
+	 p1_Alloc(stmt, var, _, _)),
+//	 p1_VCall(stmt, var, _) ;
+//	 p1_SPCall(stmt, var, _) ;
+//	 p1_Throw(stmt, var)),
 	BytecodeStmt(stmt, method, index),
 	BB_Range(method, startStmt, _, startIndex, endIndex),
 	startIndex <= index, index <= endIndex,
-	ssaVar = cat(var, cat("#_", to_string(index))).
+	p1_Var(_, var, _, name),
+	suffix = cat("#_", to_string(index)),
+	ssaVar = cat(var, suffix), ssaName = cat(name, suffix).
 
 // New var assignment at every Phi
 // Add a Phi node only when there are multiple assignments
 PHI_HyperStmt(toBB, var),
-p2_Assign(toBB, var, ssaVar, startIndex, toBB) :-
+__Rename(toBB, var, ssaVar, ssaName, startIndex, toBB) :-
 	p2_Assign(_, var, _, _, fromBB1),
 	BB_DominanceFrontier(fromBB1, toBB),
 	p2_Assign(_, var, _, _, fromBB2),
@@ -43,7 +55,9 @@ p2_Assign(toBB, var, ssaVar, startIndex, toBB) :-
 	p1_VarRange(var, varStart, varEnd),
 	BB_Start(_, toBB, startIndex),
 	varStart <= startIndex, startIndex <= varEnd,
-	ssaVar = cat(var, cat("#_PHI_", to_string(startIndex))).
+	p1_Var(_, var, _, name),
+	suffix = cat("#_PHI_", to_string(startIndex)),
+	ssaVar = cat(var, suffix), ssaName = cat(name, suffix).
 
 VarAliveAtStartOfBB(var, ssaVar, toBB) :-
 	BB_Range(_, fromBB, endStmt, _, _),

@@ -2,62 +2,61 @@
 #include "ordering.dl"
 
 .decl TAC(method: symbol, index: number, tac: symbol)
-.decl __OperandStr(stmt: symbol, pos: number, out: symbol)
-.decl __AllOperandsStrDownTo(stmt: symbol, pos: number, out: symbol)
-
 .decl TAC_RHS(stmt: symbol, out: symbol)
+.decl OperandStr(stmt: symbol, pos: number, out: symbol)
+.decl AllOperandsStrDownTo(stmt: symbol, pos: number, out: symbol)
 
-// TODO fix ssaNames
-__OperandStr(stmt, pos, name) :-
+OperandStr(stmt, pos, name) :-
 	Operand_VAR(stmt, pos, var),
 	Stmt(stmt, method, _, _),
-	VAR(method, var, _, name).
+	VAR(method, var, _, name, _).
 
-__OperandStr(stmt, pos, const) :-
+OperandStr(stmt, pos, const) :-
 	Operand_CONST(stmt, pos, const, _).
 
 // Put `to` variable in index -3
-__OperandStr(stmt, -3, name) :-
+OperandStr(stmt, -3, name) :-
 	ASSIGN(stmt, to),
 	Stmt(stmt, method, _, _),
-	VAR(method, to, _, name).
+	VAR(method, to, _, name, _).
 
 // BINOP
 TAC_RHS(stmt, out) :-
 	Operator(stmt, op),
-	__OperandStr(stmt, 0, out0),
-	__OperandStr(stmt, 1, out1),
+	OperandStr(stmt, 0, out0),
+	OperandStr(stmt, 1, out1),
 	out = cat(out0, cat(cat(" ", cat(op, " ")), out1)).
 
 // UNOP
 TAC_RHS(stmt, out) :-
 	Operator(stmt, op),
-	__OperandStr(stmt, 0, out0),
-	!__OperandStr(stmt, 1, _),
+	OperandStr(stmt, 0, out0),
+	!OperandStr(stmt, 1, _),
 	out = cat(cat(op, " "), out0).
 
 // Call parameters
 // Start from the last operand
-__AllOperandsStrDownTo(stmt, pos - 1, out) :-
-	__OperandStr(stmt, pos, out),
+AllOperandsStrDownTo(stmt, pos - 1, out) :-
+	OperandStr(stmt, pos, out),
 	!Operator(stmt, _),
-	!__OperandStr(stmt, pos + 1, _).
+	!OperandStr(stmt, pos + 1, _).
 
-__AllOperandsStrDownTo(stmt, pos - 1, out) :-
-	__AllOperandsStrDownTo(stmt, pos, out0),
-	__OperandStr(stmt, pos, out1),
+AllOperandsStrDownTo(stmt, pos - 1, out) :-
+	AllOperandsStrDownTo(stmt, pos, out0),
+	OperandStr(stmt, pos, out1),
 	out = cat(out1, cat(", ", out0)).
 
+// TODO fix name
 TAC_RHS(stmt, out) :-
 	(VCALL(stmt, base, sig) ; SPCALL(stmt, base, sig)),
-	__AllOperandsStrDownTo(stmt, -1, out0),
+	AllOperandsStrDownTo(stmt, -1, out0),
 	Invocation(sig, _, _, qualifiedName),
 	out = cat(cat(cat(base, "."), cat(qualifiedName, "(")), cat(out0, ")")).
 
 TAC_RHS(stmt, out) :-
 	SCALL(stmt, sig),
 	Invocation(sig, _, _, qualifiedName),
-	__AllOperandsStrDownTo(stmt, -1, out0),
+	AllOperandsStrDownTo(stmt, -1, out0),
 	out = cat(cat(qualifiedName, "("), cat(out0, ")")).
 
 // Allocations
@@ -94,7 +93,7 @@ TAC(method, index, "return") :-
 TAC(method, index, tac) :-
 	Stmt(stmt, method, _, index),
 	RET(stmt),
-	__OperandStr(stmt, 0, out),
+	OperandStr(stmt, 0, out),
 	tac = cat("return ", out).
 
 TAC(method, index, tac) :-

@@ -7,7 +7,7 @@
 // Annotate operands on the stack with type information
 #define TOP(type, oper, stack) [type, [oper, stack]]
 
-.decl TempVar(method: symbol, var: symbol, name: symbol)
+.decl TempVar(var: symbol, name: symbol)
 .decl TypeToDesc(type: symbol, desc: symbol)
 // Opcodes
 .decl BinOpcode(opcode: symbol, op: symbol)
@@ -131,8 +131,8 @@ __RES_Var(stmt, var) :-
 	OpcodeExt(nextStmt, "X-store", var).
 
 // ...or generate a temp one
+TempVar(var, varName),
 p1_Var(method, var, type, varName),
-TempVar(method, var, varName),
 __RES_Var(stmt, var) :-
 	__REQ_Var(stmt, tDesc, _),
 	BytecodeStmt(stmt, method, i),
@@ -381,8 +381,8 @@ OpcodeExt(stmt, opcode, var) :-
 	(startIndex - 1) <= index, index <= endIndex.
 
 // Exception handlers might introduce unnamed variables
+TempVar(var, varName),
 p1_Var(method, var, "java.lang.Throwable", varName),
-TempVar(method, var, varName),
 OpcodeExt(stmt, opcode, var) :-
 	((p0_Opcode(stmt, "X-load", varIndex), opcode = "X-load");
 	 (p0_Opcode(stmt, "X-store", varIndex), opcode = "X-store")),

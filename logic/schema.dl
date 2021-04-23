@@ -6,9 +6,8 @@
 // * SSA = Static Single Assignment
 
 // Output //
-.decl VAR(method: symbol, var: symbol, type: symbol, name: symbol)
+.decl VAR(method: symbol, var: symbol, type: symbol, name: symbol, ogName: symbol)
 .decl VarRange(var: symbol, startIndex: number, endIndex: number)
-.decl SSA_VarInfo(ssaVar: symbol, ssaName: symbol, var: symbol)
 // Stmt with the final ordering
 .decl Stmt(stmt: symbol, method: symbol, bytecodeIndex: number, index: number)
 .decl NextStmt(fromStmt: symbol, toStmt: symbol)
@@ -75,3 +74,4 @@
 // SSA phase
 .decl p2_Assign(stmt: symbol, var: symbol, ssaVar: symbol, index: number, inBB: symbol)
 .decl p2_Operand(stmt: symbol, pos: number, oper: symbol)
+.decl p2_VarInfo(ssaVar: symbol, ssaName: symbol, var: symbol)

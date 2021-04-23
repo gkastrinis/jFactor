@@ -11,9 +11,8 @@
 .output StackBeforeStmt
 
 // FACTS //
-//.output VAR
+.output VAR
 //.output VarRange
-.output SSA_VarInfo
 //.output FORMAL_PARAM
 .output Stmt
 //.output NextStmt
@@ -40,6 +39,8 @@
 //.output BB_DF_Upto
 
 .output PHI_HyperStmt
+.output p2_Assign
+.output p2_Operand
 //.output VarAliveAtStartOfBB
 //.output VarAliveAtEndOfBB
 
