@@ -271,9 +271,13 @@ public class A {
 	}
 
 	static int test19(int c) {
-		int a = c;
+		int a = test20(2, 10, c+1);
 		int b = a + 20;
 		return a * b;
+	}
+
+	static int test20(int a, double b, int c) {
+		return b > 2 ? (a * 10 + c) : 42;
 	}
 }
 

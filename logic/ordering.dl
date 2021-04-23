@@ -3,8 +3,9 @@
 #include "basic-blocks.dl"
 #include "ssa.dl"
 
-// Order vars participating in PHI nodes, for a given basic block
+// Order vars participating in phi-nodes, for a given basic block
 .decl VarToOrdInPHI(inBB: symbol, var: symbol, order: number)
+// Order ssa-variants of a var participating in phi-nodes, for a given basic block
 .decl SSAVarToOrdInPHI(inBB: symbol, var: symbol, ssaVar: symbol, order: number)
 .decl NextBaseVarInPHI(inBB: symbol, prev: symbol, next: symbol)
 .decl NextSSAVarForVarInPHI(inBB: symbol, var: symbol, prev: symbol, next: symbol)
@@ -16,7 +17,7 @@
 // Arbitrarily order vars, and ssa-variants of the same var
 VarToOrdInPHI(inBB, var, ord(var)),
 SSAVarToOrdInPHI(inBB, var, ssaVar, ord(ssaVar)) :-
-	SSA_PHI(inBB, var),
+	PHI_HyperStmt(inBB, var),
 	VarAliveAtStartOfBB(var, ssaVar, inBB).
 
 // Order base vars
@@ -62,7 +63,7 @@ NextVarInPHI(prevIndex + 1, inBB, prevVar, nextVar) :-
 
 // Total count of variables in current PHI hyper-node
 TotalSSAVarsInPHI(inBB, lastIndex + 1) :-
-	SSA_PHI(inBB, _),
+	PHI_HyperStmt(inBB, _),
 	NextVarInPHI(lastIndex, inBB, _, lastVar),
 	!NextVarInPHI(lastIndex + 1, inBB, lastVar, _).
 
@@ -73,7 +74,7 @@ Stmt(PROLOGUE_STMT(method), method, -1, -1) :- BytecodeStmt(_, method, _).
 Stmt(newStmt, method, bytecodeIndex + 1, prevIndex + 1) :-
 	Stmt(_, method, bytecodeIndex, prevIndex),
 	BytecodeStmt(stmt, method, bytecodeIndex + 1),
-	!SSA_PHI(stmt, _),
+	!PHI_HyperStmt(stmt, _),
 	index = prevIndex + 1,
 	newStmt = cat(method, cat("/", to_string(index))).
 
@@ -81,7 +82,7 @@ Stmt(newStmt, method, bytecodeIndex + 1, prevIndex + 1) :-
 Stmt(newStmt, method, bytecodeIndex + 1, index) :-
 	Stmt(_, method, bytecodeIndex, prevIndex),
 	BytecodeStmt(stmt, method, bytecodeIndex + 1),
-	SSA_PHI(stmt, _),
+	PHI_HyperStmt(stmt, _),
 	TotalSSAVarsInPHI(stmt, total),
 	index = prevIndex + 1 + total,
 	newStmt = cat(method, cat("/", to_string(index))).
@@ -91,7 +92,7 @@ Stmt(newStmt, method, bytecodeIndex + 1, index) :-
 Stmt(newStmt, method, -2, index) :-
 	Stmt(_, method, bytecodeIndex, prevIndex),
 	BytecodeStmt(stmt, method, bytecodeIndex + 1),
-	SSA_PHI(stmt, _),
+	PHI_HyperStmt(stmt, _),
 	NextVarInPHI(indexInPHI, stmt, _, _),
 	index = prevIndex + 1 + indexInPHI,
 	newStmt = cat(method, cat("/", cat(to_string(index), "/PHI"))).

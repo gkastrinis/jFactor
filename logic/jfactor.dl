@@ -38,9 +38,6 @@
 //.output BB_DF_Local
 //.output BB_DF_Upto
 
-.output p1_Operand
-.output SSA_PHI
-.output p2_Assign
-.output p2_Operand
+.output PHI_HyperStmt
 //.output VarAliveAtStartOfBB
 //.output VarAliveAtEndOfBB

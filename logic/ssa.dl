@@ -2,8 +2,10 @@
 #include "schema.dl"
 #include "basic-blocks.dl"
 
-// Basic-block `inBB` needs a phi-node for variable `var`
-.decl SSA_PHI(inBB: symbol, var: symbol)
+// The beginning of basic-block `inBB` needs a phi-node for variable `var`
+// A phi-node might implicate multiple operands, and in the end expand
+// into multiple assignments
+.decl PHI_HyperStmt(inBB: symbol, var: symbol)
 .decl VarAliveAtStartOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
 .decl VarAliveAtEndOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
 .decl OperandHasDefInBB(stmt: symbol, var: symbol, ssaVar: symbol)
@@ -30,7 +32,7 @@ p2_Assign(stmt, var, ssaVar, index, startStmt) :-
 
 // New var assignment at every Phi
 // Add a Phi node only when there are multiple assignments
-SSA_PHI(toBB, var),
+PHI_HyperStmt(toBB, var),
 p2_Assign(toBB, var, ssaVar, startIndex, toBB) :-
 	p2_Assign(_, var, _, _, fromBB1),
 	BB_DominanceFrontier(fromBB1, toBB),
@@ -59,7 +61,7 @@ VarAliveAtEndOfBB(var, ssaVar, inBB) :-
 	!p2_Assign(_, var, _, _, inBB).
 
 p2_Operand(inBB, 0, ssaVar) :-
-	SSA_PHI(inBB, var),
+	PHI_HyperStmt(inBB, var),
 	VarAliveAtStartOfBB(var, ssaVar, inBB).
 
 p2_Operand(stmt, pos, ssaVar),
