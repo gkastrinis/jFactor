@@ -14,9 +14,14 @@
 
 #define NIL "@"
 
-// Arbitrarily order vars, and ssa-variants of the same var
-VarToOrdInPHI(inBB, to, ord(to)),
-SSAVarToOrdInPHI(inBB, to, ssaTo, ord(ssaTo)) :- p2_PhiAssign(inBB, to, ssaTo).
+// Arbitrarily order vars
+VarToOrdInPHI(inBB, to, ord(to)) :- p2_PhiAssign(inBB, to, _).
+
+// ... and ssa-variants of the same var
+SSAVarToOrdInPHI(inBB, to, ssaVar, ord(ssaVar)) :-
+	p2_PhiAssign(inBB, to, _),
+	p2_Operand(inBB, 0, ssaVar),
+	p2_Assign(_, to, ssaVar, _, _).
 
 // Order base vars
 NextBaseVarInPHI(inBB, NIL, var) :-
@@ -87,10 +92,15 @@ Stmt(newStmt, method, bytecodeIndex + 1, index) :-
 
 // Give each PHI assignment an index based on ordering
 // -2 for original bytecode index
+// PHI_ASSIGN and Operand_VAR need to be here since
+// there is no original bytecode statement to map back to
+PHI_ASSIGN(newStmt, ssaTo),
+Operand_VAR(newStmt, 0, ssaVar),
 Stmt(newStmt, method, -2, index) :-
 	Stmt(_, method, bytecodeIndex, prevIndex),
 	BytecodeStmt(stmt, method, bytecodeIndex + 1),
-	p2_PhiAssign(stmt, _, _),
-	NextVarInPHI(indexInPHI, stmt, _, _),
+	p2_PhiAssign(stmt, to, ssaTo),
+	NextVarInPHI(indexInPHI, stmt, _, ssaVar),
+	SSAVarToOrdInPHI(stmt, to, ssaVar, _),
 	index = prevIndex + 1 + indexInPHI,
 	newStmt = cat(method, cat("/", cat(to_string(index), "/PHI"))).

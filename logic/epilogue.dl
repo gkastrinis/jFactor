@@ -34,10 +34,6 @@ ASSIGN(stmt, ssaTo) :-
 	!p2_PhiAssign(bcStmt, _, _),
 	BCToFinal(bcStmt, stmt).
 
-PHI_ASSIGN(stmt, ssaTo) :-
-	p2_PhiAssign(bcStmt, _, ssaTo),
-	BCToFinal(bcStmt, stmt).
-
 Operand_VAR(stmt, pos, oper) :-
 	p2_Operand(bcStmt, pos, oper),
 	BCToFinal(bcStmt, stmt),

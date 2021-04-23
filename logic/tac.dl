@@ -5,6 +5,9 @@
 .decl TAC_RHS(stmt: symbol, out: symbol)
 .decl OperandStr(stmt: symbol, pos: number, out: symbol)
 .decl AllOperandsStrDownTo(stmt: symbol, pos: number, out: symbol)
+.decl CallStmt(stmt: symbol, sig: symbol)
+
+CallStmt(stmt, sig) :- VCALL(stmt, _, sig) ; SPCALL(stmt, _, sig) ; SCALL(stmt, sig).
 
 // Ignore index == -1, that stores the receiver object of a call
 OperandStr(stmt, pos, name) :-
@@ -26,9 +29,11 @@ TAC_RHS(stmt, cat(cat(op, " "), out0)) :-
 	OperandStr(stmt, 0, out0),
 	!OperandStr(stmt, 1, _).
 
+// Move instructions or var initializations
 TAC_RHS(stmt, out) :-
-	!Operator(stmt, _),
 	OperandStr(stmt, 0, out),
+	!CallStmt(stmt, _),
+	!Operator(stmt, _),
 	!OperandStr(stmt, 1, _).
 
 // Call parameters
@@ -41,6 +46,11 @@ AllOperandsStrDownTo(stmt, pos - 1, out) :-
 AllOperandsStrDownTo(stmt, pos - 1, cat(out1, cat(", ", out))) :-
 	AllOperandsStrDownTo(stmt, pos, out),
 	OperandStr(stmt, pos, out1).
+
+// Invocations with no arguments
+AllOperandsStrDownTo(stmt, -1, "") :-
+	CallStmt(stmt, sig),
+	Invocation(sig, 0, _, _).
 
 TAC_RHS(stmt, cat(cat(cat(baseName, "."), cat(qualifiedName, "(")), cat(out, ")"))) :-
 	(VCALL(stmt, base, sig) ; SPCALL(stmt, base, sig)),
@@ -77,9 +87,7 @@ TAC(method, index, out) :-
 
 // Calls without a return value
 TAC(method, index, tac) :-
-	(VCALL(stmt, _, _) ;
-	 SPCALL(stmt, _, _) ;
-	 SCALL(stmt, _)),
+	CallStmt(stmt, _),
 	Stmt(stmt, method, _, index),
 	!ASSIGN(stmt, _),
 	TAC_RHS(stmt, tac).
@@ -98,12 +106,14 @@ TAC(method, index, cat("goto ", to_string(jumpIndex))) :-
 	GOTO(stmt, jumpStmt),
 	Stmt(jumpStmt, method, _, jumpIndex).
 
+// TODO recognise if block so it can be indented later
 TAC(method, index, cat(cat("if (", out), cat(") jump ", to_string(jumpIndex)))) :-
 	Stmt(stmt, method, _, index),
 	IF(stmt, jumpStmt),
 	Stmt(jumpStmt, method, _, jumpIndex),
 	TAC_RHS(stmt, out).
 
+// TODO mark handler blocks
 TAC(method, index, cat("throw ", varName)) :-
 	Stmt(stmt, method, _, index),
 	THROW(stmt, var),

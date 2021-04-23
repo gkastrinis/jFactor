@@ -5,7 +5,7 @@
 .decl ToRename(stmt: symbol, var: symbol, ssaVar: symbol, ssaName: symbol, index: number, inBB: symbol)
 .decl VarAliveAtStartOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
 .decl VarAliveAtEndOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
-.decl VarHasPrevDefInBB(stmt: symbol, var: symbol)
+.decl VarHasPrevDefInSameBB(stmt: symbol, var: symbol)
 .decl VarRead(stmt: symbol, var: symbol)
 .decl SSAVarForVarRead(stmt: symbol, var: symbol, ssaVar: symbol)
 
@@ -28,6 +28,7 @@ ToRename(stmt, var, var, name, PROLOGUE_INDEX, stmt) :-
 	BB_Start(method, stmt, PROLOGUE_INDEX),
 	p1_Var(_, var, _, name).
 
+// TODO dont rename vars that have only a single assignment?
 // Rename all various "source" var assigns
 ToRename(stmt, var, ssaVar, ssaName, index, startStmt) :-
 	((p1_Assign(stmt, var), !p1_InitCall(stmt)) ;
@@ -72,11 +73,8 @@ VarAliveAtEndOfBB(var, ssaVar, inBB) :-
 	!p2_Assign(_, var, _, _, inBB).
 
 
-// The operand of a PHI assignment
-p2_Operand(stmt, 0, ssaTo) :- p2_PhiAssign(stmt, _, ssaTo).
-
 // Previously, defined in this basic-block
-VarHasPrevDefInBB(stmt, var),
+VarHasPrevDefInSameBB(stmt, var),
 SSAVarForVarRead(stmt, var, ssaVar) :-
 	VarRead(stmt, var),
 	BytecodeStmt(stmt, _, index),
@@ -88,7 +86,7 @@ SSAVarForVarRead(stmt, var, ssaVar) :-
 SSAVarForVarRead(stmt, var, ssaVar) :-
 	VarRead(stmt, var),
 	BytecodeStmtInBB(stmt, inBB),
-	!VarHasPrevDefInBB(stmt, var),
+	!VarHasPrevDefInSameBB(stmt, var),
 	VarAliveAtStartOfBB(var, ssaVar, inBB).
 
 VarRead(stmt, var) :- p1_Operand(stmt, _, _, var).
@@ -100,9 +98,13 @@ p2_Operand(stmt, pos, ssaVar) :-
 	p1_Operand(stmt, pos, _, var),
 	SSAVarForVarRead(stmt, var, ssaVar).
 
+p2_Operand(inBB, 0, oper) :-
+	p2_PhiAssign(inBB, to, _),
+	VarAliveAtStartOfBB(to, oper, inBB).
+
 // Deal with constant operands
 p2_Operand(stmt, pos, oper) :-
 	p1_Operand(stmt, pos, _, oper),
 	BytecodeStmtInBB(stmt, inBB),
-	!VarHasPrevDefInBB(stmt, oper),
+	!VarHasPrevDefInSameBB(stmt, oper),
 	!VarAliveAtStartOfBB(oper, _, inBB).

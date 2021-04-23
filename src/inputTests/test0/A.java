@@ -58,7 +58,7 @@ public class A {
 	static void test5() {
 		long a = 1234;
 		long b = 5678;
-		boolean f1 = a > b;
+		boolean f1 = a > b; // TODO fix
 		float c = 1.2F;
 		float d = 3.4F;
 		boolean f2 = c <= d;
@@ -75,7 +75,7 @@ public class A {
 			y = 0;
 		} else
 			y = 1;
-		B b1 = new B();
+		B b1 = new B(); // TODO fix
 		B b2 = new B();
 		boolean f2 = (b1 == b2);
 		B b3 = null;
