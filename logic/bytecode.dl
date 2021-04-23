@@ -134,13 +134,14 @@ __RES_Var(stmt, var) :-
 p1_Var(method, var, type, varName),
 TempVar(method, var, varName),
 __RES_Var(stmt, var) :-
-	__REQ_Var(stmt, type, _),
+	__REQ_Var(stmt, tDesc, _),
 	BytecodeStmt(stmt, method, i),
 	p1_Next(stmt, nextStmt),
 	OpcodeExt(nextStmt, opcode, _),
 	opcode != "X-store",
 	varName = cat("$r", to_string(i)),
-	var = cat(cat(method, "/"), varName).
+	var = cat(cat(method, "/"), varName),
+	DESC2T(type, tDesc).
 
 // Handle all assignments to temp or source code vars
 __REQ_Assign(stmt, var),

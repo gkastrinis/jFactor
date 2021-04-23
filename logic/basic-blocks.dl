@@ -88,7 +88,7 @@ BytecodeStmtInBB(stmt, inBB) :-
 BB_Range(method, startStmt, endStmt, startIndex, endIndex) :-
 	BB_Start(method, startStmt, startIndex),
 	BB_End(method, endStmt, endIndex),
-endIndex = min index : { BB_End(method, _, index), index >= startIndex }.
+	endIndex = min index : { BB_End(method, _, index), index >= startIndex }.
 
 BB_FW_Edge(from, to) :-
 	BB_Range(method, from, end, _, endIndex),
