@@ -19,8 +19,8 @@
 //.output ASSIGN
 //.output PHI_ASSIGN
 //.output Operator
-.output Operand_VAR
-.output Operand_CONST
+//.output Operand_VAR
+//.output Operand_CONST
 //.output SLOAD
 //.output RET
 //.output RET_VOID
@@ -29,6 +29,7 @@
 //.output ALLOC
 //.output VCALL
 //.output SPCALL
+//.output INIT_CALL
 //.output SCALL
 //.output THROW
 //.output EXCEPTION_HANDLER

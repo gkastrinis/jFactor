@@ -6,19 +6,13 @@
 .decl OperandStr(stmt: symbol, pos: number, out: symbol)
 .decl AllOperandsStrDownTo(stmt: symbol, pos: number, out: symbol)
 
-OperandStr(stmt, pos, varName) :-
-	Operand_VAR(stmt, pos, var),
-	Stmt(stmt, method, _, _),
-	VAR(method, var, _, varName, _).
+// Ignore index == -1, that stores the receiver object of a call
+OperandStr(stmt, pos, name) :-
+	Operand_VAR(stmt, pos, var), pos >= 0,
+	VAR(_, var, _, name, _).
 
 OperandStr(stmt, pos, const) :-
 	Operand_CONST(stmt, pos, const, _).
-
-// Put `to` variable in index -3
-OperandStr(stmt, -3, name) :-
-	ASSIGN(stmt, to),
-	Stmt(stmt, method, _, _),
-	VAR(method, to, _, name, _).
 
 // BINOP
 TAC_RHS(stmt, cat(out0, cat(cat(" ", cat(op, " ")), out1))) :-
@@ -30,6 +24,11 @@ TAC_RHS(stmt, cat(out0, cat(cat(" ", cat(op, " ")), out1))) :-
 TAC_RHS(stmt, cat(cat(op, " "), out0)) :-
 	Operator(stmt, op),
 	OperandStr(stmt, 0, out0),
+	!OperandStr(stmt, 1, _).
+
+TAC_RHS(stmt, out) :-
+	!Operator(stmt, _),
+	OperandStr(stmt, 0, out),
 	!OperandStr(stmt, 1, _).
 
 // Call parameters
@@ -61,12 +60,19 @@ TAC_RHS(stmt, cat("new ", type)) :- ALLOC(stmt, _, _, type).
 // Static field load
 TAC_RHS(stmt, fld) :- SLOAD(stmt, fld).
 
-
-#define ASSIGN_STR(stmt, to) OperandStr(stmt, -3, to)
-
-TAC(method, index, cat(cat(to, " = "), out)) :-
-	ASSIGN_STR(stmt, to),
+// Assignments
+TAC(method, index, cat(cat(name, " = "), out)) :-
+	(ASSIGN(stmt, to) ; PHI_ASSIGN(stmt, to)),
+	!INIT_CALL(stmt),
 	Stmt(stmt, method, _, index),
+	VAR(method, to, _, name, _),
+	TAC_RHS(stmt, out).
+
+// Calls to a constructor
+TAC(method, index, out) :-
+	Stmt(stmt, method, _, index),
+	SPCALL(stmt, _, _),
+	INIT_CALL(stmt),
 	TAC_RHS(stmt, out).
 
 // Calls without a return value
@@ -75,7 +81,7 @@ TAC(method, index, tac) :-
 	 SPCALL(stmt, _, _) ;
 	 SCALL(stmt, _)),
 	Stmt(stmt, method, _, index),
-	!ASSIGN_STR(stmt, _),
+	!ASSIGN(stmt, _),
 	TAC_RHS(stmt, tac).
 
 TAC(method, index, "return") :-
