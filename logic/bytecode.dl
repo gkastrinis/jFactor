@@ -224,6 +224,7 @@ p1_VCall(stmt, base, sig) :-
 	__REQ_ActualParam(stmt, -1, TOP(_, base, _)).
 
 // Pop receiver object from stack
+p1_InitCall(stmt),
 p1_Assign(allocStmt, base),
 p1_Alloc(allocStmt, base, heap, type),
 p1_SPCall(stmt, base, sig) :-

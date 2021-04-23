@@ -32,11 +32,8 @@ ToRename(stmt, var, var, name, PROLOGUE_INDEX, stmt) :-
 
 // Rename all various "source" var assigns
 ToRename(stmt, var, ssaVar, ssaName, index, startStmt) :-
-	(p1_Assign(stmt, var) ;
+	((p1_Assign(stmt, var), !p1_InitCall(stmt)) ;
 	 p1_Alloc(stmt, var, _, _)),
-//	 p1_VCall(stmt, var, _) ;
-//	 p1_SPCall(stmt, var, _) ;
-//	 p1_Throw(stmt, var)),
 	BytecodeStmt(stmt, method, index),
 	BB_Range(method, startStmt, _, startIndex, endIndex),
 	startIndex <= index, index <= endIndex,

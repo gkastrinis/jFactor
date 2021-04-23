@@ -24,6 +24,7 @@
 .decl VCALL(stmt: symbol, base: symbol, sig: symbol)
 .decl SPCALL(stmt: symbol,  base: symbol, sig: symbol)
 .decl SCALL(stmt: symbol,  sig: symbol)
+.decl INIT_CALL(stmt: symbol)
 .decl THROW(stmt: symbol, var: symbol)
 .decl EXCEPTION_HANDLER(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
 
@@ -69,6 +70,7 @@
 .decl p1_VCall(stmt: symbol, base: symbol, sig: symbol)
 .decl p1_SPCall(stmt: symbol, base: symbol, sig: symbol)
 .decl p1_SCall(stmt: symbol, sig: symbol)
+.decl p1_InitCall(sig: symbol)
 .decl p1_Throw(stmt: symbol, var: symbol)
 .decl p1_ExceptionHandler(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
 // SSA phase

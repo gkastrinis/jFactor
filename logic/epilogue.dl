@@ -78,6 +78,8 @@ SPCALL(stmt, ssaBase, sig) :-
 
 SCALL(stmt, sig) :- p1_SCall(bcStmt, sig), BCToFinal(bcStmt, stmt).
 
+INIT_CALL(stmt) :- p1_InitCall(bcStmt), BCToFinal(bcStmt, stmt).
+
 THROW(stmt, ssaVar) :-
 	p1_Throw(bcStmt, var),
 	p2_Assign(bcStmt, var, ssaVar, _, _),
