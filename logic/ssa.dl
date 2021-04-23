@@ -2,14 +2,12 @@
 #include "schema.dl"
 #include "basic-blocks.dl"
 
-// The beginning of basic-block `inBB` needs a phi-node for variable `var`
-// A phi-node might implicate multiple operands, and in the end expand
-// into multiple assignments
-.decl PHI_HyperStmt(inBB: symbol, var: symbol)
+.decl ToRename(stmt: symbol, var: symbol, ssaVar: symbol, ssaName: symbol, index: number, inBB: symbol)
 .decl VarAliveAtStartOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
 .decl VarAliveAtEndOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
-.decl OperandHasDefInBB(stmt: symbol, var: symbol, ssaVar: symbol)
-.decl ToRename(stmt: symbol, var: symbol, ssaVar: symbol, ssaName: symbol, index: number, inBB: symbol)
+.decl VarHasPrevDefInBB(stmt: symbol, var: symbol)
+.decl VarRead(stmt: symbol, var: symbol)
+.decl SSAVarForVarRead(stmt: symbol, var: symbol, ssaVar: symbol)
 
 p2_VarInfo(ssaVar, ssaName, var),
 p2_Assign(stmt, var, ssaVar, index, inBB) :-
@@ -43,7 +41,7 @@ ToRename(stmt, var, ssaVar, ssaName, index, startStmt) :-
 
 // New var assignment at every Phi
 // Add a Phi node only when there are multiple assignments
-PHI_HyperStmt(toBB, var),
+p2_PhiAssign(toBB, var, ssaVar),
 ToRename(toBB, var, ssaVar, ssaName, startIndex, toBB) :-
 	p2_Assign(_, var, _, _, fromBB1),
 	BB_DominanceFrontier(fromBB1, toBB),
@@ -73,27 +71,38 @@ VarAliveAtEndOfBB(var, ssaVar, inBB) :-
 	VarAliveAtStartOfBB(var, ssaVar, inBB),
 	!p2_Assign(_, var, _, _, inBB).
 
-p2_Operand(inBB, 0, ssaVar) :-
-	PHI_HyperStmt(inBB, var),
-	VarAliveAtStartOfBB(var, ssaVar, inBB).
 
-p2_Operand(stmt, pos, ssaVar),
-OperandHasDefInBB(stmt, var, ssaVar) :-
-	p1_Operand(stmt, pos, _, var),
+// The operand of a PHI assignment
+p2_Operand(stmt, 0, ssaTo) :- p2_PhiAssign(stmt, _, ssaTo).
+
+// Previously, defined in this basic-block
+VarHasPrevDefInBB(stmt, var),
+SSAVarForVarRead(stmt, var, ssaVar) :-
+	VarRead(stmt, var),
 	BytecodeStmt(stmt, _, index),
 	BytecodeStmtInBB(stmt, inBB),
 	p2_Assign(_, var, ssaVar, maxMinIndex, inBB),
 	maxMinIndex = max minIndex : { p2_Assign(_, var, ssaVar, minIndex, inBB), minIndex < index }.
 
-p2_Operand(stmt, pos, ssaVar) :-
-	p1_Operand(stmt, pos, _, var),
+// Defined in a previous basic-block
+SSAVarForVarRead(stmt, var, ssaVar) :-
+	VarRead(stmt, var),
 	BytecodeStmtInBB(stmt, inBB),
-	!OperandHasDefInBB(stmt, var, _),
+	!VarHasPrevDefInBB(stmt, var),
 	VarAliveAtStartOfBB(var, ssaVar, inBB).
 
-// Deal with constant operands
-p2_Operand(stmt, pos, var) :-
+VarRead(stmt, var) :- p1_Operand(stmt, _, _, var).
+VarRead(stmt, base) :- p1_VCall(stmt, base, _).
+VarRead(stmt, base) :- p1_SPCall(stmt, base, _).
+VarRead(stmt, var) :- p1_Throw(stmt, var).
+
+p2_Operand(stmt, pos, ssaVar) :-
 	p1_Operand(stmt, pos, _, var),
+	SSAVarForVarRead(stmt, var, ssaVar).
+
+// Deal with constant operands
+p2_Operand(stmt, pos, oper) :-
+	p1_Operand(stmt, pos, _, oper),
 	BytecodeStmtInBB(stmt, inBB),
-	!OperandHasDefInBB(stmt, var, _),
-	!VarAliveAtStartOfBB(var, _, inBB).
+	!VarHasPrevDefInBB(stmt, oper),
+	!VarAliveAtStartOfBB(oper, _, inBB).

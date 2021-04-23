@@ -11,12 +11,13 @@
 .output StackBeforeStmt
 
 // FACTS //
-.output VAR
+//.output VAR
 //.output VarRange
 //.output FORMAL_PARAM
 .output Stmt
 //.output NextStmt
 //.output ASSIGN
+//.output PHI_ASSIGN
 //.output Operator
 .output Operand_VAR
 .output Operand_CONST
@@ -38,12 +39,5 @@
 //.output BB_DF_Local
 //.output BB_DF_Upto
 
-.output PHI_HyperStmt
-.output p2_Assign
-.output p2_Operand
-//.output VarAliveAtStartOfBB
-//.output VarAliveAtEndOfBB
-
 .output TAC
-
 // TODO profile rules

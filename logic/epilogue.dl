@@ -31,6 +31,11 @@ VAR(method, var, type, name, name) :-
 
 ASSIGN(stmt, ssaTo) :-
 	p2_Assign(bcStmt, _, ssaTo, _, _),
+	!p2_PhiAssign(bcStmt, _, _),
+	BCToFinal(bcStmt, stmt).
+
+PHI_ASSIGN(stmt, ssaTo) :-
+	p2_PhiAssign(bcStmt, _, ssaTo),
 	BCToFinal(bcStmt, stmt).
 
 Operand_VAR(stmt, pos, oper) :-
@@ -68,12 +73,12 @@ ALLOC(stmt, ssaTo, heap, type) :-
 
 VCALL(stmt, ssaBase, sig) :-
 	p1_VCall(bcStmt, base, sig),
-	p2_Assign(bcStmt, base, ssaBase, _, _),
+	SSAVarForVarRead(bcStmt, base, ssaBase),
 	BCToFinal(bcStmt, stmt).
 
 SPCALL(stmt, ssaBase, sig) :-
 	p1_SPCall(bcStmt, base, sig),
-	p2_Assign(bcStmt, base, ssaBase, _, _),
+	SSAVarForVarRead(bcStmt, base, ssaBase),
 	BCToFinal(bcStmt, stmt).
 
 SCALL(stmt, sig) :- p1_SCall(bcStmt, sig), BCToFinal(bcStmt, stmt).
@@ -82,7 +87,7 @@ INIT_CALL(stmt) :- p1_InitCall(bcStmt), BCToFinal(bcStmt, stmt).
 
 THROW(stmt, ssaVar) :-
 	p1_Throw(bcStmt, var),
-	p2_Assign(bcStmt, var, ssaVar, _, _),
+	SSAVarForVarRead(bcStmt, var, ssaVar),
 	BCToFinal(bcStmt, stmt).
 
 EXCEPTION_HANDLER(method, fromStmt, toStmt, handlerStmt, type, var) :-
