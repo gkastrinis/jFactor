@@ -47,7 +47,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		else if (increment <= Integer.MAX_VALUE) type = "int"
 		else if (increment <= Long.MAX_VALUE) type = "long"
 		else throw new RuntimeException("weird size")
-		Database.instance.incValues << "${methID()}/$counter\t$increment\t$type\n"
+		Database.instance.incValues << "${stmtID(counter)}\t$increment\t$type\n"
 	}
 
 	// NOP, ACONST_NULL,
@@ -194,7 +194,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		switch (opcode) {
 			case NEW:
 				def heap = "${methID()}/new $type/$counter"
-				Database.instance.allocTypes << "${methID()}/$counter\t$type\n"
+				Database.instance.allocTypes << "${stmtID(counter)}\t$type\n"
 				rec("new", heap)
 				break
 			case ANEWARRAY:
@@ -339,11 +339,11 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	void visitLabel(Label label) {
 		if (!firstLabel) firstLabel = label
-		Database.instance.labels << "${methID()}\t$label\t${methID()}/${counter + 1}\t${counter + 1}\n"
+		Database.instance.labels << "${methID()}\t$label\t${stmtID(counter + 1)}\t${counter + 1}\n"
 	}
 
 	void visitLineNumber(int line, Label start) {
-		Database.instance.lineNumbers << "${methID()}\t${methID()}/${counter + 1}\t$line\n"
+		Database.instance.lineNumbers << "${methID()}\t${stmtID(counter + 1)}\t$line\n"
 	}
 
 	void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
@@ -362,11 +362,13 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 
 	void rec(def opcode, def oper = "_") {
-		Database.instance.opcodes << "${methID()}/$counter\t$opcode\t$oper\n"
-		Database.instance.stmts << "${methID()}/$counter\t${methID()}\t$counter\n"
+		Database.instance.opcodes << "${stmtID(counter)}\t$opcode\t$oper\n"
+		Database.instance.stmts << "${stmtID(counter)}\t${methID()}\t$counter\n"
 	}
 
 	def methID() { "<${declaringType} ${name}$desc>" }
+
+	def stmtID(def index) { "${methID()}/BC/$index" }
 
 	def varID(def name) { "${methID()}/$name" }
 
