@@ -10,13 +10,14 @@
 .decl VarAliveAtEndOfBB(var: symbol, ssaVar: symbol, inBB: symbol)
 .decl OperandHasDefInBB(stmt: symbol, var: symbol, ssaVar: symbol)
 
-// Mock assignments to formal parameters so they are treated uniformly
-// in the rest of the SSA logic
+// Mock assignments to formal parameters,
+// so they are treated uniformly in the rest of the SSA logic
 // Mock assignments are placed in the fake prologue BB
-p2_Assign(stmt, var, ssaVar, PROLOGUE_INDEX, stmt) :-
-	FORMAL_PARAM(method, pos, var),
+SSA_VarInfo(var, name, var),
+p2_Assign(stmt, var, var, PROLOGUE_INDEX, stmt) :-
+	FORMAL_PARAM(method, _, var),
 	BB_Start(method, stmt, PROLOGUE_INDEX),
-	ssaVar = cat(var, cat("#_PARAM_", to_string(pos))).
+	p1_Var(_, var, _, name).
 
 // TODO skip rename for temp vars -- they are used only once
 // Rename all various "source" var assigns

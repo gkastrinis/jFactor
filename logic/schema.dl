@@ -8,7 +8,7 @@
 // Output //
 .decl VAR(method: symbol, var: symbol, type: symbol, name: symbol)
 .decl VarRange(var: symbol, startIndex: number, endIndex: number)
-.decl SSAVarToOriginal(ssaVar: symbol, var: symbol)
+.decl SSA_VarInfo(ssaVar: symbol, ssaName: symbol, var: symbol)
 // Stmt with the final ordering
 .decl Stmt(stmt: symbol, method: symbol, bytecodeIndex: number, index: number)
 .decl NextStmt(fromStmt: symbol, toStmt: symbol)

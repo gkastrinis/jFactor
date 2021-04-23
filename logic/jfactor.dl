@@ -13,12 +13,12 @@
 // FACTS //
 //.output VAR
 //.output VarRange
-//.output SSAVarToOriginal
+.output SSA_VarInfo
 //.output FORMAL_PARAM
 .output Stmt
 //.output NextStmt
-.output ASSIGN
-.output Operator
+//.output ASSIGN
+//.output Operator
 .output Operand_VAR
 .output Operand_CONST
 //.output SLOAD

@@ -28,10 +28,6 @@ VAR(method, var, type, name) :-
 	p1_Var(method, var, type, name),
 	!p2_Assign(_, var, _, _, _).
 
-SSAVarToOriginal(ssaVar, var) :-
-	p2_Assign(_, var, ssaVar, _, _),
-	!TempVar(_, var, _).
-
 ASSIGN(stmt, ssaTo) :-
 	p2_Assign(bcStmt, _, ssaTo, _, _),
 	BCToFinal(bcStmt, stmt).
