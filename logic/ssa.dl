@@ -8,17 +8,24 @@
 .decl VarHasPrevDefInSameBB(stmt: symbol, var: symbol)
 .decl VarRead(stmt: symbol, var: symbol)
 .decl SSAVarForVarRead(stmt: symbol, var: symbol, ssaVar: symbol)
+.decl HasMultipleDefs(var: symbol)
+
+// Skip renaming of temp vars, or vars that are assigned only once
+HasMultipleDefs(var) :-
+	p1_Assign(stmt1, var),
+	p1_Assign(stmt2, var),
+	stmt1 != stmt2.
 
 p2_VarInfo(ssaVar, ssaName, var),
 p2_Assign(stmt, var, ssaVar, index, inBB) :-
 	ToRename(stmt, var, ssaVar, ssaName, index, inBB),
-	!TempVar(var, _).
+	HasMultipleDefs(var).
 
-// Skip renaming of temp vars. They are assigned only once
 p2_VarInfo(var, name, var),
 p2_Assign(stmt, var, var, index, inBB) :-
 	ToRename(stmt, var, _, _, index, inBB),
-	TempVar(var, name).
+	p1_Var(_, var, _, name),
+	!HasMultipleDefs(var).
 
 // Mock assignments to formal parameters,
 // so they are treated uniformly in the rest of the SSA logic
@@ -28,7 +35,6 @@ ToRename(stmt, var, var, name, PROLOGUE_INDEX, stmt) :-
 	BB_Start(method, stmt, PROLOGUE_INDEX),
 	p1_Var(_, var, _, name).
 
-// TODO dont rename vars that have only a single assignment?
 // Rename all various "source" var assigns
 ToRename(stmt, var, ssaVar, ssaName, index, startStmt) :-
 	((p1_Assign(stmt, var), !p1_InitCall(stmt)) ;

@@ -217,8 +217,7 @@ public class A {
 		int a = 10;
 		int b = a + 20;
 		System.out.println(b);
-		int c = test9
-				(b);
+		int c = test9(b);
 		Integer d = new Integer(c);
 	}
 
