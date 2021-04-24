@@ -54,7 +54,6 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	// IALOAD, LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD,
 	// SALOAD, IASTORE, LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE, SASTORE,
 	// DUP_X1, DUP_X2, DUP2, DUP2_X1, DUP2_X2, SWAP,
-	// I2L, I2F, I2D, L2I, L2F, L2D, F2I, F2L, F2D, D2I, D2L, D2F, I2B, I2C, I2S,
 	// ARRAYLENGTH,
 	// MONITORENTER, or MONITOREXIT.
 
@@ -91,7 +90,35 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case ACONST_NULL: rec("X-Lconst", "NULL")
 				break
+			case I2L: rec("i2l")
+				break
+			case I2F: rec("i2f")
+				break
 			case I2D: rec("i2d")
+				break
+			case L2I: rec("l2i")
+				break
+			case L2F: rec("l2f")
+				break
+			case L2D: rec("l2d")
+				break
+			case F2I: rec("f2i")
+				break
+			case F2L: rec("f2l")
+				break
+			case F2D: rec("f2d")
+				break
+			case D2I: rec("d2i")
+				break
+			case D2L: rec("d2l")
+				break
+			case D2F: rec("d2f")
+				break
+			case I2B: rec("i2b")
+				break
+			case I2C: rec("i2c")
+				break
+			case I2S: rec("i2s")
 				break
 			case POP: rec("pop")
 				break
@@ -314,11 +341,11 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 			case PUTSTATIC:
 				throw new RuntimeException()
 			case GETFIELD:
-				rec(opcode, "??")
+				rec(Integer.toHexString(opcode), "??")
 				break//throw new RuntimeException()
 			case PUTFIELD: rec("putfield", fld)
 				break
-			default: rec(opcode, "??")
+			default: rec(Integer.toHexString(opcode), "??")
 				break
 		}
 	}
@@ -332,7 +359,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case NEWARRAY:
 				throw new RuntimeException()
-			default: rec(opcode, "??")
+			default: rec(Integer.toHexString(opcode), "??")
 				break
 		}
 	}

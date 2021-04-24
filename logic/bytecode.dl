@@ -10,10 +10,11 @@
 .decl TempVar(var: symbol, name: symbol)
 .decl TypeToDesc(type: symbol, desc: symbol)
 // Opcodes
-.decl BinOpcode(opcode: symbol, op: symbol)
-.decl UnaryOpcode(opcode: symbol, op: symbol)
-.decl ConstLoadOpcode(opcode: symbol, type: symbol)
-.decl CallOpcode(opcode: symbol)
+.decl BinOpcode(opcode: symbol, op: symbol) inline
+.decl UnaryOpcode(opcode: symbol, op: symbol) inline
+.decl ConstLoadOpcode(opcode: symbol, type: symbol) inline
+.decl ConvertOpcode(opcode: symbol, fromTypeDesc: symbol, toTypeDesc: symbol) inline
+.decl CallOpcode(opcode: symbol) inline
 .decl ImplicitCondJumpOpcode(opcode: symbol, op: symbol, type1: symbol, oper1: symbol)
 .decl CondJumpOpcode(opcode: symbol, op: symbol)
 
@@ -180,6 +181,12 @@ __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, [_, stack]),
 	OpcodeExt(stmt, "pop", _).
 
+// Convert from one type to another
+__REQ_StackForNext(stmt, [toTypeDesc, stack]) :-
+	StackBeforeStmt(stmt, [fromTypeDesc, stack]),
+	OpcodeExt(stmt, opcode, _),
+	ConvertOpcode(opcode, fromTypeDesc, toTypeDesc).
+
 // Calls... ///////////////////////////////////////////////////
 
 // Pop call arguments from stack
@@ -302,23 +309,49 @@ p1_Operand(stmt, -1, type, var) :-
 // Setup...
 ///////////////////////////////////////////////////////////////
 
-TypeToDesc("byte", ";B").
-TypeToDesc("char", ";C").
-TypeToDesc("double", ";D").
-TypeToDesc("float", ";F").
-TypeToDesc("int", ";I").
-TypeToDesc("long", ";J").
-TypeToDesc("short", ";S").
-TypeToDesc("void", ";V").
+#define BYTE_D ";B"
+#define CHAR_D ";C"
+#define DOUBLE_D ";D"
+#define FLOAT_D ";F"
+#define INT_D ";I"
+#define LONG_D ";J"
+#define SHORT_D ";S"
+#define VOID_D ";V"
+#define STRING_D ";L"
 
-ConstLoadOpcode("X-Bconst", ";B").
-ConstLoadOpcode("X-Cconst", ";C").
-ConstLoadOpcode("X-Dconst", ";D").
-ConstLoadOpcode("X-Fconst", ";F").
-ConstLoadOpcode("X-Iconst", ";I").
-ConstLoadOpcode("X-Jconst", ";J").
-ConstLoadOpcode("X-Sconst", ";S").
-ConstLoadOpcode("X-Lconst", ";L"). // string literals or NULL
+TypeToDesc("byte", BYTE_D).
+TypeToDesc("char", CHAR_D).
+TypeToDesc("double", DOUBLE_D).
+TypeToDesc("float", FLOAT_D).
+TypeToDesc("int", INT_D).
+TypeToDesc("long", LONG_D).
+TypeToDesc("short", SHORT_D).
+TypeToDesc("void", VOID_D).
+
+ConstLoadOpcode("X-Bconst", BYTE_D).
+ConstLoadOpcode("X-Cconst", CHAR_D).
+ConstLoadOpcode("X-Dconst", DOUBLE_D).
+ConstLoadOpcode("X-Fconst", FLOAT_D).
+ConstLoadOpcode("X-Iconst", INT_D).
+ConstLoadOpcode("X-Jconst", LONG_D).
+ConstLoadOpcode("X-Sconst", SHORT_D).
+ConstLoadOpcode("X-Lconst", STRING_D). // TODO or NULL?
+
+ConvertOpcode("i2l", INT_D, LONG_D).
+ConvertOpcode("i2f", INT_D, FLOAT_D).
+ConvertOpcode("i2d", INT_D, DOUBLE_D).
+ConvertOpcode("l2i", LONG_D, INT_D).
+ConvertOpcode("l2f", LONG_D, FLOAT_D).
+ConvertOpcode("l2d", LONG_D, DOUBLE_D).
+ConvertOpcode("f2i", FLOAT_D, INT_D).
+ConvertOpcode("f2l", FLOAT_D, LONG_D).
+ConvertOpcode("f2d", FLOAT_D, DOUBLE_D).
+ConvertOpcode("d2i", DOUBLE_D, INT_D).
+ConvertOpcode("d2l", DOUBLE_D, LONG_D).
+ConvertOpcode("d2f", DOUBLE_D, FLOAT_D).
+ConvertOpcode("i2b", INT_D, BYTE_D).
+ConvertOpcode("i2c", INT_D, CHAR_D).
+ConvertOpcode("i2s", INT_D, SHORT_D).
 
 BinOpcode("X-add", "+").
 BinOpcode("X-sub", "-").

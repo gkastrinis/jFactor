@@ -6,9 +6,10 @@
 #include "epilogue.dl"
 #include "tac.dl"
 
+// TODO fix errors
 .output ERROR
 .output OpcodeExt
-//.output StackBeforeStmt
+.output StackBeforeStmt
 
 // FACTS //
 //.output VAR
