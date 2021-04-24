@@ -106,7 +106,6 @@ TAC(method, index, cat("goto ", to_string(jumpIndex))) :-
 	Stmt(stmt, method, _, index),
 	Stmt(jumpStmt, method, _, jumpIndex).
 
-// TODO recognise if block so it can be indented later
 TAC(method, index, cat(cat("if (", out), cat(") jump ", to_string(jumpIndex)))) :-
 	IF(stmt, jumpStmt),
 	Stmt(stmt, method, _, index),

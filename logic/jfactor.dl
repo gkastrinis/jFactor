@@ -14,6 +14,9 @@
 //.output VAR
 //.output VarRange
 //.output FORMAL_PARAM
+//.output EXCEPTION_HANDLER
+.output BasicBlock
+.output BasicBlockSucc
 //.output Stmt
 //.output NextStmt
 //.output ASSIGN
@@ -32,13 +35,6 @@
 //.output INIT_CALL
 //.output SCALL
 //.output THROW
-//.output EXCEPTION_HANDLER
-
-//.output BB_Range
-//.output BB_DOM
-//.output BB_DominanceFrontier
-//.output BB_DF_Local
-//.output BB_DF_Upto
 
 .output TAC
 // TODO profile rules

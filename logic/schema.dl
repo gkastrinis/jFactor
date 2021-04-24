@@ -8,6 +8,9 @@
 // Output //
 .decl VAR(method: symbol, var: symbol, type: symbol, name: symbol, ogName: symbol)
 .decl VarRange(var: symbol, startIndex: number, endIndex: number)
+.decl EXCEPTION_HANDLER(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
+.decl BasicBlock(method: symbol, startStmt: symbol, endStmt: symbol)
+.decl BasicBlockSucc(method: symbol, fromBB: symbol, toBB: symbol)
 // Stmt with the final ordering
 .decl Stmt(stmt: symbol, method: symbol, bytecodeIndex: number, index: number)
 .decl NextStmt(fromStmt: symbol, toStmt: symbol)
@@ -27,7 +30,6 @@
 .decl SCALL(stmt: symbol,  sig: symbol)
 .decl INIT_CALL(stmt: symbol)
 .decl THROW(stmt: symbol, var: symbol)
-.decl EXCEPTION_HANDLER(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
 
 // Input //
 .decl FORMAL_PARAM(method: symbol, pos: number, var: symbol)

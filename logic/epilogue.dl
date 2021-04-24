@@ -92,3 +92,12 @@ EXCEPTION_HANDLER(method, fromStmt, toStmt, handlerStmt, type, var) :-
 	BCToFinal(bcFromStmt, fromStmt),
 	BCToFinal(bcToStmt, toStmt),
 	BCToFinal(bcHandlerStmt, handlerStmt).
+
+BasicBlock(method, startStmt, endStmt) :-
+	BB_Range(method, bcStartStmt, bcEndStmt, _, _),
+	BCToFinal(bcStartStmt, startStmt),
+	BCToFinal(bcEndStmt, endStmt).
+
+BasicBlockSucc(method, fromBB, toBB) :-
+	BasicBlock(method, fromBB, endStmt),
+	NextStmt(endStmt, toBB).
