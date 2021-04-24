@@ -14,7 +14,7 @@
 //.output VAR
 //.output VarRange
 //.output FORMAL_PARAM
-.output Stmt
+//.output Stmt
 //.output NextStmt
 //.output ASSIGN
 //.output PHI_ASSIGN

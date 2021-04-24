@@ -31,12 +31,13 @@ VAR(method, var, type, name, name) :-
 
 ASSIGN(stmt, ssaTo) :-
 	p2_Assign(bcStmt, _, ssaTo, _, _),
-	!p2_PhiAssign(bcStmt, _, _),
-	BCToFinal(bcStmt, stmt).
+	BCToFinal(bcStmt, stmt),
+	!p2_PhiAssign(bcStmt, _, ssaTo).
 
 Operand_VAR(stmt, pos, oper) :-
 	p2_Operand(bcStmt, pos, oper),
 	BCToFinal(bcStmt, stmt),
+	!p2_PhiAssign(bcStmt, _, _),
 	VAR(_, oper, _, _, _).
 
 Operand_CONST(stmt, pos, oper, type) :-

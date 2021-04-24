@@ -86,7 +86,8 @@ SSAVarForVarRead(stmt, var, ssaVar) :-
 	BytecodeStmt(stmt, _, index),
 	BytecodeStmtInBB(stmt, inBB),
 	p2_Assign(_, var, ssaVar, maxMinIndex, inBB),
-	maxMinIndex = max minIndex : { p2_Assign(_, var, ssaVar, minIndex, inBB), minIndex < index }.
+	maxMinIndex = max minIndex :
+	{ p2_Assign(_, var, _, minIndex, inBB), minIndex < index }.
 
 // Defined in a previous basic-block
 SSAVarForVarRead(stmt, var, ssaVar) :-

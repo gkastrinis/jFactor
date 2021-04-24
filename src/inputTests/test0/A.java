@@ -75,7 +75,7 @@ public class A {
 			y = 0;
 		} else
 			y = 1;
-		B b1 = new B(); // TODO fix
+		B b1 = new B();
 		B b2 = new B();
 		boolean f2 = (b1 == b2);
 		B b3 = null;
@@ -248,6 +248,7 @@ public class A {
 		}
 		else
 			i = -100;
+		i = n;
 		return i + n + a;
 	}
 
