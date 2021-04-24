@@ -80,8 +80,8 @@ TAC(method, index, cat(cat(name, " = "), out)) :-
 
 // Calls to a constructor
 TAC(method, index, out) :-
-	Stmt(stmt, method, _, index),
 	SPCALL(stmt, _, _),
+	Stmt(stmt, method, _, index),
 	INIT_CALL(stmt),
 	TAC_RHS(stmt, out).
 
@@ -93,28 +93,33 @@ TAC(method, index, tac) :-
 	TAC_RHS(stmt, tac).
 
 TAC(method, index, "return") :-
-	Stmt(stmt, method, _, index),
-	RET_VOID(stmt).
+	RET_VOID(stmt),
+	Stmt(stmt, method, _, index).
 
 TAC(method, index, cat("return ", out)) :-
-	Stmt(stmt, method, _, index),
 	RET(stmt),
+	Stmt(stmt, method, _, index),
 	OperandStr(stmt, 0, out).
 
 TAC(method, index, cat("goto ", to_string(jumpIndex))) :-
-	Stmt(stmt, method, _, index),
 	GOTO(stmt, jumpStmt),
+	Stmt(stmt, method, _, index),
 	Stmt(jumpStmt, method, _, jumpIndex).
 
 // TODO recognise if block so it can be indented later
 TAC(method, index, cat(cat("if (", out), cat(") jump ", to_string(jumpIndex)))) :-
-	Stmt(stmt, method, _, index),
 	IF(stmt, jumpStmt),
+	Stmt(stmt, method, _, index),
 	Stmt(jumpStmt, method, _, jumpIndex),
 	TAC_RHS(stmt, out).
 
 // TODO mark handler blocks
 TAC(method, index, cat("throw ", varName)) :-
-	Stmt(stmt, method, _, index),
 	THROW(stmt, var),
+	Stmt(stmt, method, _, index),
 	VAR(method, var, _, varName, _).
+
+// TODO fix jump targets to correspond to visible statements
+TAC(method, index, "---LABEL---") :-
+	(IF(_, jumpStmt) ; GOTO(_, jumpStmt)),
+	Stmt(jumpStmt, method, _, index).
