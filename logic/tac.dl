@@ -70,13 +70,22 @@ TAC_RHS(stmt, cat("new ", type)) :- ALLOC(stmt, _, _, type).
 // Static field load
 TAC_RHS(stmt, fld) :- SLOAD(stmt, fld).
 
-// Assignments
+// Assignments -- not in a catch block head
 TAC(method, index, cat(cat(name, " = "), out)) :-
 	(ASSIGN(stmt, to) ; PHI_ASSIGN(stmt, to)),
 	!INIT_CALL(stmt),
+	!EXCEPTION_HANDLER(method, _, _, stmt, _, _),
 	Stmt(stmt, method, _, index),
 	VAR(method, to, _, name, _),
 	TAC_RHS(stmt, out).
+
+// Assignments -- in catch block head
+TAC(method, index, cat("---CATCH--- " ,cat(cat(name, " = "), out))) :-
+	ASSIGN(handlerStmt, to),
+	EXCEPTION_HANDLER(method, _, _, handlerStmt, _, _),
+	Stmt(handlerStmt, method, _, index),
+	VAR(method, to, _, name, _),
+	TAC_RHS(handlerStmt, out).
 
 // Calls to a constructor
 TAC(method, index, out) :-
@@ -112,7 +121,6 @@ TAC(method, index, cat(cat("if (", out), cat(") jump ", to_string(jumpIndex)))) 
 	Stmt(jumpStmt, method, _, jumpIndex),
 	TAC_RHS(stmt, out).
 
-// TODO mark handler blocks
 TAC(method, index, cat("throw ", varName)) :-
 	THROW(stmt, var),
 	Stmt(stmt, method, _, index),

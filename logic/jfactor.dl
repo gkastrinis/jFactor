@@ -15,8 +15,8 @@
 //.output VarRange
 //.output FORMAL_PARAM
 //.output EXCEPTION_HANDLER
-.output BasicBlock
-.output BasicBlockSucc
+//.output BasicBlock
+//.output BasicBlockSucc
 //.output Stmt
 //.output NextStmt
 //.output ASSIGN
