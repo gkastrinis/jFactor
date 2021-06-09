@@ -42,16 +42,16 @@ __REQ_StackForNext(stmt, TOP(tDesc, const, stack)) :-
 
 // -> value
 __REQ_StackForNext(stmt, TOP(tDesc, var, stack)) :-
-	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, "X-load", var),
+	StackBeforeStmt(stmt, stack),
 	p1_Var(_, var, type, _), T2DESC(type, tDesc).
 
 // value ->
 __REQ_Assign(stmt, var),
 __REQ_Operand(stmt, 0, type, oper),
 __REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, TOP(type, oper, stack)),
-	OpcodeExt(stmt, "X-store", var).
+	OpcodeExt(stmt, "X-store", var),
+	StackBeforeStmt(stmt, TOP(type, oper, stack)).
 // TODO compare types
 //	VAR(_, var, type, _).
 
@@ -59,14 +59,14 @@ __REQ_StackForNext(stmt, stack) :-
 p1_Ret(stmt),
 p1_Operand(stmt, 0, type, oper),
 __REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, TOP(type, oper, stack)),
-	OpcodeExt(stmt, "X-return", _).
+	OpcodeExt(stmt, "X-return", _),
+	StackBeforeStmt(stmt, TOP(type, oper, stack)).
 
 // return void
 p1_RetVoid(stmt),
 __REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, stack),
-	OpcodeExt(stmt, "return", _).
+	OpcodeExt(stmt, "return", _),
+	StackBeforeStmt(stmt, stack).
 
 // Compute an intermediate result
 // Swap order of operands due to stack semantics
@@ -74,17 +74,17 @@ p1_Operator(stmt, op),
 __REQ_Operand(stmt, 0, type0, oper0),
 __REQ_Operand(stmt, 1, type1, oper1),
 __REQ_Var(stmt, type, stack) :-
-	StackBeforeStmt(stmt, TOP(type1, oper1, TOP(type0, oper0, stack))),
 	OpcodeExt(stmt, opcode, _),
 	BinOpcode(opcode, op),
+	StackBeforeStmt(stmt, TOP(type1, oper1, TOP(type0, oper0, stack))),
 	type = ";I". // todo infer type based on type1 and type0
 
 p1_Operator(stmt, op),
 __REQ_Operand(stmt, 0, type0, oper0),
 __REQ_Var(stmt, type, stack) :-
-	StackBeforeStmt(stmt, TOP(type0, oper0, stack)),
 	OpcodeExt(stmt, opcode, _),
 	UnaryOpcode(opcode, op),
+	StackBeforeStmt(stmt, TOP(type0, oper0, stack)),
 	type = ";I". // todo infer type based on type1
 
 // Handle ++, --, +=, -=
@@ -93,9 +93,9 @@ p1_Operator(stmt, op),
 p1_Operand(stmt, 0, tDesc0, var),
 p1_Operand(stmt, 1, tDesc1, value),
 __REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, stack),
 	((OpcodeExt(stmt, "X-inc", var), op = "+") ;
 	 (OpcodeExt(stmt, "X-dec", var), op = "-")),
+	StackBeforeStmt(stmt, stack),
 	p1_Var(_, var, type0, _), T2DESC(type0, tDesc0),
 	IncValue(stmt, value, type1), T2DESC(type1, tDesc1).
 
@@ -105,24 +105,24 @@ p1_Operator(stmt, op),
 p1_Operand(stmt, 0, type0, oper0),
 p1_Operand(stmt, 1, type1, oper1),
 __REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, TOP(type0, oper0, stack)),
 	OpcodeExt(stmt, opcode, nextStmt),
-	ImplicitCondJumpOpcode(opcode, op, type1, oper1).
+	ImplicitCondJumpOpcode(opcode, op, type1, oper1),
+	StackBeforeStmt(stmt, TOP(type0, oper0, stack)).
 
 p1_If(stmt, nextStmt),
 p1_Operator(stmt, op),
 p1_Operand(stmt, 0, type0, oper0),
 p1_Operand(stmt, 1, type1, oper1),
 __REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, TOP(type1, oper1, TOP(type0, oper0, stack))),
 	OpcodeExt(stmt, opcode, nextStmt),
-	CondJumpOpcode(opcode, op).
+	CondJumpOpcode(opcode, op),
+	StackBeforeStmt(stmt, TOP(type1, oper1, TOP(type0, oper0, stack))).
 
 // ... and unconditional ones
 p1_Goto(stmt, nextStmt),
 __REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, stack),
-	OpcodeExt(stmt, "goto", nextStmt).
+	OpcodeExt(stmt, "goto", nextStmt),
+	StackBeforeStmt(stmt, stack).
 
 // Store the top of the stack into a var
 // Found in source code
@@ -152,12 +152,11 @@ __REQ_StackForNext(stmt, TOP(type, var, stack)) :-
 
 // Fields... ///////////////////////////////////////////////////
 
-// TODO reorder stackbeforestmt and opcodeExt
 // Load static field
 p1_SLoad(stmt, fld),
 __REQ_Var(stmt, tDesc, stack) :-
-	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, "getstatic", fld),
+	StackBeforeStmt(stmt, stack),
 	Field(fld, type, _, _), T2DESC(type, tDesc).
 
 // Store static field
@@ -187,14 +186,14 @@ __REQ_StackForNext(stmt, stack) :-
 
 // -> heap id
 __REQ_StackForNext(stmt, TOP(type, heap, stack)) :-
-	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, "new", heap),
+	StackBeforeStmt(stmt, stack),
 	AllocType(stmt, type).
 
 // Dup should only follow a `new` opcode -- ignore it
 __REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, stack),
-	OpcodeExt(stmt, "dup", _).
+	OpcodeExt(stmt, "dup", _),
+	StackBeforeStmt(stmt, stack).
 
 ERROR(stmt, "dup should follow only a `new` opcode") :-
 	OpcodeExt(stmt, "dup", _),
@@ -202,22 +201,22 @@ ERROR(stmt, "dup should follow only a `new` opcode") :-
 	!OpcodeExt(prev, "new", _).
 
 __REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, [_, stack]),
-	OpcodeExt(stmt, "pop", _).
+	OpcodeExt(stmt, "pop", _),
+	StackBeforeStmt(stmt, [_, stack]).
 
 // Convert from one type to another
 __REQ_StackForNext(stmt, [toTypeDesc, stack]) :-
-	StackBeforeStmt(stmt, [fromTypeDesc, stack]),
 	OpcodeExt(stmt, opcode, _),
-	ConvertOpcode(opcode, fromTypeDesc, toTypeDesc).
+	ConvertOpcode(opcode, fromTypeDesc, toTypeDesc),
+	StackBeforeStmt(stmt, [fromTypeDesc, stack]).
 
 // Calls... ///////////////////////////////////////////////////
 
 // Pop call arguments from stack
 __REQ_ActualParam(stmt, argc - 1, stack) :-
-	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, opcode, sig),
 	CallOpcode(opcode),
+	StackBeforeStmt(stmt, stack),
 	Invocation(sig, argc, _, _).
 
 // index -1 should keep either the receiver object or a heap id
@@ -291,8 +290,8 @@ __REQ_StackForNext(stmt, stack) :-
 
 p1_Throw(stmt, var),
 __REQ_StackForNext(stmt, stack) :-
-	StackBeforeStmt(stmt, TOP(_, var, stack)),
-	OpcodeExt(stmt, "athrow", _).
+	OpcodeExt(stmt, "athrow", _),
+	StackBeforeStmt(stmt, TOP(_, var, stack)).
 
 // Initialize stack for first statement
 StackBeforeStmt(stmt, nil) :- BytecodeStmt(stmt, _, 0).
