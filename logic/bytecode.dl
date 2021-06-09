@@ -152,12 +152,36 @@ __REQ_StackForNext(stmt, TOP(type, var, stack)) :-
 
 // Fields... ///////////////////////////////////////////////////
 
+// TODO reorder stackbeforestmt and opcodeExt
 // Load static field
-p1_Sload(stmt, fld),
+p1_SLoad(stmt, fld),
 __REQ_Var(stmt, tDesc, stack) :-
 	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, "getstatic", fld),
 	Field(fld, type, _, _), T2DESC(type, tDesc).
+
+// Store static field
+p1_SStore(stmt, fld),
+p1_Operand(stmt, 1, type, oper),
+__REQ_StackForNext(stmt, stack) :-
+	OpcodeExt(stmt, "putstatic", fld),
+	StackBeforeStmt(stmt, TOP(type, oper, stack)).
+
+// Load instance field
+p1_ILoad(stmt, fld),
+p1_Operand(stmt, 0, varType, var),
+__REQ_Var(stmt, tDesc, stack) :-
+	OpcodeExt(stmt, "getfield", fld),
+	StackBeforeStmt(stmt, TOP(varType, var, stack)),
+	Field(fld, type, _, _), T2DESC(type, tDesc).
+
+// Store instance field
+p1_IStore(stmt, fld),
+p1_Operand(stmt, 0, varType, var),
+p1_Operand(stmt, 1, type, oper),
+__REQ_StackForNext(stmt, stack) :-
+	OpcodeExt(stmt, "putfield", fld),
+	StackBeforeStmt(stmt, TOP(type, oper, TOP(varType, var, stack))).
 
 ///////////////////////////////////////////////////////////////
 

@@ -4,8 +4,6 @@ import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 
-import javax.xml.crypto.Data
-
 class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	int access
@@ -122,7 +120,8 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case POP: rec("pop")
 				break
-			case POP2: throw new RuntimeException(Integer.toHexString(opcode) )
+			case POP2: wat(opcode)
+				break
 			case DUP: rec("dup")
 				break
 			case IADD:
@@ -191,7 +190,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case ATHROW: rec("athrow")
 				break
-			default: throw new RuntimeException(Integer.toHexString(opcode) )
+			default: wat(opcode)
 		}
 	}
 
@@ -210,9 +209,9 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 			case DSTORE:
 			case ASTORE: rec("X-store", var)
 				break
-			case RET:
-				throw new RuntimeException()
-			default: throw new RuntimeException()
+			case RET: wat(opcode)
+				break
+			default: wat(opcode)
 		}
 	}
 
@@ -230,8 +229,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				throw new RuntimeException()
 			case INSTANCEOF:
 				throw new RuntimeException()
-			default: rec(opcode, "??")
-				break
+			default: wat(opcode)
 		}
 	}
 
@@ -251,13 +249,9 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case INVOKEINTERFACE:
 				throw new RuntimeException()
-			default: rec(opcode, "??")
-				break
+			default: wat(opcode)
 		}
 	}
-
-
-	// JSR,
 
 	void visitJumpInsn(int opcode, Label label) {
 		counter++
@@ -296,14 +290,14 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case GOTO: rec("goto", label)
 				break
-			default:
-				throw new RuntimeException(Integer.toHexString(opcode) )
+			case JSR: wat(opcode)
+				break
+			default: wat(opcode)
 		}
 	}
 
 	void visitLdcInsn(Object value) {
 		counter++
-		def cmd
 		if (value instanceof Byte)
 			rec("X-Bconst", value)
 		else if (value instanceof Character)
@@ -329,24 +323,21 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		counter++
 		owner = owner.replace("/", ".")
 		def (type, rest) = typeFromJVM(descriptor)
-		def fld = "<$owner: $type $name>"
+		def fld = "<$owner: $type $name>" as String
 		if (fld !in visitedFlds) {
 			Database.instance.fields << "$fld\t$type\t$name\t$owner\n"
 			visitedFlds << fld
 		}
 		switch (opcode) {
-			case GETSTATIC:
-				rec("getstatic", fld)
+			case GETSTATIC: rec("getstatic", fld)
 				break
-			case PUTSTATIC:
-				throw new RuntimeException()
-			case GETFIELD:
-				rec(Integer.toHexString(opcode), "??")
-				break//throw new RuntimeException()
+			case PUTSTATIC: rec("putstatic", fld)
+				break
+			case GETFIELD: rec("getfield", fld)
+				break
 			case PUTFIELD: rec("putfield", fld)
 				break
-			default: rec(Integer.toHexString(opcode), "??")
-				break
+			default: wat(opcode)
 		}
 	}
 
@@ -357,10 +348,9 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case SIPUSH: rec("X-Sconst", operand)
 				break
-			case NEWARRAY:
-				throw new RuntimeException()
-			default: rec(Integer.toHexString(opcode), "??")
+			case NEWARRAY: wat(opcode)
 				break
+			default: wat(opcode)
 		}
 	}
 
@@ -432,5 +422,10 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		}
 		def (retType, rest) = typeFromJVM(sig.drop(1))
 		Database.instance.invocations << "$origSig\t$argc\t$retType\t$owner::$name\n"
+	}
+
+	def wat(int opcode, boolean thr = true) {
+		rec(Integer.toHexString(opcode), "??")
+		if (thr) throw new RuntimeException(Integer.toHexString(opcode) + "??")
 	}
 }

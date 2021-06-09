@@ -47,7 +47,19 @@ Operand_CONST(stmt, pos, oper, type) :-
 	!VAR(_, oper, _, _, _),
 	DESC2T(type, tDesc).
 
-SLOAD(stmt, fld) :- p1_Sload(bcStmt, fld), BCToFinal(bcStmt, stmt).
+SLOAD(stmt, fld) :- p1_SLoad(bcStmt, fld), BCToFinal(bcStmt, stmt).
+
+SSTORE(stmt, fld) :- p1_SStore(bcStmt, fld), BCToFinal(bcStmt, stmt).
+
+ILOAD(stmt, var, fld) :-
+	p1_ILoad(bcStmt, fld),
+	BCToFinal(bcStmt, stmt),
+	p2_Operand(bcStmt, 0, var).
+
+ISTORE(stmt, var, fld) :-
+	p1_IStore(bcStmt, fld),
+	BCToFinal(bcStmt, stmt),
+	p2_Operand(bcStmt, 0, var).
 
 RET(stmt) :- p1_Ret(bcStmt), BCToFinal(bcStmt, stmt).
 

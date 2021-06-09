@@ -6,7 +6,6 @@
 #include "epilogue.dl"
 #include "tac.dl"
 
-// TODO fix errors
 .output ERROR
 .output OpcodeExt
 .output StackBeforeStmt
@@ -26,6 +25,9 @@
 //.output Operand_VAR
 //.output Operand_CONST
 //.output SLOAD
+//.output SSTORE
+//.output ILOAD
+//.output ISTORE
 //.output RET
 //.output RET_VOID
 //.output IF

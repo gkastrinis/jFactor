@@ -33,6 +33,8 @@ TAC_RHS(stmt, cat(cat(op, " "), out0)) :-
 TAC_RHS(stmt, out) :-
 	OperandStr(stmt, 0, out),
 	!CallStmt(stmt, _),
+	!SLOAD(stmt, _),
+	!ILOAD(stmt, _, _),
 	!Operator(stmt, _),
 	!OperandStr(stmt, 1, _).
 
@@ -68,7 +70,30 @@ TAC_RHS(stmt, cat(cat(qualifiedName, "("), cat(out, ")"))) :-
 TAC_RHS(stmt, cat("new ", type)) :- ALLOC(stmt, _, _, type).
 
 // Static field load
-TAC_RHS(stmt, fld) :- SLOAD(stmt, fld).
+TAC_RHS(stmt, fldName) :-
+	SLOAD(stmt, fld),
+	Field(fld, _, fldName, _).
+
+// Static field store
+TAC(method, index, cat(cat(fldName, " = "), val)) :-
+	SSTORE(stmt, fld),
+	Stmt(stmt, method, _, index),
+	Field(fld, _, fldName, _),
+	((Operand_VAR(stmt, 1, valVar), VAR(_, valVar, _, val, _)) ; Operand_CONST(stmt, 1, val, _)).
+
+// Instance field load
+TAC_RHS(stmt, cat(cat(name, "."), fldName)) :-
+	ILOAD(stmt, var, fld),
+	Field(fld, _, fldName, _),
+	VAR(_, var, _, name, _).
+
+// Instance field store
+TAC(method, index, cat(cat(cat(cat(name, "."), fldName), " = "), val)) :-
+	ISTORE(stmt, var, fld),
+	Stmt(stmt, method, _, index),
+	VAR(_, var, _, name, _),
+	Field(fld, _, fldName, _),
+	((Operand_VAR(stmt, 1, valVar), VAR(_, valVar, _, val, _)) ; Operand_CONST(stmt, 1, val, _)).
 
 // Assignments -- not in a catch block head
 TAC(method, index, cat(cat(name, " = "), out)) :-

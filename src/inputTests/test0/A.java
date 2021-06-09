@@ -285,6 +285,7 @@ class B {
 	int f1;
 	String f2;
 
+	// TODO call to object init or super init
 	public B() {
 		f1 = 1;
 	}
