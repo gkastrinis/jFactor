@@ -1,16 +1,12 @@
 #!/bin/bash
+FILTER='\<A test21('
 BASE=build/out
-filter='\<B <init>(LB;'
 rm -rf $BASE && mkdir $BASE
-echo "Souffle..."
-time souffle -j4 -F$BASE/../out_tmp -D$BASE logic/jfactor.dl
-if [ -s $BASE/ERROR.csv ] ; then
-  echo -e "\nErrors encountered!!!"
-  wc -l $BASE/ERROR.csv
-fi
-sort -V $BASE/OpcodeExt.csv | grep "$filter" > $BASE/OpcodeExt.facts
+time souffle -j8 -F$BASE/../out_tmp -D$BASE logic/jfactor.dl
+echo -e "\nERRORS: $(cat $BASE/ERROR.csv | wc -l)"
+sort -V $BASE/OpcodeExt.csv | grep "$FILTER" > $BASE/OpcodeExt.facts
 rm $BASE/OpcodeExt.csv
 for f in $BASE/*csv ; do
-  if ! [ -s $f ] ; then continue ; fi
-  (echo $f ; sort -V $f | grep "$filter"; echo) >> $BASE/all.txt
+	if ! [ -s $f ] ; then continue ; fi
+	(echo $f ; sort -V $f | grep "$FILTER"; echo) >> $BASE/all.txt
 done
