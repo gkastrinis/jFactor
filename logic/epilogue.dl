@@ -32,7 +32,14 @@ VAR(method, var, type, name, name) :-
 ASSIGN(stmt, ssaTo) :-
 	p2_Assign(bcStmt, _, ssaTo, _, _),
 	BCToFinal(bcStmt, stmt),
+	!p1_Cast(bcStmt, _, _),
 	!p2_PhiAssign(bcStmt, _, ssaTo).
+
+CAST(stmt, ssaTo, type) :-
+	p1_Cast(bcStmt, type, _),
+	p2_Assign(bcStmt, _, ssaTo, _, _),
+	BCToFinal(bcStmt, stmt),
+	p2_Operand(bcStmt, -1, type).
 
 Operand_VAR(stmt, pos, oper) :-
 	p2_Operand(bcStmt, pos, oper),
@@ -41,7 +48,7 @@ Operand_VAR(stmt, pos, oper) :-
 	VAR(_, oper, _, _, _).
 
 Operand_CONST(stmt, pos, oper, type) :-
-	p2_Operand(bcStmt, pos, oper),
+	p2_Operand(bcStmt, pos, oper), pos >= 0,
 	p1_Operand(bcStmt, pos, tDesc, oper),
 	BCToFinal(bcStmt, stmt),
 	!VAR(_, oper, _, _, _),

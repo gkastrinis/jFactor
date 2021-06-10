@@ -217,18 +217,19 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	void visitTypeInsn(int opcode, String type) {
 		counter++
+		type = type.replace("/", ".")
 		switch (opcode) {
 			case NEW:
 				def heap = "${methID()}/new $type/$counter"
 				Database.instance.allocTypes << "${stmtID(counter)}\t$type\n"
 				rec("new", heap)
 				break
-			case ANEWARRAY:
-				throw new RuntimeException()
-			case CHECKCAST:
-				throw new RuntimeException()
-			case INSTANCEOF:
-				throw new RuntimeException()
+			case ANEWARRAY: wat(opcode)
+				break
+			case CHECKCAST: rec("checkcast", type)
+				break
+			case INSTANCEOF: wat(opcode)
+				break
 			default: wat(opcode)
 		}
 	}

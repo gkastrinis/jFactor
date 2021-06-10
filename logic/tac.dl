@@ -23,14 +23,20 @@ TAC_RHS(stmt, cat(out0, cat(cat(" ", cat(op, " ")), out1))) :-
 	OperandStr(stmt, 1, out1).
 
 // UNOP
-TAC_RHS(stmt, cat(cat(op, " "), out0)) :-
+TAC_RHS(stmt, CAT3(op, " ", out0)) :-
 	Operator(stmt, op),
 	OperandStr(stmt, 0, out0),
 	!OperandStr(stmt, 1, _).
 
+// CAST
+TAC_RHS(stmt, cat(cat("(", type), cat(") ", out0))) :-
+	CAST(stmt, _, type),
+	OperandStr(stmt, 0, out0).
+
 // Move instructions or var initializations
 TAC_RHS(stmt, out) :-
 	OperandStr(stmt, 0, out),
+	!CAST(stmt, _, _),
 	!CallStmt(stmt, _),
 	!SLOAD(stmt, _),
 	!ILOAD(stmt, _, _),
@@ -96,7 +102,7 @@ TAC(method, index, cat(cat(cat(cat(name, "."), fldName), " = "), val)) :-
 
 // Assignments -- not in a catch block head
 TAC(method, index, cat(cat(name, " = "), out)) :-
-	(ASSIGN(stmt, to) ; PHI_ASSIGN(stmt, to)),
+	(ASSIGN(stmt, to) ; PHI_ASSIGN(stmt, to) ; CAST(stmt, to, _)),
 	!INIT_CALL(stmt),
 	!EXCEPTION_HANDLER(method, _, _, stmt, _, _),
 	Stmt(stmt, method, _, index),

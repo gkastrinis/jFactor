@@ -274,9 +274,9 @@ public class A {
 		List<Integer> l1 = new ArrayList<>();
 		l1.add(1);
 		l1.add(2);
-//		for (Integer i : l1) {
-//			System.out.println(i);
-//		}
+		for (Integer i : l1) {
+			System.out.println(i);
+		}
 //		for (int i = 0 ; i < l1.size() ; i++)
 //			System.out.println(l1.get(i));
 //		List<Object> i = new ArrayList<>();

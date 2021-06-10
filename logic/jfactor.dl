@@ -1,3 +1,7 @@
+#define CAT3(v1, v2, v3) cat(cat(v1, v2), v3)
+#define CAT4(v1, v2, v3, v4) cat(cat(v1, v2), cat(v3, v4))
+#define CAT5(v1, v2, v3, v4, v5) cat(cat(v1, v2), cat(cat(v3, v4), v5))
+
 #include "schema.dl"
 #include "bytecode.dl"
 #include "basic-blocks.dl"
@@ -21,6 +25,7 @@
 //.output NextStmt
 //.output ASSIGN
 //.output PHI_ASSIGN
+//.output CAST
 //.output Operator
 //.output Operand_VAR
 //.output Operand_CONST

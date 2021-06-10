@@ -22,7 +22,7 @@
 .decl __RES_Var(stmt: symbol, var: symbol)
 .decl __REQ_ActualParam(stmt: symbol, pos: number, stack: Stack)
 .decl __REQ_Assign(stmt: symbol, to: symbol)
-.decl __REQ_Operand(stmt: symbol, pos: number, type: symbol, value: symbol)
+.decl __REQ_Operand(stmt: symbol, pos: number, type: symbol, value: symbol) // TODO why?
 
 #define T2DESC(type, desc) \
 (TypeToDesc(type, desc) ; (!TypeToDesc(type, _), desc = type))
@@ -97,6 +97,14 @@ __REQ_StackForNext(stmt, stack) :-
 	StackBeforeStmt(stmt, stack),
 	p1_Var(_, var, type0, _), T2DESC(type0, tDesc0),
 	IncValue(stmt, value, type1), T2DESC(type1, tDesc1).
+
+// Handle casts
+p1_Cast(stmt, type, fromType),
+__REQ_Operand(stmt, -1, "null", type),
+__REQ_Operand(stmt, 0, fromType, from),
+__REQ_Var(stmt, type, stack) :-
+	OpcodeExt(stmt, "checkcast", type),
+	StackBeforeStmt(stmt, TOP(fromType, from, stack)).
 
 // Handle conditional jumps
 p1_If(stmt, nextStmt),
@@ -438,15 +446,16 @@ OpcodeExt(stmt, opcode, var) :-
 	p1_VarRange(var, startIndex, endIndex),
 	(startIndex - 1) <= index, index <= endIndex.
 
-// Exception handlers might introduce unnamed variables
+// Exception handlers and other language constructs
+// might introduce unnamed variables
 TempVar(var, varName),
-p1_Var(method, var, "java.lang.Throwable", varName),
+p1_Var(method, var, "java.lang.Throwable", varName), // TODO correct type?
 OpcodeExt(stmt, opcode, var) :-
 	((p0_Opcode(stmt, "X-load", varIndex), opcode = "X-load");
 	 (p0_Opcode(stmt, "X-store", varIndex), opcode = "X-store")),
 	BytecodeStmt(stmt, method, _),
 	!p0_Var(method, varIndex, _, _, _, _, _),
-	varName = cat("$throw", varIndex),
+	varName = cat("$t", varIndex),
 	var = cat(cat(method, "/"), varName).
 
 // Anything other than var load/store and jumps
