@@ -1,5 +1,4 @@
 #pragma once
-#include "ordering.dl"
 
 .decl TAC(method: symbol, index: number, tac: symbol)
 .decl TAC_RHS(stmt: symbol, out: symbol)

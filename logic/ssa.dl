@@ -1,6 +1,4 @@
 #pragma once
-#include "schema.dl"
-#include "basic-blocks.dl"
 
 .decl ToRename(stmt: symbol, var: symbol, ssaVar: symbol, ssaName: symbol, index: number, inBB: symbol)
 .decl VarAliveAtStartOfBB(var: symbol, ssaVar: symbol, inBB: symbol)

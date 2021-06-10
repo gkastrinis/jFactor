@@ -1,5 +1,4 @@
 #pragma once
-#include "schema.dl"
 
 .type Stack = [top: symbol, rest: Stack]
 .decl StackBeforeStmt(stmt: symbol, stack: Stack)
@@ -182,7 +181,7 @@ __REQ_StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, "putfield", fld),
 	StackBeforeStmt(stmt, TOP(type, oper, TOP(varType, var, stack))).
 
-///////////////////////////////////////////////////////////////
+// Allocations... //////////////////////////////////////////////
 
 // -> heap id
 __REQ_StackForNext(stmt, TOP(type, heap, stack)) :-
@@ -210,7 +209,7 @@ __REQ_StackForNext(stmt, [toTypeDesc, stack]) :-
 	ConvertOpcode(opcode, fromTypeDesc, toTypeDesc),
 	StackBeforeStmt(stmt, [fromTypeDesc, stack]).
 
-// Calls... ///////////////////////////////////////////////////
+// Calls... ////////////////////////////////////////////////////
 
 // Pop call arguments from stack
 __REQ_ActualParam(stmt, argc - 1, stack) :-
@@ -250,7 +249,8 @@ p1_Operand(stmt, pos, type, var) :-
 
 // Pop receiver object from stack
 p1_VCall(stmt, base, sig) :-
-	OpcodeExt(stmt, "invokevirtual", sig),
+	(OpcodeExt(stmt, "invokevirtual", sig) ;
+	 OpcodeExt(stmt, "invokeinterface", sig)),
 	__REQ_ActualParam(stmt, -1, TOP(_, base, _)).
 
 // Pop receiver object from stack
@@ -393,6 +393,7 @@ BinOpcode("cmpg", "cmp").
 UnaryOpcode("X-neg", "-").
 
 CallOpcode("invokevirtual").
+CallOpcode("invokeinterface").
 CallOpcode("invokespecial").
 CallOpcode("X-invokeinit").
 CallOpcode("invokestatic").

@@ -35,8 +35,8 @@
 //.output ALLOC
 //.output VCALL
 //.output SPCALL
-//.output INIT_CALL
 //.output SCALL
+//.output INIT_CALL
 //.output THROW
 
 .output TAC

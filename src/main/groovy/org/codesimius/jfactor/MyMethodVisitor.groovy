@@ -209,7 +209,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 			case DSTORE:
 			case ASTORE: rec("X-store", var)
 				break
-			case RET: wat(opcode)
+			case RET: wat(opcode) // Deprecated in Java 7
 				break
 			default: wat(opcode)
 		}
@@ -238,17 +238,14 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		def sig = "${owner.replace("/", ".")}.${name}$descriptor"
 		callInfo(sig, owner, name)
 		switch (opcode) {
-			case INVOKEVIRTUAL:
-				rec("invokevirtual", sig)
+			case INVOKEVIRTUAL: rec("invokevirtual", sig)
 				break
-			case INVOKESPECIAL:
-				rec(name == "<init>" ? "X-invokeinit" : "invokespecial", sig)
+			case INVOKESPECIAL: rec(name == "<init>" ? "X-invokeinit" : "invokespecial", sig)
 				break
-			case INVOKESTATIC:
-				rec("invokestatic", sig)
+			case INVOKESTATIC: rec("invokestatic", sig)
 				break
-			case INVOKEINTERFACE:
-				throw new RuntimeException()
+			case INVOKEINTERFACE: rec("invokeinterface", sig)
+				break
 			default: wat(opcode)
 		}
 	}
@@ -290,7 +287,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case GOTO: rec("goto", label)
 				break
-			case JSR: wat(opcode)
+			case JSR: wat(opcode) // Deprecated in Java 7
 				break
 			default: wat(opcode)
 		}

@@ -25,6 +25,7 @@ public class A {
 		test17(200);
 		test18(100);
 		test19(2);
+		test21();
 	}
 
 	static void test1() {
@@ -222,17 +223,6 @@ public class A {
 	}
 
 	static void test15() {
-//		List<Integer> l = new ArrayList<>();
-//		l.add(1);
-//		l.add(2);
-//		for (Integer i : l) {
-//			System.out.println(i);
-//		}
-//		for (int i = 0 ; i < l.size() ; i++)
-//			System.out.println(l.get(i));
-//		List<Object> i = new ArrayList<>();
-//		i.add("HI");
-//		System.out.println(i.get(0));
 		int sum = 0;
 		for (int i = 0 ; i < 10 ; i++) sum += i;
 		double j = 20;
@@ -278,6 +268,20 @@ public class A {
 
 	static int test20(int a, double b, int c) {
 		return b > 2 ? (a * 10 + c) : 42;
+	}
+
+	static void test21() {
+		List<Integer> l1 = new ArrayList<>();
+		l1.add(1);
+		l1.add(2);
+//		for (Integer i : l1) {
+//			System.out.println(i);
+//		}
+//		for (int i = 0 ; i < l1.size() ; i++)
+//			System.out.println(l1.get(i));
+//		List<Object> i = new ArrayList<>();
+//		i.add("HI");
+//		System.out.println(i.get(0));
 	}
 }
 
