@@ -23,6 +23,7 @@
 .decl __REQ_ActualParam(stmt: symbol, pos: number, stack: Stack)
 .decl __REQ_Assign(stmt: symbol, to: symbol)
 .decl __REQ_Operand(stmt: symbol, pos: number, type: symbol, value: symbol) // TODO why?
+.decl __REQ_TempVar(method: symbol, var: symbol, type: symbol, varName: symbol, stmtIndex: number)
 
 #define T2DESC(type, desc) \
 (TypeToDesc(type, desc) ; (!TypeToDesc(type, _), desc = type))
@@ -446,17 +447,22 @@ OpcodeExt(stmt, opcode, var) :-
 	p1_VarRange(var, startIndex, endIndex),
 	(startIndex - 1) <= index, index <= endIndex.
 
-// Exception handlers and other language constructs
-// might introduce unnamed variables
-TempVar(var, varName),
-p1_Var(method, var, "java.lang.Throwable", varName), // TODO correct type?
+// Exception handlers and other language constructs, might introduce unnamed variables
+__REQ_TempVar(method, var, "java.lang.Throwable", varName, index), // TODO correct type?
 OpcodeExt(stmt, opcode, var) :-
-	((p0_Opcode(stmt, "X-load", varIndex), opcode = "X-load");
+	((p0_Opcode(stmt, "X-load", varIndex), opcode = "X-load") ;
 	 (p0_Opcode(stmt, "X-store", varIndex), opcode = "X-store")),
-	BytecodeStmt(stmt, method, _),
+	BytecodeStmt(stmt, method, index),
 	!p0_Var(method, varIndex, _, _, _, _, _),
 	varName = cat("$t", varIndex),
-	var = cat(cat(method, "/"), varName).
+	var = CAT3(method, "/", varName).
+
+TempVar(var, varName),
+p1_Var(method, var, type, varName),
+p1_VarRange(var, start, end) :-
+	__REQ_TempVar(method, var, type, varName, start),
+	start = min index : { __REQ_TempVar(method, var, type, varName, index) },
+	end = max methodIndex : { BytecodeStmt(_, method, methodIndex) }.
 
 // Anything other than var load/store and jumps
 OpcodeExt(stmt, opcode, oper) :-

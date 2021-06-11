@@ -59,7 +59,7 @@ AllOperandsStrDownTo(stmt, -1, "") :-
 	CallStmt(stmt, sig),
 	Invocation(sig, 0, _, _).
 
-TAC_RHS(stmt, CAT6(baseName, " . ", qualifiedName, "(", out, ")")) :-
+TAC_RHS(stmt, CAT6(baseName, " -> ", qualifiedName, "(", out, ")")) :-
 	(VCALL(stmt, base, sig) ; SPCALL(stmt, base, sig)),
 	AllOperandsStrDownTo(stmt, -1, out),
 	Invocation(sig, _, _, qualifiedName),
