@@ -17,7 +17,7 @@ OperandStr(stmt, pos, const) :-
 	Operand_CONST(stmt, pos, const, _).
 
 // BINOP
-TAC_RHS(stmt, cat(out0, cat(cat(" ", cat(op, " ")), out1))) :-
+TAC_RHS(stmt, CAT5(out0, " ", op, " ", out1)) :-
 	Operator(stmt, op),
 	OperandStr(stmt, 0, out0),
 	OperandStr(stmt, 1, out1).
@@ -29,7 +29,7 @@ TAC_RHS(stmt, CAT3(op, " ", out0)) :-
 	!OperandStr(stmt, 1, _).
 
 // CAST
-TAC_RHS(stmt, cat(cat("(", type), cat(") ", out0))) :-
+TAC_RHS(stmt, CAT4("(", type, ") ", out0)) :-
 	CAST(stmt, _, type),
 	OperandStr(stmt, 0, out0).
 
@@ -50,7 +50,7 @@ AllOperandsStrDownTo(stmt, pos - 1, out) :-
 	!Operator(stmt, _),
 	!OperandStr(stmt, pos + 1, _).
 
-AllOperandsStrDownTo(stmt, pos - 1, cat(out1, cat(", ", out))) :-
+AllOperandsStrDownTo(stmt, pos - 1, CAT3(out1, ", ", out)) :-
 	AllOperandsStrDownTo(stmt, pos, out),
 	OperandStr(stmt, pos, out1).
 
@@ -59,14 +59,14 @@ AllOperandsStrDownTo(stmt, -1, "") :-
 	CallStmt(stmt, sig),
 	Invocation(sig, 0, _, _).
 
-TAC_RHS(stmt, cat(cat(cat(baseName, "."), cat(qualifiedName, "(")), cat(out, ")"))) :-
+TAC_RHS(stmt, CAT6(baseName, " . ", qualifiedName, "(", out, ")")) :-
 	(VCALL(stmt, base, sig) ; SPCALL(stmt, base, sig)),
 	AllOperandsStrDownTo(stmt, -1, out),
 	Invocation(sig, _, _, qualifiedName),
 	Stmt(stmt, method, _, _),
 	VAR(method, base, _, baseName, _).
 
-TAC_RHS(stmt, cat(cat(qualifiedName, "("), cat(out, ")"))) :-
+TAC_RHS(stmt, CAT4(qualifiedName, "(", out, ")")) :-
 	SCALL(stmt, sig),
 	Invocation(sig, _, _, qualifiedName),
 	AllOperandsStrDownTo(stmt, -1, out).
@@ -75,25 +75,25 @@ TAC_RHS(stmt, cat(cat(qualifiedName, "("), cat(out, ")"))) :-
 TAC_RHS(stmt, cat("new ", type)) :- ALLOC(stmt, _, _, type).
 
 // Static field load
-TAC_RHS(stmt, fldName) :-
+TAC_RHS(stmt, CAT3(owner, ".", fldName)) :-
 	SLOAD(stmt, fld),
-	Field(fld, _, fldName, _).
+	Field(fld, _, fldName, owner).
 
 // Static field store
-TAC(method, index, cat(cat(fldName, " = "), val)) :-
+TAC(method, index, CAT3(fldName, " = ", val)) :-
 	SSTORE(stmt, fld),
 	Stmt(stmt, method, _, index),
 	Field(fld, _, fldName, _),
 	((Operand_VAR(stmt, 1, valVar), VAR(_, valVar, _, val, _)) ; Operand_CONST(stmt, 1, val, _)).
 
 // Instance field load
-TAC_RHS(stmt, cat(cat(name, "."), fldName)) :-
+TAC_RHS(stmt, CAT3(name, ".", fldName)) :-
 	ILOAD(stmt, var, fld),
 	Field(fld, _, fldName, _),
 	VAR(_, var, _, name, _).
 
 // Instance field store
-TAC(method, index, cat(cat(cat(cat(name, "."), fldName), " = "), val)) :-
+TAC(method, index, CAT5(name, ".", fldName, " = ", val)) :-
 	ISTORE(stmt, var, fld),
 	Stmt(stmt, method, _, index),
 	VAR(_, var, _, name, _),
@@ -101,7 +101,7 @@ TAC(method, index, cat(cat(cat(cat(name, "."), fldName), " = "), val)) :-
 	((Operand_VAR(stmt, 1, valVar), VAR(_, valVar, _, val, _)) ; Operand_CONST(stmt, 1, val, _)).
 
 // Assignments -- not in a catch block head
-TAC(method, index, cat(cat(name, " = "), out)) :-
+TAC(method, index, CAT3(name, " = ", out)) :-
 	(ASSIGN(stmt, to) ; PHI_ASSIGN(stmt, to) ; CAST(stmt, to, _)),
 	!INIT_CALL(stmt),
 	!EXCEPTION_HANDLER(method, _, _, stmt, _, _),
@@ -110,7 +110,7 @@ TAC(method, index, cat(cat(name, " = "), out)) :-
 	TAC_RHS(stmt, out).
 
 // Assignments -- in catch block head
-TAC(method, index, cat("---CATCH--- " ,cat(cat(name, " = "), out))) :-
+TAC(method, index, CAT4("---CATCH--- ", name, " = ", out)) :-
 	ASSIGN(handlerStmt, to),
 	EXCEPTION_HANDLER(method, _, _, handlerStmt, _, _),
 	Stmt(handlerStmt, method, _, index),
@@ -145,7 +145,7 @@ TAC(method, index, cat("goto ", to_string(jumpIndex))) :-
 	Stmt(stmt, method, _, index),
 	Stmt(jumpStmt, method, _, jumpIndex).
 
-TAC(method, index, cat(cat("if (", out), cat(") jump ", to_string(jumpIndex)))) :-
+TAC(method, index, CAT4("if (", out, ") jump ", to_string(jumpIndex))) :-
 	IF(stmt, jumpStmt),
 	Stmt(stmt, method, _, index),
 	Stmt(jumpStmt, method, _, jumpIndex),

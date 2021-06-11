@@ -1,6 +1,7 @@
 #define CAT3(v1, v2, v3) cat(cat(v1, v2), v3)
-#define CAT4(v1, v2, v3, v4) cat(cat(v1, v2), cat(v3, v4))
-#define CAT5(v1, v2, v3, v4, v5) cat(cat(v1, v2), cat(cat(v3, v4), v5))
+#define CAT4(v1, v2, v3, v4) cat(CAT3(v1, v2, v3), v4)
+#define CAT5(v1, v2, v3, v4, v5) cat(CAT4(v1, v2, v3, v4), v5)
+#define CAT6(v1, v2, v3, v4, v5, v6) cat(CAT5(v1, v2, v3, v4, v5), v6)
 
 #include "schema.dl"
 #include "bytecode.dl"

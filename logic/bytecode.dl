@@ -148,7 +148,7 @@ __RES_Var(stmt, var) :-
 	OpcodeExt(nextStmt, opcode, _),
 	opcode != "X-store",
 	varName = cat("$r", to_string(i)),
-	var = cat(cat(method, "/"), varName),
+	var = CAT3(method, "/", varName),
 	DESC2T(type, tDesc).
 
 // Handle all assignments to temp or source code vars
@@ -484,7 +484,7 @@ OpcodeExt(stmt, "goto", nextStmt) :-
 	Label(method, label, nextStmt, _).
 
 // The next statement, in sequence, is also a successor in most cases
-p1_Next(stmt, cat(method, cat("/BC/", to_string(i + 1)))) :-
+p1_Next(stmt, CAT3(method, "/BC/", to_string(i + 1))) :-
 	p0_Opcode(stmt, opcode, _),
 	BytecodeStmt(stmt, method, i),
 	opcode != "goto",

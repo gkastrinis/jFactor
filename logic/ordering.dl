@@ -79,7 +79,7 @@ Stmt(newStmt, method, bytecodeIndex + 1, prevIndex + 1) :-
 	BytecodeStmt(stmt, method, bytecodeIndex + 1),
 	!p2_PhiAssign(stmt, _, _),
 	index = prevIndex + 1,
-	newStmt = cat(method, cat("/", to_string(index))).
+	newStmt = CAT3(method, "/", to_string(index)).
 
 // Calculate the index of the first, non-PHI assignment in a PHI node
 Stmt(newStmt, method, bytecodeIndex + 1, index) :-
@@ -88,7 +88,7 @@ Stmt(newStmt, method, bytecodeIndex + 1, index) :-
 	p2_PhiAssign(stmt, _, _),
 	TotalSSAVarsInPHI(stmt, total),
 	index = prevIndex + 1 + total,
-	newStmt = cat(method, cat("/", to_string(index))).
+	newStmt = CAT3(method, "/", to_string(index)).
 
 // Give each PHI assignment an index based on ordering
 // -2 for original bytecode index
@@ -103,4 +103,4 @@ Stmt(newStmt, method, -2, index) :-
 	NextVarInPHI(indexInPHI, stmt, _, ssaVar),
 	SSAVarToOrdInPHI(stmt, to, ssaVar, _),
 	index = prevIndex + 1 + indexInPHI,
-	newStmt = cat(method, cat("/", cat(to_string(index), "/PHI"))).
+	newStmt = CAT4(method, "/", to_string(index), "/PHI").
