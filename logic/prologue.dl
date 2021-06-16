@@ -1,14 +1,6 @@
 #pragma once
 
-.decl p0_Opcode(stmt: symbol, opcode: symbol, oper: symbol)
-.decl p0_Var_RAW(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLabel: symbol)
-.decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
-.decl Handler(method: symbol, startLabel: symbol, endLabel: symbol, handlerLabel: symbol, type: symbol)
-.input p0_Opcode(filename="Opcode.facts")
-.input p0_Var_RAW(filename="Var.facts")
-.input Label
-.input Handler
-
+.decl BasicTypeDesc(type: symbol, desc: symbol)
 // Opcodes
 .decl BinOpcode(opcode: symbol, op: symbol) inline
 .decl UnaryOpcode(opcode: symbol, op: symbol) inline
@@ -23,6 +15,15 @@
 .decl MethodLastStmtIndex(method: symbol, index: number) inline
 .decl p0_Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startIndex: number, endIndex: number)
 
+.decl p0_Opcode(stmt: symbol, opcode: symbol, oper: symbol)
+.decl p0_Var_RAW(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLabel: symbol)
+.decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
+.decl Handler(method: symbol, startLabel: symbol, endLabel: symbol, handlerLabel: symbol, type: symbol)
+.input p0_Opcode(filename="Opcode.facts")
+.input p0_Var_RAW(filename="Var.facts")
+.input Label
+.input Handler
+
 #define BYTE_D ";B"
 #define CHAR_D ";C"
 #define DOUBLE_D ";D"
@@ -33,14 +34,14 @@
 #define VOID_D ";V"
 #define STRING_D ";L"
 
-TypeToDesc("byte", BYTE_D).
-TypeToDesc("char", CHAR_D).
-TypeToDesc("double", DOUBLE_D).
-TypeToDesc("float", FLOAT_D).
-TypeToDesc("int", INT_D).
-TypeToDesc("long", LONG_D).
-TypeToDesc("short", SHORT_D).
-TypeToDesc("void", VOID_D).
+BasicTypeDesc("byte", BYTE_D).
+BasicTypeDesc("char", CHAR_D).
+BasicTypeDesc("double", DOUBLE_D).
+BasicTypeDesc("float", FLOAT_D).
+BasicTypeDesc("int", INT_D).
+BasicTypeDesc("long", LONG_D).
+BasicTypeDesc("short", SHORT_D).
+BasicTypeDesc("void", VOID_D).
 
 ConstLoadOpcode("X-Bconst", BYTE_D).
 ConstLoadOpcode("X-Cconst", CHAR_D).

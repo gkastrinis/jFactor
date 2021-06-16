@@ -6,7 +6,6 @@
 // Annotate operands on the stack with type information
 #define TOP(type, oper, stack) [type, [oper, stack]]
 
-.decl TypeToDesc(type: symbol, desc: symbol)
 .decl __REQ_StackForNext(stmt: symbol, stack: Stack)
 .decl __REQ_Var(stmt: symbol, type: symbol, stack: Stack)
 .decl __RES_Var(stmt: symbol, var: symbol)
@@ -14,11 +13,8 @@
 .decl __REQ_Assign(stmt: symbol, to: symbol)
 .decl __REQ_Operand(stmt: symbol, pos: number, type: symbol, value: symbol) // TODO why?
 
-#define T2DESC(type, desc) \
-(TypeToDesc(type, desc) ; (!TypeToDesc(type, _), desc = type))
-
-#define DESC2T(type, desc) \
-(TypeToDesc(type, desc) ; (!TypeToDesc(_, desc), type = desc))
+#define TYPE2DESC(type, desc) (BasicTypeDesc(type, desc) ; (!BasicTypeDesc(type, _), desc = type))
+#define DESC2TYPE(desc, type) (BasicTypeDesc(type, desc) ; (!BasicTypeDesc(_, desc), type = desc))
 
 ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////
@@ -27,13 +23,13 @@
 __REQ_StackForNext(stmt, TOP(tDesc, const, stack)) :-
 	StackBeforeStmt(stmt, stack),
 	OpcodeExt(stmt, opcode, const),
-	ConstLoadOpcode(opcode, type), T2DESC(type, tDesc).
+	ConstLoadOpcode(opcode, type), TYPE2DESC(type, tDesc).
 
 // -> value
 __REQ_StackForNext(stmt, TOP(tDesc, var, stack)) :-
 	OpcodeExt(stmt, "X-load", var),
 	StackBeforeStmt(stmt, stack),
-	p1_Var(_, var, _, type, _, _), T2DESC(type, tDesc).
+	p1_Var(_, var, _, type, _, _), TYPE2DESC(type, tDesc).
 
 // value ->
 __REQ_Assign(stmt, var),
@@ -85,8 +81,8 @@ __REQ_StackForNext(stmt, stack) :-
 	((OpcodeExt(stmt, "X-inc", var), op = "+") ;
 	 (OpcodeExt(stmt, "X-dec", var), op = "-")),
 	StackBeforeStmt(stmt, stack),
-	p1_Var(_, var, _, type0, _, _), T2DESC(type0, tDesc0),
-	IncValue(stmt, value, type1), T2DESC(type1, tDesc1).
+	p1_Var(_, var, _, type0, _, _), TYPE2DESC(type0, tDesc0),
+	IncValue(stmt, value, type1), TYPE2DESC(type1, tDesc1).
 
 // Handle casts
 p1_Cast(stmt, type, fromType),
@@ -139,7 +135,7 @@ __RES_Var(stmt, var) :-
 	opcode != "X-store",
 	varName = cat("$r", to_string(i)),
 	var = CAT3(method, "/", varName),
-	DESC2T(type, tDesc).
+	DESC2TYPE(tDesc, type).
 
 // Handle all assignments to temp or source code vars
 __REQ_Assign(stmt, var),
@@ -154,7 +150,7 @@ p1_SLoad(stmt, fld),
 __REQ_Var(stmt, tDesc, stack) :-
 	OpcodeExt(stmt, "getstatic", fld),
 	StackBeforeStmt(stmt, stack),
-	Field(fld, type, _, _), T2DESC(type, tDesc).
+	Field(fld, type, _, _), TYPE2DESC(type, tDesc).
 
 // Store static field
 p1_SStore(stmt, fld),
@@ -169,7 +165,7 @@ p1_Operand(stmt, 0, varType, var),
 __REQ_Var(stmt, tDesc, stack) :-
 	OpcodeExt(stmt, "getfield", fld),
 	StackBeforeStmt(stmt, TOP(varType, var, stack)),
-	Field(fld, type, _, _), T2DESC(type, tDesc).
+	Field(fld, type, _, _), TYPE2DESC(type, tDesc).
 
 // Store instance field
 p1_IStore(stmt, fld),
@@ -237,13 +233,13 @@ __REQ_ActualParam(stmt, -2, stack) :-
 p1_Operand(stmt, pos, type, notHeap) :-
 	__REQ_ActualParam(stmt, pos, TOP(tDesc, notHeap, _)), pos >= 0,
 	!p1_Alloc(_, _, notHeap, _),
-	DESC2T(type, tDesc).
+	DESC2TYPE(tDesc, type).
 
 // Use the var instead of the heap id, as argument
 p1_Operand(stmt, pos, type, var) :-
 	__REQ_ActualParam(stmt, pos, TOP(tDesc, heap, _)), pos >= 0,
 	p1_Alloc(_, var, heap, _),
-	DESC2T(type, tDesc).
+	DESC2TYPE(tDesc, type).
 
 // Pop receiver object from stack
 p1_VCall(stmt, base, sig) :-
@@ -274,7 +270,7 @@ __REQ_Var(stmt, retDesc, stack) :-
 	CallOpcode(opcode),
 	Invocation(sig, _, retType, _),
 	(retType != "void" ; opcode = "X-invokeinit"),
-	T2DESC(retType, retDesc),
+	TYPE2DESC(retType, retDesc),
 	__REQ_ActualParam(stmt, -2, stack).
 
 // Propagate stack on void-returning calls (that are not constructors)
