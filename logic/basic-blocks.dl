@@ -53,10 +53,8 @@ BB_End(method, stmt, index) :-
 // and another starts at the target label
 BB_End(method, stmt, index),
 BB_Start(method, targetStmt, targetIndex) :-
+	JumpStmt(stmt, opcode, _),
 	OpcodeExt(stmt, opcode, targetStmt),
-	(ImplicitCondJumpOpcode(opcode, _, _, _) ;
-	 CondJumpOpcode(opcode, _) ;
-	 opcode = "goto"),
 	BytecodeStmt(stmt, method, index),
 	BytecodeStmt(targetStmt, method, targetIndex).
 
