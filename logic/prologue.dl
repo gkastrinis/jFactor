@@ -1,0 +1,254 @@
+#pragma once
+
+.decl p0_Opcode(stmt: symbol, opcode: symbol, oper: symbol)
+.decl p0_Var_RAW(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLabel: symbol)
+.decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
+.decl Handler(method: symbol, startLabel: symbol, endLabel: symbol, handlerLabel: symbol, type: symbol)
+.input p0_Opcode(filename="Opcode.facts")
+.input p0_Var_RAW(filename="Var.facts")
+.input Label
+.input Handler
+
+// Opcodes
+.decl BinOpcode(opcode: symbol, op: symbol) inline
+.decl UnaryOpcode(opcode: symbol, op: symbol) inline
+.decl ConstLoadOpcode(opcode: symbol, type: symbol) inline
+.decl ConvertOpcode(opcode: symbol, fromTypeDesc: symbol, toTypeDesc: symbol) inline
+.decl CallOpcode(opcode: symbol) inline
+.decl ImplicitCondJumpOpcode(opcode: symbol, op: symbol, type1: symbol, oper1: symbol)
+.decl CondJumpOpcode(opcode: symbol, op: symbol)
+// Stmt Groups
+.decl LoadStoreStmt(stmt: symbol, opcode: symbol, oper: symbol)
+.decl JumpStmt(stmt: symbol, opcode: symbol, oper: symbol)
+.decl MethodLastStmtIndex(method: symbol, index: number) inline
+.decl p0_Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startIndex: number, endIndex: number)
+
+#define BYTE_D ";B"
+#define CHAR_D ";C"
+#define DOUBLE_D ";D"
+#define FLOAT_D ";F"
+#define INT_D ";I"
+#define LONG_D ";J"
+#define SHORT_D ";S"
+#define VOID_D ";V"
+#define STRING_D ";L"
+
+TypeToDesc("byte", BYTE_D).
+TypeToDesc("char", CHAR_D).
+TypeToDesc("double", DOUBLE_D).
+TypeToDesc("float", FLOAT_D).
+TypeToDesc("int", INT_D).
+TypeToDesc("long", LONG_D).
+TypeToDesc("short", SHORT_D).
+TypeToDesc("void", VOID_D).
+
+ConstLoadOpcode("X-Bconst", BYTE_D).
+ConstLoadOpcode("X-Cconst", CHAR_D).
+ConstLoadOpcode("X-Dconst", DOUBLE_D).
+ConstLoadOpcode("X-Fconst", FLOAT_D).
+ConstLoadOpcode("X-Iconst", INT_D).
+ConstLoadOpcode("X-Jconst", LONG_D).
+ConstLoadOpcode("X-Sconst", SHORT_D).
+ConstLoadOpcode("X-Lconst", STRING_D). // TODO or NULL?
+
+ConvertOpcode("i2l", INT_D, LONG_D).
+ConvertOpcode("i2f", INT_D, FLOAT_D).
+ConvertOpcode("i2d", INT_D, DOUBLE_D).
+ConvertOpcode("l2i", LONG_D, INT_D).
+ConvertOpcode("l2f", LONG_D, FLOAT_D).
+ConvertOpcode("l2d", LONG_D, DOUBLE_D).
+ConvertOpcode("f2i", FLOAT_D, INT_D).
+ConvertOpcode("f2l", FLOAT_D, LONG_D).
+ConvertOpcode("f2d", FLOAT_D, DOUBLE_D).
+ConvertOpcode("d2i", DOUBLE_D, INT_D).
+ConvertOpcode("d2l", DOUBLE_D, LONG_D).
+ConvertOpcode("d2f", DOUBLE_D, FLOAT_D).
+ConvertOpcode("i2b", INT_D, BYTE_D).
+ConvertOpcode("i2c", INT_D, CHAR_D).
+ConvertOpcode("i2s", INT_D, SHORT_D).
+
+BinOpcode("X-add", "+").
+BinOpcode("X-sub", "-").
+BinOpcode("X-mul", "*").
+BinOpcode("X-div", "/").
+BinOpcode("X-rem", "%").
+BinOpcode("X-band", "&").
+BinOpcode("X-bor", "|").
+BinOpcode("X-bxor", "^").
+BinOpcode("X-shl", "<<").
+BinOpcode("X-shr", ">>").
+BinOpcode("X-ushr", ">>>").
+BinOpcode("lcmp", "cmp").
+BinOpcode("cmpl", "cmp").
+BinOpcode("cmpg", "cmp").
+UnaryOpcode("X-neg", "-").
+
+CallOpcode("invokevirtual").
+CallOpcode("invokeinterface").
+CallOpcode("invokespecial").
+CallOpcode("X-invokeinit").
+CallOpcode("invokestatic").
+
+ImplicitCondJumpOpcode("ifeq", "==", ";B", "0").
+ImplicitCondJumpOpcode("ifne", "!=", ";B", "0").
+ImplicitCondJumpOpcode("iflt", "<", ";B", "0").
+ImplicitCondJumpOpcode("ifge", ">=", ";B", "0").
+ImplicitCondJumpOpcode("ifgt", ">", ";B", "0").
+ImplicitCondJumpOpcode("ifle", "<=", ";B", "0").
+ImplicitCondJumpOpcode("ifnull", "==", ";L", "NULL").
+ImplicitCondJumpOpcode("ifnonnull", "!=", ";L", "NULL").
+
+CondJumpOpcode("if_icmpeq", "==").
+CondJumpOpcode("if_icmpne", "!=").
+CondJumpOpcode("if_icmplt", "<").
+CondJumpOpcode("if_icmpge", ">=").
+CondJumpOpcode("if_icmpgt", ">").
+CondJumpOpcode("if_icmple", "<=").
+CondJumpOpcode("if_acmpeq", "==").
+CondJumpOpcode("if_acmpne", "!=").
+
+LoadStoreStmt(stmt, "X-load", varIndex) :- p0_Opcode(stmt, "X-load", varIndex).
+LoadStoreStmt(stmt, "X-store", varIndex) :- p0_Opcode(stmt, "X-store", varIndex).
+LoadStoreStmt(stmt, "X-inc", varIndex) :- p0_Opcode(stmt, "X-inc", varIndex).
+LoadStoreStmt(stmt, "X-dec", varIndex) :- p0_Opcode(stmt, "X-dec", varIndex).
+
+JumpStmt(stmt, opcode, oper) :- ImplicitCondJumpOpcode(opcode, _, _, _), p0_Opcode(stmt, opcode, oper).
+JumpStmt(stmt, opcode, oper) :- CondJumpOpcode(opcode, _), p0_Opcode(stmt, opcode, oper).
+JumpStmt(stmt, "goto", oper) :- p0_Opcode(stmt, "goto", oper).
+
+MethodLastStmtIndex(method, lastIndex) :-
+	BytecodeStmt(_, method, _),
+	lastIndex = max index : { BytecodeStmt(_, method, index) }.
+
+// The endIndex in VarRange is not inclusive in the original bytecode
+p0_Var(method, varIndex, var, name, type, startIndex, endIndex - 1) :-
+	p0_Var_RAW(method, varIndex, var, name, type, startLabel, endLabel),
+	Label(method, startLabel, _, startIndex),
+	Label(method, endLabel, _, endIndex).
+
+p1_Var(method, var, name, type, start, end) :- p0_Var(method, _, var, name, type, start, end).
+
+// Anything other than var load/store and jumps
+OpcodeExt(stmt, opcode, oper) :-
+	p0_Opcode(stmt, opcode, oper),
+	!LoadStoreStmt(stmt, opcode, oper),
+	!JumpStmt(stmt, opcode, oper).
+
+// Jump targets
+p1_Next(stmt, nextStmt),
+OpcodeExt(stmt, opcode, nextStmt) :-
+	JumpStmt(stmt, opcode, label),
+	BytecodeStmt(stmt, method, _),
+	Label(method, label, nextStmt, _).
+
+// The next statement, in sequence, is also a successor in most cases
+p1_Next(stmt, CAT3(method, "/BC/", to_string(i + 1))) :-
+	p0_Opcode(stmt, opcode, _),
+	BytecodeStmt(stmt, method, i),
+	MethodLastStmtIndex(method, lastIndex),
+	i != lastIndex,
+	opcode != "goto",
+	opcode != "athrow",
+	opcode != "X-return",
+	opcode != "return".
+
+// Assume that the first instruction of a handler is a store
+p1_ExceptionHandler(method, startStmt, endStmt, handlerStmt, type, var) :-
+	Handler(method, startLabel, endLabel, handlerLabel, type),
+	Label(method, startLabel, startStmt, _),
+	Label(method, endLabel, endStmt, _),
+	Label(method, handlerLabel, handlerStmt, _),
+	OpcodeExt(handlerStmt, "X-store", var).
+
+ERROR(handlerStmt, "first stmt of handler should be a `store` opcode") :-
+	Handler(method, _, _, handlerLabel, _),
+	Label(method, handlerLabel, handlerStmt, _),
+	OpcodeExt(handlerStmt, opcode, _),
+	opcode != "X-store".
+
+ERROR(stmt, cat("stmt is not associated with a stack for: ", opcode)) :-
+	OpcodeExt(stmt, opcode, _),
+	!StackBeforeStmt(stmt, _).
+
+ERROR(stmt, cat("stmt has no entry in OpcodeExt: ", stmt)) :-
+	p0_Opcode(stmt, opcode, _),
+	!OpcodeExt(stmt, opcode, _).
+
+
+.decl StmtInVarRange(stmt: symbol)
+.decl StmtMissingVarRange(method: symbol, stmtIndex: number, stmt: symbol, opcode: symbol, varIndex: symbol)
+.decl NewTempVar(method: symbol, stmtIndex: number, var: symbol, name: symbol, type: symbol)
+.decl REQ_VarRangeStart(method: symbol, stmtIndex: number, mayStartIndex: number)
+.decl RES_VarRangeStart(method: symbol, stmtIndex: number, startIndex: number)
+.decl REQ_VarRangeEnd(method: symbol, stmtIndex: number, mayEndIndex: number)
+.decl RES_VarRangeEnd(method: symbol, stmtIndex: number, endIndex: number)
+
+// Match load/store statements to variable scopes
+// The first store statement of a variable is located one index before the variable's scope start
+StmtInVarRange(stmt),
+OpcodeExt(stmt, opcode, var) :-
+	LoadStoreStmt(stmt, opcode, varIndex),
+	BytecodeStmt(stmt, method, stmtIndex),
+	p0_Var(method, varIndex, var, _, _, startIndex, endIndex),
+	startIndex - 1 <= stmtIndex, stmtIndex <= endIndex.
+
+StmtMissingVarRange(method, stmtIndex, stmt, opcode, varIndex) :-
+	LoadStoreStmt(stmt, opcode, varIndex),
+	BytecodeStmt(stmt, method, stmtIndex),
+	!StmtInVarRange(stmt).
+
+// Java bytecode might use a declared variable, before its life range,
+// as an optimization instead of introducing a new slot.
+// The same slot might also appear in multiple ranges.
+// New temp vars should have a range that doesn't conflict with existing ones
+NewTempVar(method, stmtIndex, var, varName, "java.lang.Object"), // TODO correct type
+OpcodeExt(stmt, opcode, var) :-
+	StmtMissingVarRange(method, stmtIndex, stmt, opcode, varIndex),
+	p0_Var(method, varIndex, _, name, _, _, _),
+	varName = CAT4("$opt_", name, "_", varIndex),
+	var = CAT3(method, "/", varName).
+
+REQ_VarRangeStart(method, stmtIndex, 0) :-
+	StmtMissingVarRange(method, stmtIndex, _, _, _).
+
+REQ_VarRangeStart(method, stmtIndex, endIndex + 1) :-
+	StmtMissingVarRange(method, stmtIndex, _, _, varIndex),
+	p0_Var(method, varIndex, _, _, _, _, endIndex),
+	stmtIndex > endIndex.
+
+RES_VarRangeStart(method, stmtIndex, start) :-
+	REQ_VarRangeStart(method, stmtIndex, _),
+	start = max mayStartIndex : { REQ_VarRangeStart(method, stmtIndex, mayStartIndex) }.
+
+REQ_VarRangeEnd(method, stmtIndex, lastIndex) :-
+	StmtMissingVarRange(method, stmtIndex, _, _, _),
+	MethodLastStmtIndex(method, lastIndex).
+
+REQ_VarRangeEnd(method, stmtIndex, startIndex - 2) :-
+	StmtMissingVarRange(method, stmtIndex, _, _, varIndex),
+	p0_Var(method, varIndex, _, _, _, startIndex, _),
+	stmtIndex < startIndex.
+
+RES_VarRangeEnd(method, stmtIndex, end) :-
+	REQ_VarRangeEnd(method, stmtIndex, _),
+	end = min mayEndIndex : { REQ_VarRangeEnd(method, stmtIndex, mayEndIndex) }.
+
+// Exception handlers or other language constructs (e.g., implicit iterators),
+// might introduce unnamed variables (that don't have an explicit slot)
+NewTempVar(method, stmtIndex, var, varName, "java.lang.Object"), // TODO correct type
+RES_VarRangeStart(method, stmtIndex, 0),
+RES_VarRangeEnd(method, stmtIndex, lastIndex),
+OpcodeExt(stmt, opcode, var) :-
+	StmtMissingVarRange(method, stmtIndex, stmt, opcode, varIndex),
+	!p0_Var(method, varIndex, _, _, _, _, _),
+	MethodLastStmtIndex(method, lastIndex),
+	varName = cat("$t", varIndex),
+	var = CAT3(method, "/", varName).
+
+p1_Var(method, var, varName, type, start, end) :-
+	NewTempVar(method, stmtIndex, var, varName, type),
+	RES_VarRangeStart(method, stmtIndex, start),
+	RES_VarRangeEnd(method, stmtIndex, end).
+
+// TODO report warning to souffle team
+//	((stmtIndex < startIndex - 1, endIndex = endIndex) ; stmtIndex > endIndex),

@@ -11,7 +11,7 @@ CallStmt(stmt, sig) :- VCALL(stmt, _, sig) ; SPCALL(stmt, _, sig) ; SCALL(stmt, 
 // Ignore `pos` == -1, that stores the receiver object of a call
 OperandStr(stmt, pos, name) :-
 	Operand_VAR(stmt, pos, var), pos >= 0,
-	VAR(_, var, _, name, _).
+	VAR(_, var, _, name).
 
 OperandStr(stmt, pos, const) :-
 	Operand_CONST(stmt, pos, const, _).
@@ -64,7 +64,7 @@ TAC_RHS(stmt, CAT6(baseName, " -> ", qualifiedName, "(", out, ")")) :-
 	AllOperandsStrDownTo(stmt, -1, out),
 	Invocation(sig, _, _, qualifiedName),
 	Stmt(stmt, method, _, _),
-	VAR(method, base, _, baseName, _).
+	VAR(method, base, _, baseName).
 
 TAC_RHS(stmt, CAT4(qualifiedName, "(", out, ")")) :-
 	SCALL(stmt, sig),
@@ -84,21 +84,21 @@ TAC(method, index, CAT3(fldName, " = ", val)) :-
 	SSTORE(stmt, fld),
 	Stmt(stmt, method, _, index),
 	Field(fld, _, fldName, _),
-	((Operand_VAR(stmt, 1, valVar), VAR(_, valVar, _, val, _)) ; Operand_CONST(stmt, 1, val, _)).
+	((Operand_VAR(stmt, 1, valVar), VAR(_, valVar, _, val)) ; Operand_CONST(stmt, 1, val, _)).
 
 // Instance field load
 TAC_RHS(stmt, CAT3(name, ".", fldName)) :-
 	ILOAD(stmt, var, fld),
 	Field(fld, _, fldName, _),
-	VAR(_, var, _, name, _).
+	VAR(_, var, _, name).
 
 // Instance field store
 TAC(method, index, CAT5(name, ".", fldName, " = ", val)) :-
 	ISTORE(stmt, var, fld),
 	Stmt(stmt, method, _, index),
-	VAR(_, var, _, name, _),
+	VAR(_, var, _, name),
 	Field(fld, _, fldName, _),
-	((Operand_VAR(stmt, 1, valVar), VAR(_, valVar, _, val, _)) ; Operand_CONST(stmt, 1, val, _)).
+	((Operand_VAR(stmt, 1, valVar), VAR(_, valVar, _, val)) ; Operand_CONST(stmt, 1, val, _)).
 
 // Assignments -- not in a catch block head
 TAC(method, index, CAT3(name, " = ", out)) :-
@@ -106,7 +106,7 @@ TAC(method, index, CAT3(name, " = ", out)) :-
 	!INIT_CALL(stmt),
 	!EXCEPTION_HANDLER(method, _, _, stmt, _, _),
 	Stmt(stmt, method, _, index),
-	VAR(method, to, _, name, _),
+	VAR(method, to, _, name),
 	TAC_RHS(stmt, out).
 
 // Assignments -- in catch block head
@@ -114,7 +114,7 @@ TAC(method, index, CAT4("---CATCH--- ", name, " = ", out)) :-
 	ASSIGN(handlerStmt, to),
 	EXCEPTION_HANDLER(method, _, _, handlerStmt, _, _),
 	Stmt(handlerStmt, method, _, index),
-	VAR(method, to, _, name, _),
+	VAR(method, to, _, name),
 	TAC_RHS(handlerStmt, out).
 
 // Calls to a constructor
@@ -154,7 +154,7 @@ TAC(method, index, CAT4("if (", out, ") jump ", to_string(jumpIndex))) :-
 TAC(method, index, cat("throw ", varName)) :-
 	THROW(stmt, var),
 	Stmt(stmt, method, _, index),
-	VAR(method, var, _, varName, _).
+	VAR(method, var, _, varName).
 
 // TODO fix jump targets to correspond to visible statements
 TAC(method, index, "---LABEL---") :-

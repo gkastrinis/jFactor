@@ -1,8 +1,6 @@
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class A {
 	public static void main(String args[]){
@@ -26,6 +24,8 @@ public class A {
 		test18(100);
 		test19(2);
 		test21();
+		test22();
+		test23();
 	}
 
 	static void test1() {
@@ -272,16 +272,39 @@ public class A {
 
 	static void test21() {
 		List<Integer> l1 = new ArrayList<>();
-		l1.add(1);
-		l1.add(2);
 		for (Integer i : l1) {
 			System.out.println(i);
 		}
-//		for (int i = 0 ; i < l1.size() ; i++)
-//			System.out.println(l1.get(i));
-//		List<Object> i = new ArrayList<>();
-//		i.add("HI");
-//		System.out.println(i.get(0));
+		for (Integer i : l1) {
+			System.out.println(i);
+		}
+		Set<Integer> s1 = new HashSet<>();
+		for (Integer k : s1) {
+			System.out.println(k);
+		}
+		for (int i = 0 ; i < l1.size() ; i++)
+			System.out.println(l1.get(i));
+		List<Object> i = new ArrayList<>();
+		i.add("HI");
+		System.out.println(i.get(0));
+	}
+
+	static void test22() {
+		List<Integer> l1 = new ArrayList<>();
+		Set<Integer> s1 = new HashSet<>();
+		for (Integer i : l1) {
+			System.out.println(i);
+		}
+		for (Integer i : s1) {
+			System.out.println(i);
+		}
+	}
+
+	static void test23() {
+		List<Integer> l1 = new ArrayList<>();
+		for (Integer i : l1) {
+			System.out.println(i);
+		}
 	}
 }
 

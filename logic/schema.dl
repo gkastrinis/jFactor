@@ -6,7 +6,8 @@
 // * SSA = Static Single Assignment
 
 // Output //
-.decl VAR(method: symbol, var: symbol, type: symbol, name: symbol, ogName: symbol)
+.decl ERROR(stmt: symbol, msg: symbol)
+.decl VAR(method: symbol, var: symbol, type: symbol, name: symbol)
 .decl VarRange(var: symbol, startIndex: number, endIndex: number)
 .decl EXCEPTION_HANDLER(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
 .decl BasicBlock(method: symbol, startStmt: symbol, endStmt: symbol)
@@ -37,33 +38,21 @@
 
 // Input //
 .decl FORMAL_PARAM(method: symbol, pos: number, var: symbol)
-
 .decl BytecodeStmt(id: symbol, method: symbol, index: number)
-.decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
-.decl Handler(method: symbol, startLabel: symbol, endLabel: symbol, handlerLabel: symbol, type: symbol)
 .decl Invocation(sig: symbol, argc: number, retType: symbol, qualifiedName: symbol)
 .decl AllocType(stmt: symbol, type: symbol)
 .decl IncValue(stmt: symbol, value : symbol, type: symbol)
 .decl Field(fld: symbol, type: symbol, name: symbol, owner: symbol)
-.decl p0_Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLable: symbol)
-.decl p0_Opcode(stmt: symbol, opcode: symbol, oper: symbol)
 .input FORMAL_PARAM
 .input BytecodeStmt
-.input Label
-.input Handler
 .input Invocation
 .input AllocType
 .input IncValue
 .input Field
-.input p0_Var(filename="Var.facts")
-.input p0_Opcode(filename="Opcode.facts")
 
-// Core //
-.decl ERROR(stmt: symbol, msg: symbol)
-.decl OpcodeExt(stmt: symbol, opcode: symbol, oper: symbol)
 // Bytecode phase
-.decl p1_Var(method: symbol, var: symbol, type: symbol, name: symbol)
-.decl p1_VarRange(var: symbol, startIndex: number, endIndex: number)
+.decl OpcodeExt(stmt: symbol, opcode: symbol, oper: symbol)
+.decl p1_Var(method: symbol, var: symbol, name: symbol, type: symbol, startIndex: number, endIndex: number)
 .decl p1_Next(fromStmt: symbol, toStmt: symbol)
 .decl p1_Assign(stmt: symbol, to: symbol)
 .decl p1_Cast(stmt: symbol, type: symbol, fromType: symbol)

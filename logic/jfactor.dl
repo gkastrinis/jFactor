@@ -4,6 +4,7 @@
 #define CAT6(v1, v2, v3, v4, v5, v6) cat(CAT5(v1, v2, v3, v4, v5), v6)
 
 #include "schema.dl"
+#include "prologue.dl"
 #include "bytecode.dl"
 #include "basic-blocks.dl"
 #include "ssa.dl"
@@ -13,7 +14,7 @@
 
 .output ERROR
 .output OpcodeExt
-.output StackBeforeStmt
+//.output StackBeforeStmt
 
 // FACTS //
 //.output VAR

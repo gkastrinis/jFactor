@@ -22,7 +22,7 @@ p2_Assign(stmt, var, ssaVar, index, inBB) :-
 p2_VarInfo(var, name, var),
 p2_Assign(stmt, var, var, index, inBB) :-
 	ToRename(stmt, var, _, _, index, inBB),
-	p1_Var(_, var, _, name),
+	p1_Var(_, var, name, _, _, _),
 	!HasMultipleDefs(var).
 
 // Mock assignments to formal parameters,
@@ -31,7 +31,7 @@ p2_Assign(stmt, var, var, index, inBB) :-
 ToRename(stmt, var, var, name, PROLOGUE_INDEX, stmt) :-
 	FORMAL_PARAM(method, _, var),
 	BB_Start(method, stmt, PROLOGUE_INDEX),
-	p1_Var(_, var, _, name).
+	p1_Var(method, var, name, _, _, _).
 
 // Rename all various "source" var assigns
 ToRename(stmt, var, ssaVar, ssaName, index, startStmt) :-
@@ -40,7 +40,7 @@ ToRename(stmt, var, ssaVar, ssaName, index, startStmt) :-
 	BytecodeStmt(stmt, method, index),
 	BB_Range(method, startStmt, _, startIndex, endIndex),
 	startIndex <= index, index <= endIndex,
-	p1_Var(_, var, _, name),
+	p1_Var(method, var, name, _, _, _),
 	suffix = cat("#_", to_string(index)),
 	ssaVar = cat(var, suffix), ssaName = cat(name, suffix).
 
@@ -52,10 +52,9 @@ ToRename(toBB, var, ssaVar, ssaName, startIndex, toBB) :-
 	BB_DominanceFrontier(fromBB1, toBB),
 	p2_Assign(_, var, _, _, fromBB2),
 	fromBB1 != fromBB2,
-	p1_VarRange(var, varStart, varEnd),
+	p1_Var(_, var, name, _, varStart, varEnd),
 	BB_Start(_, toBB, startIndex),
 	varStart <= startIndex, startIndex <= varEnd,
-	p1_Var(_, var, _, name),
 	suffix = cat("#_PHI_", to_string(startIndex)),
 	ssaVar = cat(var, suffix), ssaName = cat(name, suffix).
 
@@ -64,7 +63,7 @@ VarAliveAtStartOfBB(var, ssaVar, toBB) :-
 	VarAliveAtEndOfBB(var, ssaVar, fromBB),
 	p1_Next(endStmt, toBB),
 	BB_Start(_, toBB, toBBIndex),
-	p1_VarRange(var, varStart, varEnd),
+	p1_Var(_, var, _, _, varStart, varEnd),
 	varStart <= toBBIndex, toBBIndex <= varEnd.
 
 VarAliveAtEndOfBB(var, ssaVar, inBB) :-
@@ -84,8 +83,7 @@ SSAVarForVarRead(stmt, var, ssaVar) :-
 	BytecodeStmt(stmt, _, index),
 	BytecodeStmtInBB(stmt, inBB),
 	p2_Assign(_, var, ssaVar, maxMinIndex, inBB),
-	maxMinIndex = max minIndex :
-	{ p2_Assign(_, var, _, minIndex, inBB), minIndex < index }.
+	maxMinIndex = max minIndex : { p2_Assign(_, var, _, minIndex, inBB), minIndex < index }.
 
 // Defined in a previous basic-block
 SSAVarForVarRead(stmt, var, ssaVar) :-
@@ -94,7 +92,7 @@ SSAVarForVarRead(stmt, var, ssaVar) :-
 	!VarHasPrevDefInSameBB(stmt, var),
 	VarAliveAtStartOfBB(var, ssaVar, inBB).
 
-VarRead(stmt, var) :- p1_Operand(stmt, _, _, var).
+VarRead(stmt, var) :- p1_Operand(stmt, pos, _, var), pos >= 0.
 VarRead(stmt, base) :- p1_VCall(stmt, base, _).
 VarRead(stmt, base) :- p1_SPCall(stmt, base, _).
 VarRead(stmt, var) :- p1_Throw(stmt, var).

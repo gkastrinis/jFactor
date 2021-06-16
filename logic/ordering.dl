@@ -1,7 +1,4 @@
 #pragma once
-#include "schema.dl"
-#include "basic-blocks.dl"
-#include "ssa.dl"
 
 // Order vars participating in phi-nodes, for a given basic block
 .decl VarToOrdInPHI(inBB: symbol, var: symbol, order: number)
@@ -69,6 +66,7 @@ TotalSSAVarsInPHI(inBB, lastIndex + 1) :-
 	p2_PhiAssign(inBB, _, _),
 	NextVarInPHI(lastIndex, inBB, _, lastVar),
 	!NextVarInPHI(lastIndex + 1, inBB, lastVar, _).
+
 
 // Start from -1, to avoid PHI nodes at the beginning of a method
 Stmt(PROLOGUE_STMT(method), method, -1, -1) :- BytecodeStmt(_, method, _).

@@ -1,5 +1,4 @@
 #pragma once
-#include "schema.dl"
 
 // Starting and ending statements for each Basic Block
 .decl BB_Start(method: symbol, stmt: symbol, index: number)

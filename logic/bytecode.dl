@@ -6,24 +6,13 @@
 // Annotate operands on the stack with type information
 #define TOP(type, oper, stack) [type, [oper, stack]]
 
-.decl TempVar(var: symbol, name: symbol)
 .decl TypeToDesc(type: symbol, desc: symbol)
-// Opcodes
-.decl BinOpcode(opcode: symbol, op: symbol) inline
-.decl UnaryOpcode(opcode: symbol, op: symbol) inline
-.decl ConstLoadOpcode(opcode: symbol, type: symbol) inline
-.decl ConvertOpcode(opcode: symbol, fromTypeDesc: symbol, toTypeDesc: symbol) inline
-.decl CallOpcode(opcode: symbol) inline
-.decl ImplicitCondJumpOpcode(opcode: symbol, op: symbol, type1: symbol, oper1: symbol)
-.decl CondJumpOpcode(opcode: symbol, op: symbol)
-
 .decl __REQ_StackForNext(stmt: symbol, stack: Stack)
 .decl __REQ_Var(stmt: symbol, type: symbol, stack: Stack)
 .decl __RES_Var(stmt: symbol, var: symbol)
 .decl __REQ_ActualParam(stmt: symbol, pos: number, stack: Stack)
 .decl __REQ_Assign(stmt: symbol, to: symbol)
 .decl __REQ_Operand(stmt: symbol, pos: number, type: symbol, value: symbol) // TODO why?
-.decl __REQ_TempVar(method: symbol, var: symbol, type: symbol, varName: symbol, stmtIndex: number)
 
 #define T2DESC(type, desc) \
 (TypeToDesc(type, desc) ; (!TypeToDesc(type, _), desc = type))
@@ -44,7 +33,7 @@ __REQ_StackForNext(stmt, TOP(tDesc, const, stack)) :-
 __REQ_StackForNext(stmt, TOP(tDesc, var, stack)) :-
 	OpcodeExt(stmt, "X-load", var),
 	StackBeforeStmt(stmt, stack),
-	p1_Var(_, var, type, _), T2DESC(type, tDesc).
+	p1_Var(_, var, _, type, _, _), T2DESC(type, tDesc).
 
 // value ->
 __REQ_Assign(stmt, var),
@@ -96,7 +85,7 @@ __REQ_StackForNext(stmt, stack) :-
 	((OpcodeExt(stmt, "X-inc", var), op = "+") ;
 	 (OpcodeExt(stmt, "X-dec", var), op = "-")),
 	StackBeforeStmt(stmt, stack),
-	p1_Var(_, var, type0, _), T2DESC(type0, tDesc0),
+	p1_Var(_, var, _, type0, _, _), T2DESC(type0, tDesc0),
 	IncValue(stmt, value, type1), T2DESC(type1, tDesc1).
 
 // Handle casts
@@ -140,8 +129,8 @@ __RES_Var(stmt, var) :-
 	OpcodeExt(nextStmt, "X-store", var).
 
 // ...or generate a temp one
-TempVar(var, varName),
-p1_Var(method, var, type, varName),
+// temp vars for local results are not reused
+p1_Var(method, var, varName, type, i, i + 1),
 __RES_Var(stmt, var) :-
 	__REQ_Var(stmt, tDesc, _),
 	BytecodeStmt(stmt, method, i),
@@ -333,185 +322,6 @@ p1_Operand(stmt, pos, type, oper) :-
 // Treat assigned return values as operands in pos -1
 p1_Operand(stmt, -1, type, var) :-
 	__REQ_Assign(stmt, var),
-	p1_Var(_, var, type, _),
+	p1_Var(_, var, _, type, _, _),
 	OpcodeExt(stmt, opcode, _),
 	CallOpcode(opcode).
-
-///////////////////////////////////////////////////////////////
-// Setup...
-///////////////////////////////////////////////////////////////
-
-#define BYTE_D ";B"
-#define CHAR_D ";C"
-#define DOUBLE_D ";D"
-#define FLOAT_D ";F"
-#define INT_D ";I"
-#define LONG_D ";J"
-#define SHORT_D ";S"
-#define VOID_D ";V"
-#define STRING_D ";L"
-
-TypeToDesc("byte", BYTE_D).
-TypeToDesc("char", CHAR_D).
-TypeToDesc("double", DOUBLE_D).
-TypeToDesc("float", FLOAT_D).
-TypeToDesc("int", INT_D).
-TypeToDesc("long", LONG_D).
-TypeToDesc("short", SHORT_D).
-TypeToDesc("void", VOID_D).
-
-ConstLoadOpcode("X-Bconst", BYTE_D).
-ConstLoadOpcode("X-Cconst", CHAR_D).
-ConstLoadOpcode("X-Dconst", DOUBLE_D).
-ConstLoadOpcode("X-Fconst", FLOAT_D).
-ConstLoadOpcode("X-Iconst", INT_D).
-ConstLoadOpcode("X-Jconst", LONG_D).
-ConstLoadOpcode("X-Sconst", SHORT_D).
-ConstLoadOpcode("X-Lconst", STRING_D). // TODO or NULL?
-
-ConvertOpcode("i2l", INT_D, LONG_D).
-ConvertOpcode("i2f", INT_D, FLOAT_D).
-ConvertOpcode("i2d", INT_D, DOUBLE_D).
-ConvertOpcode("l2i", LONG_D, INT_D).
-ConvertOpcode("l2f", LONG_D, FLOAT_D).
-ConvertOpcode("l2d", LONG_D, DOUBLE_D).
-ConvertOpcode("f2i", FLOAT_D, INT_D).
-ConvertOpcode("f2l", FLOAT_D, LONG_D).
-ConvertOpcode("f2d", FLOAT_D, DOUBLE_D).
-ConvertOpcode("d2i", DOUBLE_D, INT_D).
-ConvertOpcode("d2l", DOUBLE_D, LONG_D).
-ConvertOpcode("d2f", DOUBLE_D, FLOAT_D).
-ConvertOpcode("i2b", INT_D, BYTE_D).
-ConvertOpcode("i2c", INT_D, CHAR_D).
-ConvertOpcode("i2s", INT_D, SHORT_D).
-
-BinOpcode("X-add", "+").
-BinOpcode("X-sub", "-").
-BinOpcode("X-mul", "*").
-BinOpcode("X-div", "/").
-BinOpcode("X-rem", "%").
-BinOpcode("X-band", "&").
-BinOpcode("X-bor", "|").
-BinOpcode("X-bxor", "^").
-BinOpcode("X-shl", "<<").
-BinOpcode("X-shr", ">>").
-BinOpcode("X-ushr", ">>>").
-BinOpcode("lcmp", "cmp").
-BinOpcode("cmpl", "cmp").
-BinOpcode("cmpg", "cmp").
-UnaryOpcode("X-neg", "-").
-
-CallOpcode("invokevirtual").
-CallOpcode("invokeinterface").
-CallOpcode("invokespecial").
-CallOpcode("X-invokeinit").
-CallOpcode("invokestatic").
-
-ImplicitCondJumpOpcode("ifeq", "==", ";B", "0").
-ImplicitCondJumpOpcode("ifne", "!=", ";B", "0").
-ImplicitCondJumpOpcode("iflt", "<", ";B", "0").
-ImplicitCondJumpOpcode("ifge", ">=", ";B", "0").
-ImplicitCondJumpOpcode("ifgt", ">", ";B", "0").
-ImplicitCondJumpOpcode("ifle", "<=", ";B", "0").
-ImplicitCondJumpOpcode("ifnull", "==", ";L", "NULL").
-ImplicitCondJumpOpcode("ifnonnull", "!=", ";L", "NULL").
-
-CondJumpOpcode("if_icmpeq", "==").
-CondJumpOpcode("if_icmpne", "!=").
-CondJumpOpcode("if_icmplt", "<").
-CondJumpOpcode("if_icmpge", ">=").
-CondJumpOpcode("if_icmpgt", ">").
-CondJumpOpcode("if_icmple", "<=").
-CondJumpOpcode("if_acmpeq", "==").
-CondJumpOpcode("if_acmpne", "!=").
-
-///////////////////////////////////////////////////////////////
-
-// The endIndex in VarRange is not inclusive in the original bytecode
-p1_Var(method, var, type, name),
-p1_VarRange(var, startIndex, endIndex - 1) :-
-	p0_Var(method, _, var, name, type, startLabel, endLabel),
-	Label(method, startLabel, _, startIndex),
-	Label(method, endLabel, _, endIndex).
-
-// Match load/store statements to variable scopes
-// The first store statement of a variable is located
-// one index before the variable's scope start
-OpcodeExt(stmt, opcode, var) :-
-	((p0_Opcode(stmt, "X-load", varIndex), opcode = "X-load");
-	 (p0_Opcode(stmt, "X-store", varIndex), opcode = "X-store");
-	 (p0_Opcode(stmt, "X-inc", varIndex), opcode = "X-inc");
-	 (p0_Opcode(stmt, "X-dec", varIndex), opcode = "X-dec")),
-	BytecodeStmt(stmt, method, index),
-	p0_Var(method, varIndex, var, _, _, _, _),
-	p1_VarRange(var, startIndex, endIndex),
-	(startIndex - 1) <= index, index <= endIndex.
-
-// Exception handlers and other language constructs, might introduce unnamed variables
-__REQ_TempVar(method, var, "java.lang.Throwable", varName, index), // TODO correct type?
-OpcodeExt(stmt, opcode, var) :-
-	((p0_Opcode(stmt, "X-load", varIndex), opcode = "X-load") ;
-	 (p0_Opcode(stmt, "X-store", varIndex), opcode = "X-store")),
-	BytecodeStmt(stmt, method, index),
-	!p0_Var(method, varIndex, _, _, _, _, _),
-	varName = cat("$t", varIndex),
-	var = CAT3(method, "/", varName).
-
-TempVar(var, varName),
-p1_Var(method, var, type, varName),
-p1_VarRange(var, start, end) :-
-	__REQ_TempVar(method, var, type, varName, start),
-	start = min index : { __REQ_TempVar(method, var, type, varName, index) },
-	end = max methodIndex : { BytecodeStmt(_, method, methodIndex) }.
-
-// Anything other than var load/store and jumps
-OpcodeExt(stmt, opcode, oper) :-
-	p0_Opcode(stmt, opcode, oper),
-	opcode != "X-load",
-	opcode != "X-store",
-	opcode != "X-inc",
-	opcode != "X-dec",
-	opcode != "goto",
-	!ImplicitCondJumpOpcode(opcode, _, _, _),
-	!CondJumpOpcode(opcode, _).
-
-p1_Next(stmt, nextStmt),
-OpcodeExt(stmt, opcode, nextStmt) :-
-	p0_Opcode(stmt, opcode, label),
-	(ImplicitCondJumpOpcode(opcode, _, _, _) ;
-	 CondJumpOpcode(opcode, _)),
-	BytecodeStmt(stmt, method, _),
-	Label(method, label, nextStmt, _).
-
-p1_Next(stmt, nextStmt),
-OpcodeExt(stmt, "goto", nextStmt) :-
-	p0_Opcode(stmt, "goto", label),
-	BytecodeStmt(stmt, method, _),
-	Label(method, label, nextStmt, _).
-
-// The next statement, in sequence, is also a successor in most cases
-p1_Next(stmt, CAT3(method, "/BC/", to_string(i + 1))) :-
-	p0_Opcode(stmt, opcode, _),
-	BytecodeStmt(stmt, method, i),
-	opcode != "goto",
-	opcode != "athrow",
-	opcode != "X-return",
-	opcode != "return".
-
-// Assume that the first instruction of a handler is a store
-p1_ExceptionHandler(method, startStmt, endStmt, handlerStmt, type, var) :-
-	Handler(method, startLabel, endLabel, handlerLabel, type),
-	Label(method, startLabel, startStmt, _),
-	Label(method, endLabel, endStmt, _),
-	Label(method, handlerLabel, handlerStmt, _),
-	OpcodeExt(handlerStmt, "X-store", var).
-
-ERROR(handlerStmt, "first stmt of handler should be a `store` opcode") :-
-	Handler(method, _, _, handlerLabel, _),
-	Label(method, handlerLabel, handlerStmt, _),
-	OpcodeExt(handlerStmt, opcode, _),
-	opcode != "X-store".
-
-ERROR(stmt, cat("stmt is not associated with a stack for: ", opcode)) :-
-	OpcodeExt(stmt, opcode, _),
-	!StackBeforeStmt(stmt, _).
