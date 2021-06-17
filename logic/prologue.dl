@@ -250,6 +250,3 @@ p1_Var(method, var, varName, type, start, end) :-
 	NewTempVar(method, stmtIndex, var, varName, type),
 	RES_VarRangeStart(method, stmtIndex, start),
 	RES_VarRangeEnd(method, stmtIndex, end).
-
-// TODO report warning to souffle team
-//	((stmtIndex < startIndex - 1, endIndex = endIndex) ; stmtIndex > endIndex),
