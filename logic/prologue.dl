@@ -1,6 +1,5 @@
 #pragma once
 
-.decl BasicTypeDesc(type: symbol, desc: symbol)
 // Opcodes
 .decl BinOpcode(opcode: symbol, op: symbol) inline
 .decl UnaryOpcode(opcode: symbol, op: symbol) inline
@@ -24,49 +23,40 @@
 .input Label
 .input Handler
 
-#define BYTE_D ";B"
-#define CHAR_D ";C"
-#define DOUBLE_D ";D"
-#define FLOAT_D ";F"
-#define INT_D ";I"
-#define LONG_D ";J"
-#define SHORT_D ";S"
-#define VOID_D ";V"
-#define STRING_D ";L"
+#define BYTE_T "byte"
+#define CHAR_T "char"
+#define DOUBLE_T "doule"
+#define FLOAT_T "float"
+#define INT_T "int"
+#define LONG_T "long"
+#define SHORT_T "short"
+#define VOID_T "void"
 
-BasicTypeDesc("byte", BYTE_D).
-BasicTypeDesc("char", CHAR_D).
-BasicTypeDesc("double", DOUBLE_D).
-BasicTypeDesc("float", FLOAT_D).
-BasicTypeDesc("int", INT_D).
-BasicTypeDesc("long", LONG_D).
-BasicTypeDesc("short", SHORT_D).
-BasicTypeDesc("void", VOID_D).
+ConstLoadOpcode("X-Bconst", BYTE_T).
+ConstLoadOpcode("X-Cconst", CHAR_T).
+ConstLoadOpcode("X-Dconst", DOUBLE_T).
+ConstLoadOpcode("X-Fconst", FLOAT_T).
+ConstLoadOpcode("X-Iconst", INT_T).
+ConstLoadOpcode("X-Lconst", LONG_T).
+ConstLoadOpcode("X-Sconst", SHORT_T).
+ConstLoadOpcode("X-String", "java.lang.String").
+ConstLoadOpcode("X-NULL", "NULL").
 
-ConstLoadOpcode("X-Bconst", BYTE_D).
-ConstLoadOpcode("X-Cconst", CHAR_D).
-ConstLoadOpcode("X-Dconst", DOUBLE_D).
-ConstLoadOpcode("X-Fconst", FLOAT_D).
-ConstLoadOpcode("X-Iconst", INT_D).
-ConstLoadOpcode("X-Jconst", LONG_D).
-ConstLoadOpcode("X-Sconst", SHORT_D).
-ConstLoadOpcode("X-Lconst", STRING_D). // TODO or NULL?
-
-ConvertOpcode("i2l", INT_D, LONG_D).
-ConvertOpcode("i2f", INT_D, FLOAT_D).
-ConvertOpcode("i2d", INT_D, DOUBLE_D).
-ConvertOpcode("l2i", LONG_D, INT_D).
-ConvertOpcode("l2f", LONG_D, FLOAT_D).
-ConvertOpcode("l2d", LONG_D, DOUBLE_D).
-ConvertOpcode("f2i", FLOAT_D, INT_D).
-ConvertOpcode("f2l", FLOAT_D, LONG_D).
-ConvertOpcode("f2d", FLOAT_D, DOUBLE_D).
-ConvertOpcode("d2i", DOUBLE_D, INT_D).
-ConvertOpcode("d2l", DOUBLE_D, LONG_D).
-ConvertOpcode("d2f", DOUBLE_D, FLOAT_D).
-ConvertOpcode("i2b", INT_D, BYTE_D).
-ConvertOpcode("i2c", INT_D, CHAR_D).
-ConvertOpcode("i2s", INT_D, SHORT_D).
+ConvertOpcode("i2l", INT_T, LONG_T).
+ConvertOpcode("i2f", INT_T, FLOAT_T).
+ConvertOpcode("i2d", INT_T, DOUBLE_T).
+ConvertOpcode("l2i", LONG_T, INT_T).
+ConvertOpcode("l2f", LONG_T, FLOAT_T).
+ConvertOpcode("l2d", LONG_T, DOUBLE_T).
+ConvertOpcode("f2i", FLOAT_T, INT_T).
+ConvertOpcode("f2l", FLOAT_T, LONG_T).
+ConvertOpcode("f2d", FLOAT_T, DOUBLE_T).
+ConvertOpcode("d2i", DOUBLE_T, INT_T).
+ConvertOpcode("d2l", DOUBLE_T, LONG_T).
+ConvertOpcode("d2f", DOUBLE_T, FLOAT_T).
+ConvertOpcode("i2b", INT_T, BYTE_T).
+ConvertOpcode("i2c", INT_T, CHAR_T).
+ConvertOpcode("i2s", INT_T, SHORT_T).
 
 BinOpcode("X-add", "+").
 BinOpcode("X-sub", "-").

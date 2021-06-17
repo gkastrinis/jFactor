@@ -74,9 +74,9 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case LCONST_0: rec("X-Lconst", "0L")
 				break
-			case LCONST_1: rec("X-Jconst", "1L")
+			case LCONST_1: rec("X-Lconst", "1L")
 				break
-			case FCONST_0: rec("X-Jconst", "0.0f")
+			case FCONST_0: rec("X-Fconst", "0.0f")
 				break
 			case FCONST_1: rec("X-Fconst", "1.0f")
 				break
@@ -86,7 +86,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case DCONST_1: rec("X-Dconst", "1.0")
 				break
-			case ACONST_NULL: rec("X-Lconst", "NULL")
+			case ACONST_NULL: rec("X-NULL", "NULL")
 				break
 			case I2L: rec("i2l")
 				break
@@ -308,12 +308,12 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		else if (value instanceof Integer)
 			rec("X-Iconst", value)
 		else if (value instanceof Long)
-			rec("X-Jconst", value)
+			rec("X-Lconst", value)
 		else if (value instanceof Short)
 			rec("X-Sconst", value)
 		else if (value instanceof String) {
 			value = "\"${value.replaceAll("\t", "\\\\t").replaceAll("\"", "\\\\\"")}\""
-			rec("X-Lconst", value)
+			rec("X-String", value)
 		} else
 			throw new RuntimeException("Should handle type: " + value.class)
 	}

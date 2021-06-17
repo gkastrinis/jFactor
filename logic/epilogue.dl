@@ -48,10 +48,9 @@ Operand_VAR(stmt, pos, oper) :-
 
 Operand_CONST(stmt, pos, oper, type) :-
 	p2_Operand(bcStmt, pos, oper), pos >= 0,
-	p1_Operand(bcStmt, pos, tDesc, oper),
+	p1_Operand(bcStmt, pos, type, oper),
 	BCToFinal(bcStmt, stmt),
-	!VAR(_, oper, _, _),
-	DESC2TYPE(tDesc, type).
+	!VAR(_, oper, _, _).
 
 SLOAD(stmt, fld) :- p1_SLoad(bcStmt, fld), BCToFinal(bcStmt, stmt).
 

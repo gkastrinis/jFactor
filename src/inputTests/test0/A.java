@@ -305,6 +305,7 @@ public class A {
 		for (Integer i : l1) {
 			System.out.println(i);
 		}
+		Set<Integer> s = null;
 	}
 }
 
