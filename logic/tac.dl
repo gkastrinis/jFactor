@@ -160,3 +160,6 @@ TAC(method, index, cat("throw ", varName)) :-
 TAC(method, index, "---LABEL---") :-
 	(IF(_, jumpStmt) ; GOTO(_, jumpStmt)),
 	Stmt(jumpStmt, method, _, index).
+
+TAC(method, -1, CAT4("// ", type, " ", name)) :-
+	VAR(method, _, type, name).

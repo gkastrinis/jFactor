@@ -2,15 +2,15 @@
 
 .type Stack = [top: symbol, rest: Stack]
 .decl StackBeforeStmt(stmt: symbol, stack: Stack)
+.decl StackForNext(stmt: symbol, stack: Stack)
 
 // Annotate operands on the stack with type information
 #define TOP(type, oper, stack) [type, [oper, stack]]
 
-.decl StackForNext(stmt: symbol, stack: Stack)
 .decl REQ_Var(stmt: symbol, type: symbol, stack: Stack)
 .decl RES_Var(stmt: symbol, var: symbol)
-.decl REQ_ActualParam(stmt: symbol, pos: number, stack: Stack)
 .decl REQ_Assign(stmt: symbol, to: symbol)
+.decl REQ_ActualParam(stmt: symbol, pos: number, stack: Stack)
 
 ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////
@@ -80,7 +80,7 @@ StackForNext(stmt, stack) :-
 
 // Handle casts
 p1_Cast(stmt, type, fromType),
-p1_Operand(stmt, -1, "null", type),
+p1_Operand(stmt, -1, "nil", type),
 p1_Operand(stmt, 0, fromType, from),
 REQ_Var(stmt, type, stack) :-
 	OpcodeExt(stmt, "checkcast", type),
