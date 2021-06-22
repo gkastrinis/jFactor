@@ -1,23 +1,29 @@
 #pragma once
 
-// Bytecode statement to final statement
-.decl BCToFinal(bcStmt: symbol, stmt: symbol)
+Operand_VAR(stmt, 0, var),
+PHI_ASSIGN(stmt, to) :-
+	p3_PhiAssign(method, p3Index, to, var),
+	p3_ToFinalIndex(method, stmt, _, p3Index, _, _).
 
-BCToFinal(bcStmt, stmt) :-
-	BytecodeStmt(bcStmt, method, bcIndex),
-	Stmt(stmt, method, bcIndex, _).
+IF(stmt, jumpStmt) :-
+	p1_If(bcStmt, bcJumpStmt),
+	BC_ToFinal(bcStmt, stmt),
+	(BC_ToFinal(bcJumpStmt, jumpStmt) ; RES_NewJumpTarget(stmt, jumpStmt)).
 
-NextStmt(fromStmt, toStmt) :-
-	p1_Next(bcFromStmt, bcToStmt),
-	BCToFinal(bcFromStmt, fromStmt),
-	BCToFinal(bcToStmt, toStmt).
+GOTO(stmt, jumpStmt) :-
+	p1_Goto(bcStmt, bcJumpStmt),
+	BC_ToFinal(bcStmt, stmt),
+	(BC_ToFinal(bcJumpStmt, jumpStmt) ; RES_NewJumpTarget(stmt, jumpStmt)).
 
+// TODO start/end hidden?
 VarRange(var, startIndex, endIndex) :-
 	p1_Var(method, var, _, _, bcStartIndex, bcEndIndex),
-	Stmt(_, method, bcStartIndex, startIndex),
-	Stmt(_, method, bcEndIndex, endIndex).
+	p3_ToFinalIndex(method, _, bcStartIndex, _, startIndex, _),
+	p3_ToFinalIndex(method, _, bcEndIndex, _, endIndex, _).
 
-Operator(stmt, op) :- p1_Operator(bcStmt, op), BCToFinal(bcStmt, stmt).
+Operator(stmt, op) :-
+	p1_Operator(bcStmt, op),
+	BC_ToFinal(bcStmt, stmt).
 
 VAR(method, ssaVar, type, ssaName) :-
 	p2_Assign(_, var, ssaVar, _, _),
@@ -30,90 +36,92 @@ VAR(method, var, type, name) :-
 
 ASSIGN(stmt, ssaTo) :-
 	p2_Assign(bcStmt, _, ssaTo, _, _),
-	BCToFinal(bcStmt, stmt),
+	BC_ToFinal(bcStmt, stmt),
 	!p1_Cast(bcStmt, _, _),
 	!p2_PhiAssign(bcStmt, _, ssaTo).
 
 CAST(stmt, ssaTo, type) :-
 	p1_Cast(bcStmt, type, _),
 	p2_Assign(bcStmt, _, ssaTo, _, _),
-	BCToFinal(bcStmt, stmt),
-	p2_Operand(bcStmt, -1, type).
+	BC_ToFinal(bcStmt, stmt),
+	p2_Operand(bcStmt, 0, type).
 
 Operand_VAR(stmt, pos, oper) :-
 	p2_Operand(bcStmt, pos, oper),
-	BCToFinal(bcStmt, stmt),
+	BC_ToFinal(bcStmt, stmt),
 	!p2_PhiAssign(bcStmt, _, _),
 	VAR(_, oper, _, _).
 
 Operand_CONST(stmt, pos, oper, type) :-
 	p2_Operand(bcStmt, pos, oper), pos >= 0,
 	p1_Operand(bcStmt, pos, type, oper),
-	BCToFinal(bcStmt, stmt),
+	BC_ToFinal(bcStmt, stmt),
 	!VAR(_, oper, _, _).
 
-SLOAD(stmt, fld) :- p1_SLoad(bcStmt, fld), BCToFinal(bcStmt, stmt).
+SLOAD(stmt, fld) :-
+	p1_SLoad(bcStmt, fld),
+	BC_ToFinal(bcStmt, stmt).
 
-SSTORE(stmt, fld) :- p1_SStore(bcStmt, fld), BCToFinal(bcStmt, stmt).
+SSTORE(stmt, fld) :-
+	p1_SStore(bcStmt, fld),
+	BC_ToFinal(bcStmt, stmt).
 
 ILOAD(stmt, var, fld) :-
 	p1_ILoad(bcStmt, fld),
-	BCToFinal(bcStmt, stmt),
+	BC_ToFinal(bcStmt, stmt),
 	p2_Operand(bcStmt, 0, var).
 
 ISTORE(stmt, var, fld) :-
 	p1_IStore(bcStmt, fld),
-	BCToFinal(bcStmt, stmt),
+	BC_ToFinal(bcStmt, stmt),
 	p2_Operand(bcStmt, 0, var).
 
-RET(stmt) :- p1_Ret(bcStmt), BCToFinal(bcStmt, stmt).
+RET(stmt) :-
+	p1_Ret(bcStmt),
+	BC_ToFinal(bcStmt, stmt).
 
-RET_VOID(stmt) :- p1_RetVoid(bcStmt), BCToFinal(bcStmt, stmt).
-
-IF(stmt, jumpStmt) :-
-	p1_If(bcStmt, bcJumpStmt),
-	BCToFinal(bcStmt, stmt),
-	BCToFinal(bcJumpStmt, jumpStmt).
-
-GOTO(stmt, jumpStmt) :-
-	p1_Goto(bcStmt, bcJumpStmt),
-	BCToFinal(bcStmt, stmt),
-	BCToFinal(bcJumpStmt, jumpStmt).
+RET_VOID(stmt) :-
+	p1_RetVoid(bcStmt),
+	BC_ToFinal(bcStmt, stmt).
 
 ALLOC(stmt, ssaTo, heap, type) :-
 	p1_Alloc(bcStmt, to, heap, type),
 	p2_Assign(bcStmt, to, ssaTo, _, _),
-	BCToFinal(bcStmt, stmt).
+	BC_ToFinal(bcStmt, stmt).
 
 VCALL(stmt, ssaBase, sig) :-
 	p1_VCall(bcStmt, base, sig),
 	SSAVarForVarRead(bcStmt, base, ssaBase),
-	BCToFinal(bcStmt, stmt).
+	BC_ToFinal(bcStmt, stmt).
 
 SPCALL(stmt, ssaBase, sig) :-
 	p1_SPCall(bcStmt, base, sig),
 	SSAVarForVarRead(bcStmt, base, ssaBase),
-	BCToFinal(bcStmt, stmt).
+	BC_ToFinal(bcStmt, stmt).
 
-SCALL(stmt, sig) :- p1_SCall(bcStmt, sig), BCToFinal(bcStmt, stmt).
+SCALL(stmt, sig) :-
+	p1_SCall(bcStmt, sig),
+	BC_ToFinal(bcStmt, stmt).
 
-INIT_CALL(stmt) :- p1_InitCall(bcStmt), BCToFinal(bcStmt, stmt).
+INIT_CALL(stmt) :-
+	p1_InitCall(bcStmt),
+	BC_ToFinal(bcStmt, stmt).
 
 THROW(stmt, ssaVar) :-
 	p1_Throw(bcStmt, var),
 	SSAVarForVarRead(bcStmt, var, ssaVar),
-	BCToFinal(bcStmt, stmt).
+	BC_ToFinal(bcStmt, stmt).
 
 EXCEPTION_HANDLER(method, fromStmt, toStmt, handlerStmt, type, var) :-
 	p1_ExceptionHandler(method, bcFromStmt, bcToStmt, bcHandlerStmt, type, var),
-	BCToFinal(bcFromStmt, fromStmt),
-	BCToFinal(bcToStmt, toStmt),
-	BCToFinal(bcHandlerStmt, handlerStmt).
+	BC_ToFinal(bcFromStmt, fromStmt),
+	BC_ToFinal(bcToStmt, toStmt),
+	BC_ToFinal(bcHandlerStmt, handlerStmt).
 
 BasicBlock(method, startStmt, endStmt) :-
 	BB_Range(method, bcStartStmt, bcEndStmt, _, _),
-	BCToFinal(bcStartStmt, startStmt),
-	BCToFinal(bcEndStmt, endStmt).
+	BC_ToFinal(bcStartStmt, startStmt),
+	BC_ToFinal(bcEndStmt, endStmt).
 
 BasicBlockSucc(method, fromBB, toBB) :-
 	BasicBlock(method, fromBB, endStmt),

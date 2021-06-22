@@ -26,6 +26,7 @@ public class A {
 		test21();
 		test22();
 		test23();
+		test24();
 	}
 
 	static void test1() {
@@ -306,6 +307,12 @@ public class A {
 			System.out.println(i);
 		}
 		Set<Integer> s = null;
+	}
+
+	static double D;
+
+	static void test24() {
+		D = test19(42);
 	}
 }
 

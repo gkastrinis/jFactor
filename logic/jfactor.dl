@@ -3,6 +3,8 @@
 #define CAT5(v1, v2, v3, v4, v5) cat(CAT4(v1, v2, v3, v4), v5)
 #define CAT6(v1, v2, v3, v4, v5, v6) cat(CAT5(v1, v2, v3, v4, v5), v6)
 
+#define NIL "@"
+
 #include "schema.dl"
 #include "prologue.dl"
 #include "bytecode.dl"
@@ -48,3 +50,4 @@
 
 .output TAC
 // TODO profile rules
+.output p3_ToFinalIndex

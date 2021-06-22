@@ -9,8 +9,6 @@
 .decl NextVarInPHI(index: number, inBB: symbol, prev: symbol, next: symbol)
 .decl TotalSSAVarsInPHI(inBB: symbol, total: number)
 
-#define NIL "@"
-
 // Arbitrarily order vars
 VarToOrdInPHI(inBB, to, ord(to)) :- p2_PhiAssign(inBB, to, _).
 
@@ -68,37 +66,128 @@ TotalSSAVarsInPHI(inBB, lastIndex + 1) :-
 	!NextVarInPHI(lastIndex + 1, inBB, lastVar, _).
 
 
+.decl OpcodeToHide(opcode: symbol)
+.decl BCIndexToHide(method: symbol, bcIndex: number)
+.decl p3_Indexing(method: symbol, tag: symbol, opcode: symbol, bcIndex: number, p3Index: number)
+.decl p3_ToFinalIndex(method: symbol, stmt: symbol, bcIndex: number, p3Index: number, finalIndex: number, currLast: number)
+.decl p3_PhiAssign(method: symbol, p3Index: number, to: symbol, from: symbol)
+// Fix jump targets based on final indexing
+.decl REQ_NewJumpTarget(stmt: symbol, method: symbol, jumpIndex: number)
+.decl RES_NewJumpTarget(stmt: symbol, newJumpStmt: symbol)
+// Bytecode statement to final statement
+.decl BC_ToFinal(bcStmt: symbol, stmt: symbol)
+
+// TODO is the list complete?
+OpcodeToHide("X-load").
+OpcodeToHide("X-Bconst").
+OpcodeToHide("X-Cconst").
+OpcodeToHide("X-Dconst").
+OpcodeToHide("X-Fconst").
+OpcodeToHide("X-Iconst").
+OpcodeToHide("X-Lconst").
+OpcodeToHide("X-Sconst").
+OpcodeToHide("X-String").
+OpcodeToHide("X-NULL").
+OpcodeToHide("i2l").
+OpcodeToHide("i2f").
+OpcodeToHide("i2d").
+OpcodeToHide("l2i").
+OpcodeToHide("l2f").
+OpcodeToHide("l2d").
+OpcodeToHide("f2i").
+OpcodeToHide("f2l").
+OpcodeToHide("f2d").
+OpcodeToHide("d2i").
+OpcodeToHide("d2l").
+OpcodeToHide("d2f").
+OpcodeToHide("i2b").
+OpcodeToHide("i2c").
+OpcodeToHide("i2s").
+OpcodeToHide("dup").
+
+BCIndexToHide(method, bcIndex) :-
+	OpcodeExt(stmt, "X-store", _),
+	BytecodeStmt(stmt, method, bcIndex),
+	!p2_Assign(stmt, _, _, _, _).
+
 // Start from -1, to avoid PHI nodes at the beginning of a method
-Stmt(PROLOGUE_STMT(method), method, -1, -1) :- BytecodeStmt(_, method, _).
+p3_ToFinalIndex(method, NIL, -1, -1, -1, -1),
+p3_Indexing(method, "/prologue", NIL, -1, -1) :- BytecodeStmt(_, method, _).
 
 // For non-PHI nodes, just increment the index
-Stmt(newStmt, method, bytecodeIndex + 1, prevIndex + 1) :-
-	Stmt(_, method, bytecodeIndex, prevIndex),
-	BytecodeStmt(stmt, method, bytecodeIndex + 1),
-	!p2_PhiAssign(stmt, _, _),
-	index = prevIndex + 1,
-	newStmt = CAT3(method, "/", to_string(index)).
+p3_Indexing(method, "", opcode, prevBytecodeIndex + 1, prevIndex + 1) :-
+	p3_Indexing(method, _, _, prevBytecodeIndex, prevIndex),
+	BytecodeStmt(stmt, method, prevBytecodeIndex + 1),
+	OpcodeExt(stmt, opcode, _),
+	!p2_PhiAssign(stmt, _, _).
 
 // Calculate the index of the first, non-PHI assignment in a PHI node
-Stmt(newStmt, method, bytecodeIndex + 1, index) :-
-	Stmt(_, method, bytecodeIndex, prevIndex),
-	BytecodeStmt(stmt, method, bytecodeIndex + 1),
+p3_Indexing(method, "", opcode, prevBytecodeIndex + 1, prevIndex + 1 + total) :-
+	p3_Indexing(method, _, _, prevBytecodeIndex, prevIndex),
+	BytecodeStmt(stmt, method, prevBytecodeIndex + 1),
+	OpcodeExt(stmt, opcode, _),
 	p2_PhiAssign(stmt, _, _),
-	TotalSSAVarsInPHI(stmt, total),
-	index = prevIndex + 1 + total,
-	newStmt = CAT3(method, "/", to_string(index)).
+	TotalSSAVarsInPHI(stmt, total).
 
 // Give each PHI assignment an index based on ordering
 // -2 for original bytecode index
-// PHI_ASSIGN and Operand_VAR need to be here since
-// there is no original bytecode statement to map back to
-PHI_ASSIGN(newStmt, ssaTo),
-Operand_VAR(newStmt, 0, ssaVar),
-Stmt(newStmt, method, -2, index) :-
-	Stmt(_, method, bytecodeIndex, prevIndex),
-	BytecodeStmt(stmt, method, bytecodeIndex + 1),
+p3_PhiAssign(method, p3Index, ssaTo, ssaVar),
+p3_Indexing(method, "/PHI", NIL, -2, p3Index) :-
+	p3_Indexing(method, _, _, prevBytecodeIndex, prevIndex),
+	BytecodeStmt(stmt, method, prevBytecodeIndex + 1),
 	p2_PhiAssign(stmt, to, ssaTo),
 	NextVarInPHI(indexInPHI, stmt, _, ssaVar),
 	SSAVarToOrdInPHI(stmt, to, ssaVar, _),
-	index = prevIndex + 1 + indexInPHI,
-	newStmt = CAT4(method, "/", to_string(index), "/PHI").
+	p3Index = prevIndex + 1 + indexInPHI.
+
+// Generate final indexes for statements that are not hidden
+p3_ToFinalIndex(method, newStmt, bcIndex, p3Index + 1, currLast + 1, currLast + 1) :-
+	p3_ToFinalIndex(method, _, _, p3Index, _, currLast),
+	p3_Indexing(method, tag, opcode, bcIndex, p3Index + 1),
+	!OpcodeToHide(opcode),
+	!BCIndexToHide(method, bcIndex),
+	newStmt = CAT4(method, "/", to_string(currLast + 1), tag).
+
+p3_ToFinalIndex(method, NIL, bcIndex, p3Index + 1, -1, currLast) :-
+	p3_ToFinalIndex(method, _, _, p3Index, _, currLast),
+	p3_Indexing(method, _, opcode, bcIndex, p3Index + 1),
+	(OpcodeToHide(opcode) ; BCIndexToHide(method, bcIndex)).
+
+REQ_NewJumpTarget(stmt, method, jumpIndex) :-
+	(p1_If(bcStmt, bcJumpStmt) ; p1_Goto(bcStmt, bcJumpStmt)),
+	BC_ToFinal(bcStmt, stmt),
+	!BC_ToFinal(bcJumpStmt, _),
+	!p2_PhiAssign(bcJumpStmt, _, _),
+	BytecodeStmt(bcJumpStmt, method, bcJumpIndex),
+	p3_ToFinalIndex(method, _, bcJumpIndex, jumpIndex, _, _).
+
+// Use the next valid (not hidden) statement as the new jump target
+RES_NewJumpTarget(stmt, newJumpStmt) :-
+	REQ_NewJumpTarget(stmt, method, jumpIndex),
+	p3_ToFinalIndex(method, newJumpStmt, _, _, newJumpIndex, _),
+	newJumpIndex = min index :
+	{ p3_ToFinalIndex(method, _, _, p3Index, index, _), p3Index >= jumpIndex, index >= 0 }.
+
+// Jump to the first statement of a phi-node
+RES_NewJumpTarget(stmt, jumpStmt) :-
+	(p1_If(bcStmt, bcJumpStmt) ; p1_Goto(bcStmt, bcJumpStmt)),
+	BC_ToFinal(bcStmt, stmt),
+	!BC_ToFinal(bcJumpStmt, _),
+	p2_PhiAssign(bcJumpStmt, _, _),
+	TotalSSAVarsInPHI(bcJumpStmt, total),
+	BytecodeStmt(bcJumpStmt, method, bcJumpIndex),
+	p3_ToFinalIndex(method, _, bcJumpIndex, p3Index, _, _),
+	p3_ToFinalIndex(method, jumpStmt, _, p3Index - total, _, _).
+
+// Final Statement form
+Stmt(stmt, method, index) :-
+	p3_ToFinalIndex(method, stmt, _, _, index, _), index != -1.
+
+BC_ToFinal(bcStmt, stmt) :-
+	p3_ToFinalIndex(method, stmt, bcIndex, _, index, _), index != -1,
+	BytecodeStmt(bcStmt, method, bcIndex).
+
+NextStmt(fromStmt, toStmt) :-
+	p1_Next(bcFromStmt, bcToStmt),
+	BC_ToFinal(bcFromStmt, fromStmt),
+	BC_ToFinal(bcToStmt, toStmt).

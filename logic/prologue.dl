@@ -80,14 +80,14 @@ CallOpcode("invokespecial").
 CallOpcode("X-invokeinit").
 CallOpcode("invokestatic").
 
-ImplicitCondJumpOpcode("ifeq", "==", ";B", "0").
-ImplicitCondJumpOpcode("ifne", "!=", ";B", "0").
-ImplicitCondJumpOpcode("iflt", "<", ";B", "0").
-ImplicitCondJumpOpcode("ifge", ">=", ";B", "0").
-ImplicitCondJumpOpcode("ifgt", ">", ";B", "0").
-ImplicitCondJumpOpcode("ifle", "<=", ";B", "0").
-ImplicitCondJumpOpcode("ifnull", "==", ";L", "NULL").
-ImplicitCondJumpOpcode("ifnonnull", "!=", ";L", "NULL").
+ImplicitCondJumpOpcode("ifeq", "==", BYTE_T, "0").
+ImplicitCondJumpOpcode("ifne", "!=", BYTE_T, "0").
+ImplicitCondJumpOpcode("iflt", "<", BYTE_T, "0").
+ImplicitCondJumpOpcode("ifge", ">=", BYTE_T, "0").
+ImplicitCondJumpOpcode("ifgt", ">", BYTE_T, "0").
+ImplicitCondJumpOpcode("ifle", "<=", BYTE_T, "0").
+ImplicitCondJumpOpcode("ifnull", "==", "NULL", "NULL").
+ImplicitCondJumpOpcode("ifnonnull", "!=", "NULL", "NULL").
 
 CondJumpOpcode("if_icmpeq", "==").
 CondJumpOpcode("if_icmpne", "!=").

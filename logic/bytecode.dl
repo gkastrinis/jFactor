@@ -80,8 +80,8 @@ StackForNext(stmt, stack) :-
 
 // Handle casts
 p1_Cast(stmt, type, fromType),
-p1_Operand(stmt, -1, "nil", type),
-p1_Operand(stmt, 0, fromType, from),
+p1_Operand(stmt, 0, NIL, type),
+p1_Operand(stmt, 1, fromType, from),
 REQ_Var(stmt, type, stack) :-
 	OpcodeExt(stmt, "checkcast", type),
 	StackBeforeStmt(stmt, TOP(fromType, from, stack)).
@@ -131,12 +131,6 @@ RES_Var(stmt, var) :-
 	varName = cat("$r", to_string(index)),
 	var = CAT3(method, "/", varName).
 
-// Handle all assignments to temp or source code vars
-REQ_Assign(stmt, var),
-StackForNext(stmt, TOP(type, var, stack)) :-
-	REQ_Var(stmt, type, stack),
-	RES_Var(stmt, var).
-
 // Fields... ///////////////////////////////////////////////////
 
 // Load static field
@@ -148,7 +142,7 @@ REQ_Var(stmt, type, stack) :-
 
 // Store static field
 p1_SStore(stmt, fld),
-p1_Operand(stmt, 1, type, oper),
+p1_Operand(stmt, 0, type, oper),
 StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, "putstatic", fld),
 	StackBeforeStmt(stmt, TOP(type, oper, stack)).
@@ -221,8 +215,8 @@ REQ_ActualParam(stmt, -2, stack) :-
 
 // duplicate stack for index -2 for static calls
 REQ_ActualParam(stmt, -2, stack) :-
-	REQ_ActualParam(stmt, -1, stack),
-	OpcodeExt(stmt, "invokestatic", _).
+	OpcodeExt(stmt, "invokestatic", _),
+	REQ_ActualParam(stmt, -1, stack).
 
 p1_Operand(stmt, pos, type, notHeap) :-
 	REQ_ActualParam(stmt, pos, TOP(type, notHeap, _)), pos >= 0,
@@ -254,7 +248,8 @@ p1_SPCall(stmt, base, sig) :-
 	OpcodeExt(stmt, "invokespecial", sig),
 	REQ_ActualParam(stmt, -1, TOP(_, base, _)).
 
-p1_SCall(stmt, sig) :- OpcodeExt(stmt, "invokestatic", sig).
+p1_SCall(stmt, sig) :-
+	OpcodeExt(stmt, "invokestatic", sig).
 
 // -> var to store invocation result
 REQ_Var(stmt, retType, stack) :-
@@ -268,7 +263,8 @@ REQ_Var(stmt, retType, stack) :-
 StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, opcode, sig),
 	CallOpcode(opcode),
-	Invocation(sig, _, "void", _), opcode != "X-invokeinit",
+	opcode != "X-invokeinit",
+	Invocation(sig, _, "void", _),
 	REQ_ActualParam(stmt, -2, stack).
 
 ///////////////////////////////////////////////////////////////
@@ -290,20 +286,27 @@ StackBeforeStmt(nextStmt, stack) :-
 StackBeforeStmt(handlerStmt, TOP(type, type, nil)) :-
 	p1_ExceptionHandler(_, _, _, handlerStmt, type, _).
 
+// Handle all assignments to temp or source code vars
+REQ_Assign(stmt, var),
+StackForNext(stmt, TOP(type, var, stack)) :-
+	REQ_Var(stmt, type, stack),
+	RES_Var(stmt, var).
+
 // Approve all assignments, except self-assign ones
 p1_Assign(stmt, to) :-
 	REQ_Assign(stmt, to),
-	p1_Operand(stmt, 0, _, oper),
-	to != oper.
+	!p1_Operand(stmt, _, _, _).
+
+p1_Assign(stmt, to) :-
+	REQ_Assign(stmt, to),
+	p1_Operand(stmt, 0, _, oper), to != oper.
 
 p1_Assign(stmt, to) :-
 	REQ_Assign(stmt, to),
 	p1_Operand(stmt, 0, _, to),
 	p1_Operand(stmt, 1, _, _).
 
-// Treat assigned return values as operands in pos -1
-p1_Operand(stmt, -1, type, var) :-
-	REQ_Assign(stmt, var),
-	p1_Var(_, var, _, type, _, _),
-	OpcodeExt(stmt, opcode, _),
-	CallOpcode(opcode).
+p1_Assign(stmt, to) :-
+	REQ_Assign(stmt, to),
+	p1_Operand(stmt, 0, _, to),
+	p1_Operand(stmt, 1, _, _).

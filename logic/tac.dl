@@ -31,7 +31,7 @@ TAC_RHS(stmt, CAT3(op, " ", out0)) :-
 // CAST
 TAC_RHS(stmt, CAT4("(", type, ") ", out0)) :-
 	CAST(stmt, _, type),
-	OperandStr(stmt, 0, out0).
+	OperandStr(stmt, 1, out0).
 
 // Move instructions or var initializations
 TAC_RHS(stmt, out) :-
@@ -63,7 +63,7 @@ TAC_RHS(stmt, CAT6(baseName, "-->", qualifiedName, "(", out, ")")) :-
 	(VCALL(stmt, base, sig) ; SPCALL(stmt, base, sig)),
 	AllOperandsStrDownTo(stmt, -1, out),
 	Invocation(sig, _, _, qualifiedName),
-	Stmt(stmt, method, _, _),
+	Stmt(stmt, method, _),
 	VAR(method, base, _, baseName).
 
 TAC_RHS(stmt, CAT4(qualifiedName, "(", out, ")")) :-
@@ -82,9 +82,9 @@ TAC_RHS(stmt, CAT3(owner, ".", fldName)) :-
 // Static field store
 TAC(method, index, CAT3(fldName, " = ", val)) :-
 	SSTORE(stmt, fld),
-	Stmt(stmt, method, _, index),
+	Stmt(stmt, method, index),
 	Field(fld, _, fldName, _),
-	((Operand_VAR(stmt, 1, valVar), VAR(_, valVar, _, val)) ; Operand_CONST(stmt, 1, val, _)).
+	((Operand_VAR(stmt, 0, valVar), VAR(_, valVar, _, val)) ; Operand_CONST(stmt, 0, val, _)).
 
 // Instance field load
 TAC_RHS(stmt, CAT3(name, ".", fldName)) :-
@@ -95,7 +95,7 @@ TAC_RHS(stmt, CAT3(name, ".", fldName)) :-
 // Instance field store
 TAC(method, index, CAT5(name, ".", fldName, " = ", val)) :-
 	ISTORE(stmt, var, fld),
-	Stmt(stmt, method, _, index),
+	Stmt(stmt, method, index),
 	VAR(_, var, _, name),
 	Field(fld, _, fldName, _),
 	((Operand_VAR(stmt, 1, valVar), VAR(_, valVar, _, val)) ; Operand_CONST(stmt, 1, val, _)).
@@ -105,7 +105,7 @@ TAC(method, index, CAT3(name, " = ", out)) :-
 	(ASSIGN(stmt, to) ; PHI_ASSIGN(stmt, to) ; CAST(stmt, to, _)),
 	!INIT_CALL(stmt),
 	!EXCEPTION_HANDLER(method, _, _, stmt, _, _),
-	Stmt(stmt, method, _, index),
+	Stmt(stmt, method, index),
 	VAR(method, to, _, name),
 	TAC_RHS(stmt, out).
 
@@ -113,53 +113,48 @@ TAC(method, index, CAT3(name, " = ", out)) :-
 TAC(method, index, CAT4("---CATCH--- ", name, " = ", out)) :-
 	ASSIGN(handlerStmt, to),
 	EXCEPTION_HANDLER(method, _, _, handlerStmt, _, _),
-	Stmt(handlerStmt, method, _, index),
+	Stmt(handlerStmt, method, index),
 	VAR(method, to, _, name),
 	TAC_RHS(handlerStmt, out).
 
 // Calls to a constructor
 TAC(method, index, out) :-
 	SPCALL(stmt, _, _),
-	Stmt(stmt, method, _, index),
+	Stmt(stmt, method, index),
 	INIT_CALL(stmt),
 	TAC_RHS(stmt, out).
 
 // Calls without a return value
 TAC(method, index, tac) :-
 	CallStmt(stmt, _),
-	Stmt(stmt, method, _, index),
+	Stmt(stmt, method, index),
 	!ASSIGN(stmt, _),
 	TAC_RHS(stmt, tac).
 
 TAC(method, index, "return") :-
 	RET_VOID(stmt),
-	Stmt(stmt, method, _, index).
+	Stmt(stmt, method, index).
 
 TAC(method, index, cat("return ", out)) :-
 	RET(stmt),
-	Stmt(stmt, method, _, index),
+	Stmt(stmt, method, index),
 	OperandStr(stmt, 0, out).
 
 TAC(method, index, cat("goto ", to_string(jumpIndex))) :-
 	GOTO(stmt, jumpStmt),
-	Stmt(stmt, method, _, index),
-	Stmt(jumpStmt, method, _, jumpIndex).
+	Stmt(stmt, method, index),
+	Stmt(jumpStmt, method, jumpIndex).
 
 TAC(method, index, CAT4("if (", out, ") jump ", to_string(jumpIndex))) :-
 	IF(stmt, jumpStmt),
-	Stmt(stmt, method, _, index),
-	Stmt(jumpStmt, method, _, jumpIndex),
+	Stmt(stmt, method, index),
+	Stmt(jumpStmt, method, jumpIndex),
 	TAC_RHS(stmt, out).
 
 TAC(method, index, cat("throw ", varName)) :-
 	THROW(stmt, var),
-	Stmt(stmt, method, _, index),
+	Stmt(stmt, method, index),
 	VAR(method, var, _, varName).
 
-// TODO fix jump targets to correspond to visible statements
-TAC(method, index, "---LABEL---") :-
-	(IF(_, jumpStmt) ; GOTO(_, jumpStmt)),
-	Stmt(jumpStmt, method, _, index).
-
-TAC(method, -1, CAT4("// ", type, " ", name)) :-
-	VAR(method, _, type, name).
+//TAC(method, -1, CAT4("// ", type, " ", name)) :-
+//	VAR(method, _, type, name).

@@ -13,7 +13,7 @@
 .decl BasicBlock(method: symbol, startStmt: symbol, endStmt: symbol)
 .decl BasicBlockSucc(method: symbol, fromBB: symbol, toBB: symbol)
 // Stmt with the final ordering
-.decl Stmt(stmt: symbol, method: symbol, bytecodeIndex: number, index: number)
+.decl Stmt(stmt: symbol, method: symbol, index: number)
 .decl NextStmt(fromStmt: symbol, toStmt: symbol)
 .decl ASSIGN(stmt: symbol, to: symbol)
 .decl PHI_ASSIGN(stmt: symbol, to: symbol)
