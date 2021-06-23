@@ -36,6 +36,7 @@ TAC_RHS(stmt, CAT4("(", type, ") ", out0)) :-
 // Move instructions or var initializations
 TAC_RHS(stmt, out) :-
 	OperandStr(stmt, 0, out),
+	!ARRAY_ALLOC(stmt, _, _, _),
 	!CAST(stmt, _, _),
 	!CallStmt(stmt, _),
 	!SLOAD(stmt, _),
@@ -71,8 +72,15 @@ TAC_RHS(stmt, CAT4(qualifiedName, "(", out, ")")) :-
 	Invocation(sig, _, _, qualifiedName),
 	AllOperandsStrDownTo(stmt, -1, out).
 
-// Allocations
-TAC_RHS(stmt, cat("new ", type)) :- ALLOC(stmt, _, _, type).
+// "Normal" Allocation
+TAC_RHS(stmt, cat("new ", type)) :-
+	ALLOC(stmt, _, _, type).
+
+// Array Allocation
+TAC_RHS(stmt, CAT5("new ", compType, "[", size, "]")) :-
+	ARRAY_ALLOC(stmt, _, _, arrayType),
+	ComponentType(arrayType, compType),
+	OperandStr(stmt, 0, size).
 
 // Static field load
 TAC_RHS(stmt, CAT3(owner, ".", fldName)) :-
@@ -84,7 +92,7 @@ TAC(method, index, CAT3(fldName, " = ", val)) :-
 	SSTORE(stmt, fld),
 	Stmt(stmt, method, index),
 	Field(fld, _, fldName, _),
-	((Operand_VAR(stmt, 0, valVar), VAR(_, valVar, _, val)) ; Operand_CONST(stmt, 0, val, _)).
+	OperandStr(stmt, 0, val).
 
 // Instance field load
 TAC_RHS(stmt, CAT3(name, ".", fldName)) :-
@@ -98,7 +106,15 @@ TAC(method, index, CAT5(name, ".", fldName, " = ", val)) :-
 	Stmt(stmt, method, index),
 	VAR(_, var, _, name),
 	Field(fld, _, fldName, _),
-	((Operand_VAR(stmt, 1, valVar), VAR(_, valVar, _, val)) ; Operand_CONST(stmt, 1, val, _)).
+	OperandStr(stmt, 1, val).
+
+// Array store
+TAC(method, index, CAT5(name, "[", arrIndex, "] = ", from)) :-
+	ASTORE(stmt, array),
+	Stmt(stmt, method, index),
+	VAR(_, array, _, name),
+	OperandStr(stmt, 0, arrIndex),
+	OperandStr(stmt, 1, from).
 
 // Assignments -- not in a catch block head
 TAC(method, index, CAT3(name, " = ", out)) :-

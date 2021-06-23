@@ -19,6 +19,7 @@ class Database {
 	File handlers = new File(baseDir, "Handler.facts")
 	File invocations = new File(baseDir, "Invocation.facts")
 	File allocTypes = new File(baseDir, "AllocType.facts")
+	File componentTypes = new File(baseDir, "ComponentType.facts")
 	File incValues = new File(baseDir, "IncValue.facts")
 	File fields = new File(baseDir, "Field.facts")
 	File vars = new File(baseDir, "Var.facts")

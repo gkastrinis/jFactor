@@ -9,6 +9,9 @@
 .decl ERROR(stmt: symbol, msg: symbol)
 .decl VAR(method: symbol, var: symbol, type: symbol, name: symbol)
 .decl VarRange(var: symbol, startIndex: number, endIndex: number)
+.decl Field(fld: symbol, type: symbol, name: symbol, owner: symbol)
+.decl ComponentType(arrayType: symbol, compType: symbol)
+.decl FORMAL_PARAM(method: symbol, pos: number, var: symbol)
 .decl EXCEPTION_HANDLER(method: symbol, fromStmt: symbol, toStmt: symbol, handlerStmt: symbol, type: symbol, var: symbol)
 .decl BasicBlock(method: symbol, startStmt: symbol, endStmt: symbol)
 .decl BasicBlockSucc(method: symbol, fromBB: symbol, toBB: symbol)
@@ -30,25 +33,27 @@
 .decl IF(stmt: symbol, jumpStmt: symbol)
 .decl GOTO(stmt: symbol, jumpStmt: symbol)
 .decl ALLOC(stmt: symbol, to: symbol, heap: symbol, type: symbol)
+.decl ARRAY_ALLOC(stmt: symbol, to: symbol, heap: symbol, type: symbol)
+.decl ASTORE(stmt: symbol, array: symbol)
 .decl VCALL(stmt: symbol, base: symbol, sig: symbol)
 .decl SPCALL(stmt: symbol,  base: symbol, sig: symbol)
 .decl SCALL(stmt: symbol,  sig: symbol)
 .decl INIT_CALL(stmt: symbol)
 .decl THROW(stmt: symbol, var: symbol)
 
+.input Field
+.input ComponentType
+.input FORMAL_PARAM
+
 // Input //
-.decl FORMAL_PARAM(method: symbol, pos: number, var: symbol)
 .decl BytecodeStmt(id: symbol, method: symbol, index: number)
 .decl Invocation(sig: symbol, argc: number, retType: symbol, qualifiedName: symbol)
 .decl AllocType(stmt: symbol, type: symbol)
 .decl IncValue(stmt: symbol, value : symbol, type: symbol)
-.decl Field(fld: symbol, type: symbol, name: symbol, owner: symbol)
-.input FORMAL_PARAM
 .input BytecodeStmt
 .input Invocation
 .input AllocType
 .input IncValue
-.input Field
 
 // Bytecode phase
 .decl OpcodeExt(stmt: symbol, opcode: symbol, oper: symbol)
@@ -67,6 +72,8 @@
 .decl p1_If(stmt: symbol, jumpStmt: symbol)
 .decl p1_Goto(stmt: symbol, jumpStmt: symbol)
 .decl p1_Alloc(stmt: symbol, to: symbol, heap: symbol, type: symbol)
+.decl p1_ArrayAlloc(stmt: symbol, heap: symbol, type: symbol)
+.decl p1_AStore(stmt: symbol, array: symbol)
 .decl p1_VCall(stmt: symbol, base: symbol, sig: symbol)
 .decl p1_SPCall(stmt: symbol, base: symbol, sig: symbol)
 .decl p1_SCall(stmt: symbol, sig: symbol)

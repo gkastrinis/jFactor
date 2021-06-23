@@ -49,10 +49,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	}
 
 	// NOP, ACONST_NULL,
-	// IALOAD, LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD,
-	// SALOAD, IASTORE, LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE, SASTORE,
 	// DUP_X1, DUP_X2, DUP2, DUP2_X1, DUP2_X2, SWAP,
-	// ARRAYLENGTH,
 	// MONITORENTER, or MONITOREXIT.
 
 	void visitInsn(int opcode) {
@@ -190,6 +187,12 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case ATHROW: rec("athrow")
 				break
+			case ARRAYLENGTH: rec("arraylength")
+				break
+			case CASTORE: rec("castore")
+				break
+				// IALOAD, LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD, SALOAD, IASTORE,
+				// LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE, SASTORE,
 			default: wat(opcode)
 		}
 	}
@@ -347,7 +350,12 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case SIPUSH: rec("X-Sconst", operand)
 				break
-			case NEWARRAY: wat(opcode)
+			case NEWARRAY:
+				def type = toPrimitiveType(operand)
+				def heap = "${methID()}/new[] $type/$counter"
+				Database.instance.allocTypes << "${stmtID(counter)}\t$type[]\n"
+				Database.instance.componentTypes << "$type[]\t$type\n"
+				rec("newarray", heap)
 				break
 			default: wat(opcode)
 		}
@@ -388,6 +396,20 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	def varID(def name) { "${methID()}/$name" }
 
+	static String toPrimitiveType(int operand) {
+		switch (operand) {
+			case T_BOOLEAN: return "boolean"
+			case T_BYTE: return "byte"
+			case T_CHAR: return "char"
+			case T_DOUBLE: return "double"
+			case T_FLOAT: return "float"
+			case T_INT: return "int"
+			case T_LONG: return "long"
+			case T_SHORT: return "short"
+			default: return NULL
+		}
+	}
+
 	static List typeFromJVM(String str) {
 		switch (str[0]) {
 			case 'B': return ["byte", str.drop(1)]
@@ -401,7 +423,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 			case 'V': return ["void", str.drop(1)]
 			case 'L':
 				def end = str.indexOf(";")
-				return [str[1..end-1].replace("/", "."), str.drop(end+1)]
+				return [str[1..end - 1].replace("/", "."), str.drop(end + 1)]
 			case '[':
 				def (type, rest) = typeFromJVM(str.drop(1))
 				return ["[$type", rest]

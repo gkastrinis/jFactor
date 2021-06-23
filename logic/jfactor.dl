@@ -16,7 +16,7 @@
 
 .output ERROR
 .output OpcodeExt
-//.output StackBeforeStmt
+.output StackBeforeStmt
 
 // FACTS //
 //.output VAR
@@ -42,6 +42,8 @@
 //.output IF
 //.output GOTO
 //.output ALLOC
+//.output ARRAY_ALLOC
+//.output ASTORE
 //.output VCALL
 //.output SPCALL
 //.output SCALL

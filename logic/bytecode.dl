@@ -267,6 +267,28 @@ StackForNext(stmt, stack) :-
 	Invocation(sig, _, "void", _),
 	REQ_ActualParam(stmt, -2, stack).
 
+// Arrays... //////////////////////////////////////////////////
+
+p1_Operand(stmt, 0, sizeType, size),
+p1_ArrayAlloc(stmt, heap, type),
+REQ_Var(stmt, type, stack) :-
+	OpcodeExt(stmt, "newarray", heap),
+	StackBeforeStmt(stmt, TOP(sizeType, size, stack)),
+	AllocType(stmt, type).
+
+p1_Operator(stmt, "arraylength"),
+p1_Operand(stmt, 0, type, array),
+REQ_Var(stmt, INT_T, stack) :-
+	OpcodeExt(stmt, "arraylength", _),
+	StackBeforeStmt(stmt, TOP(type, array, stack)).
+
+p1_AStore(stmt, array),
+p1_Operand(stmt, 0, INT_T, index),
+p1_Operand(stmt, 1, fromType, from),
+StackForNext(stmt, stack) :-
+	OpcodeExt(stmt, "castore", _),
+	StackBeforeStmt(stmt, TOP(fromType, from, TOP(_, index, TOP(_, array, stack)))).
+
 ///////////////////////////////////////////////////////////////
 
 p1_Throw(stmt, var),
