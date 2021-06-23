@@ -5,7 +5,9 @@
 .decl StackForNext(stmt: symbol, stack: Stack)
 
 // Annotate operands on the stack with type information
-#define TOP(type, oper, stack) [type, [oper, stack]]
+
+#define TOP2(v2, v1, stack) [v2, [v1, stack]]
+#define TOP4(v4, v3, v2, v1, stack) TOP2(v4, v3, TOP2(v2, v1, stack))
 
 .decl REQ_Var(stmt: symbol, type: symbol, stack: Stack)
 .decl RES_Var(stmt: symbol, var: symbol)
@@ -16,13 +18,13 @@
 ///////////////////////////////////////////////////////////////
 
 // -> constant value
-StackForNext(stmt, TOP(type, const, stack)) :-
+StackForNext(stmt, TOP2(type, const, stack)) :-
 	OpcodeExt(stmt, opcode, const),
 	ConstLoadOpcode(opcode, type),
 	StackBeforeStmt(stmt, stack).
 
 // -> value
-StackForNext(stmt, TOP(type, var, stack)) :-
+StackForNext(stmt, TOP2(type, var, stack)) :-
 	OpcodeExt(stmt, "X-load", var),
 	StackBeforeStmt(stmt, stack),
 	p1_Var(_, var, _, type, _, _).
@@ -32,14 +34,14 @@ REQ_Assign(stmt, var),
 p1_Operand(stmt, 0, type, oper),
 StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, "X-store", var),
-	StackBeforeStmt(stmt, TOP(type, oper, stack)). // TODO compare types with vartype
+	StackBeforeStmt(stmt, TOP2(type, oper, stack)). // TODO compare types with vartype
 
 // return value ->
 p1_Ret(stmt),
 p1_Operand(stmt, 0, type, oper),
 StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, "X-return", _),
-	StackBeforeStmt(stmt, TOP(type, oper, stack)).
+	StackBeforeStmt(stmt, TOP2(type, oper, stack)).
 
 // return void
 p1_RetVoid(stmt),
@@ -55,7 +57,7 @@ p1_Operand(stmt, 1, type1, oper1),
 REQ_Var(stmt, type, stack) :-
 	OpcodeExt(stmt, opcode, _),
 	BinOpcode(opcode, op),
-	StackBeforeStmt(stmt, TOP(type1, oper1, TOP(type0, oper0, stack))),
+	StackBeforeStmt(stmt, TOP4(type1, oper1, type0, oper0, stack)),
 	type = INT_T. // todo infer type based on type1 and type0
 
 p1_Operator(stmt, op),
@@ -63,7 +65,7 @@ p1_Operand(stmt, 0, type0, oper0),
 REQ_Var(stmt, type, stack) :-
 	OpcodeExt(stmt, opcode, _),
 	UnaryOpcode(opcode, op),
-	StackBeforeStmt(stmt, TOP(type0, oper0, stack)),
+	StackBeforeStmt(stmt, TOP2(type0, oper0, stack)),
 	type = INT_T. // todo infer type based on type1
 
 // Handle ++, --, +=, -=
@@ -84,7 +86,7 @@ p1_Operand(stmt, 0, NIL, type),
 p1_Operand(stmt, 1, fromType, from),
 REQ_Var(stmt, type, stack) :-
 	OpcodeExt(stmt, "checkcast", type),
-	StackBeforeStmt(stmt, TOP(fromType, from, stack)).
+	StackBeforeStmt(stmt, TOP2(fromType, from, stack)).
 
 // Handle conditional jumps
 p1_If(stmt, nextStmt),
@@ -94,7 +96,7 @@ p1_Operand(stmt, 1, type1, oper1),
 StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, opcode, nextStmt),
 	ImplicitCondJumpOpcode(opcode, op, type1, oper1),
-	StackBeforeStmt(stmt, TOP(type0, oper0, stack)).
+	StackBeforeStmt(stmt, TOP2(type0, oper0, stack)).
 
 p1_If(stmt, nextStmt),
 p1_Operator(stmt, op),
@@ -103,7 +105,7 @@ p1_Operand(stmt, 1, type1, oper1),
 StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, opcode, nextStmt),
 	CondJumpOpcode(opcode, op),
-	StackBeforeStmt(stmt, TOP(type1, oper1, TOP(type0, oper0, stack))).
+	StackBeforeStmt(stmt, TOP4(type1, oper1, type0, oper0, stack)).
 
 // ... and unconditional ones
 p1_Goto(stmt, nextStmt),
@@ -145,14 +147,14 @@ p1_SStore(stmt, fld),
 p1_Operand(stmt, 0, type, oper),
 StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, "putstatic", fld),
-	StackBeforeStmt(stmt, TOP(type, oper, stack)).
+	StackBeforeStmt(stmt, TOP2(type, oper, stack)).
 
 // Load instance field
 p1_ILoad(stmt, fld),
 p1_Operand(stmt, 0, varType, var),
 REQ_Var(stmt, type, stack) :-
 	OpcodeExt(stmt, "getfield", fld),
-	StackBeforeStmt(stmt, TOP(varType, var, stack)),
+	StackBeforeStmt(stmt, TOP2(varType, var, stack)),
 	Field(fld, type, _, _).
 
 // Store instance field
@@ -161,12 +163,12 @@ p1_Operand(stmt, 0, varType, var),
 p1_Operand(stmt, 1, type, oper),
 StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, "putfield", fld),
-	StackBeforeStmt(stmt, TOP(type, oper, TOP(varType, var, stack))).
+	StackBeforeStmt(stmt, TOP4(type, oper, varType, var, stack)).
 
 // Allocations... //////////////////////////////////////////////
 
 // -> heap id
-StackForNext(stmt, TOP(type, heap, stack)) :-
+StackForNext(stmt, TOP2(type, heap, stack)) :-
 	OpcodeExt(stmt, "new", heap),
 	StackBeforeStmt(stmt, stack),
 	AllocType(stmt, type).
@@ -205,11 +207,11 @@ REQ_ActualParam(stmt, argc - 1, stack) :-
 
 // actual arg1, arg2, ... ->
 REQ_ActualParam(stmt, pos - 1, stack) :-
-	REQ_ActualParam(stmt, pos, TOP(_, _, stack)), pos >= 0.
+	REQ_ActualParam(stmt, pos, TOP2(_, _, stack)), pos >= 0.
 
 // receiver var, or heap allocation ->
 REQ_ActualParam(stmt, -2, stack) :-
-	REQ_ActualParam(stmt, -1, TOP(_, _, stack)),
+	REQ_ActualParam(stmt, -1, TOP2(_, _, stack)),
 	OpcodeExt(stmt, opcode, _),
 	opcode != "invokestatic".
 
@@ -219,19 +221,19 @@ REQ_ActualParam(stmt, -2, stack) :-
 	REQ_ActualParam(stmt, -1, stack).
 
 p1_Operand(stmt, pos, type, notHeap) :-
-	REQ_ActualParam(stmt, pos, TOP(type, notHeap, _)), pos >= 0,
+	REQ_ActualParam(stmt, pos, TOP2(type, notHeap, _)), pos >= 0,
 	!p1_Alloc(_, _, notHeap, _).
 
 // Use the var instead of the heap id, as argument
 p1_Operand(stmt, pos, type, var) :-
-	REQ_ActualParam(stmt, pos, TOP(type, heap, _)), pos >= 0,
+	REQ_ActualParam(stmt, pos, TOP2(type, heap, _)), pos >= 0,
 	p1_Alloc(_, var, heap, _).
 
 // Pop receiver object from stack
 p1_VCall(stmt, base, sig) :-
 	(OpcodeExt(stmt, "invokevirtual", sig) ;
 	 OpcodeExt(stmt, "invokeinterface", sig)),
-	REQ_ActualParam(stmt, -1, TOP(_, base, _)).
+	REQ_ActualParam(stmt, -1, TOP2(_, base, _)).
 
 // Pop receiver object from stack
 p1_InitCall(stmt),
@@ -239,14 +241,14 @@ p1_Assign(allocStmt, base),
 p1_Alloc(allocStmt, base, heap, type),
 p1_SPCall(stmt, base, sig) :-
 	OpcodeExt(stmt, "X-invokeinit", sig),
-	REQ_ActualParam(stmt, -1, TOP(type, heap, _)),
+	REQ_ActualParam(stmt, -1, TOP2(type, heap, _)),
 	OpcodeExt(allocStmt, "new", heap),
 	RES_Var(stmt, base).
 
 // Pop receiver object from stack
 p1_SPCall(stmt, base, sig) :-
 	OpcodeExt(stmt, "invokespecial", sig),
-	REQ_ActualParam(stmt, -1, TOP(_, base, _)).
+	REQ_ActualParam(stmt, -1, TOP2(_, base, _)).
 
 p1_SCall(stmt, sig) :-
 	OpcodeExt(stmt, "invokestatic", sig).
@@ -273,14 +275,14 @@ p1_Operand(stmt, 0, sizeType, size),
 p1_ArrayAlloc(stmt, heap, type),
 REQ_Var(stmt, type, stack) :-
 	OpcodeExt(stmt, "newarray", heap),
-	StackBeforeStmt(stmt, TOP(sizeType, size, stack)),
+	StackBeforeStmt(stmt, TOP2(sizeType, size, stack)),
 	AllocType(stmt, type).
 
 p1_Operator(stmt, "arraylength"),
 p1_Operand(stmt, 0, type, array),
 REQ_Var(stmt, INT_T, stack) :-
 	OpcodeExt(stmt, "arraylength", _),
-	StackBeforeStmt(stmt, TOP(type, array, stack)).
+	StackBeforeStmt(stmt, TOP2(type, array, stack)).
 
 // TODO fix types
 p1_ALoad(stmt),
@@ -288,21 +290,21 @@ p1_Operand(stmt, 0, NIL, array),
 p1_Operand(stmt, 1, INT_T, index),
 REQ_Var(stmt, NIL, stack) :-
 	OpcodeExt(stmt, "X-aload", _),
-	StackBeforeStmt(stmt, TOP(_, index, TOP(_, array, stack))).
+	StackBeforeStmt(stmt, TOP4(_, index, _, array, stack)).
 
 p1_AStore(stmt, array),
 p1_Operand(stmt, 0, INT_T, index),
 p1_Operand(stmt, 1, fromType, from),
 StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, "X-astore", _),
-	StackBeforeStmt(stmt, TOP(fromType, from, TOP(_, index, TOP(_, array, stack)))).
+	StackBeforeStmt(stmt, TOP2(fromType, from, TOP4(_, index, _, array, stack))).
 
 ///////////////////////////////////////////////////////////////
 
 p1_Throw(stmt, var),
 StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, "athrow", _),
-	StackBeforeStmt(stmt, TOP(_, var, stack)).
+	StackBeforeStmt(stmt, TOP2(_, var, stack)).
 
 // Initialize stack for first statement
 StackBeforeStmt(stmt, nil) :- BytecodeStmt(stmt, _, 0).
@@ -313,12 +315,12 @@ StackBeforeStmt(nextStmt, stack) :-
 	p1_Next(stmt, nextStmt).
 
 // Prepare stack for an exception handler
-StackBeforeStmt(handlerStmt, TOP(type, type, nil)) :-
+StackBeforeStmt(handlerStmt, TOP2(type, type, nil)) :-
 	p1_ExceptionHandler(_, _, _, handlerStmt, type, _).
 
 // Handle all assignments to temp or source code vars
 REQ_Assign(stmt, var),
-StackForNext(stmt, TOP(type, var, stack)) :-
+StackForNext(stmt, TOP2(type, var, stack)) :-
 	REQ_Var(stmt, type, stack),
 	RES_Var(stmt, var).
 
