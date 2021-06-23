@@ -27,6 +27,7 @@ public class A {
 		test22();
 		test23();
 		test24();
+		test25();
 	}
 
 	static void test1() {
@@ -313,11 +314,20 @@ public class A {
 
 	static void test24() {
 		D = test19(42);
+		int x = (int) D;
+	}
+
+	static void test25() {
 		int x = 20;
-		char[] arr1 = new char[10];
 		char[] arr2 = new char[x];
-		for (int i = 0 ; i < arr1.length ; i++)
-			arr1[i] = 'a' + 10;
+		char[] arr1 = new char[10];
+		for (int i = 0 ; i < arr1.length ; i++) {
+			arr1[i] = 'a' + 1;
+		}
+		for (char c : arr1)
+			System.out.println(c);
+		for (char c : arr1)
+			System.out.println(c);
 	}
 }
 

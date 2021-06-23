@@ -282,11 +282,19 @@ REQ_Var(stmt, INT_T, stack) :-
 	OpcodeExt(stmt, "arraylength", _),
 	StackBeforeStmt(stmt, TOP(type, array, stack)).
 
+// TODO fix types
+p1_ALoad(stmt),
+p1_Operand(stmt, 0, NIL, array),
+p1_Operand(stmt, 1, INT_T, index),
+REQ_Var(stmt, NIL, stack) :-
+	OpcodeExt(stmt, "X-aload", _),
+	StackBeforeStmt(stmt, TOP(_, index, TOP(_, array, stack))).
+
 p1_AStore(stmt, array),
 p1_Operand(stmt, 0, INT_T, index),
 p1_Operand(stmt, 1, fromType, from),
 StackForNext(stmt, stack) :-
-	OpcodeExt(stmt, "castore", _),
+	OpcodeExt(stmt, "X-astore", _),
 	StackBeforeStmt(stmt, TOP(fromType, from, TOP(_, index, TOP(_, array, stack)))).
 
 ///////////////////////////////////////////////////////////////

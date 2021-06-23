@@ -189,10 +189,24 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 				break
 			case ARRAYLENGTH: rec("arraylength")
 				break
-			case CASTORE: rec("castore")
+			case IALOAD:
+			case LALOAD:
+			case FALOAD:
+			case DALOAD:
+			case BALOAD:
+			case CALOAD:
+			case SALOAD:
+			case AALOAD: rec("X-aload")
 				break
-				// IALOAD, LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD, SALOAD, IASTORE,
-				// LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE, SASTORE,
+			case IASTORE:
+			case LASTORE:
+			case FASTORE:
+			case DASTORE:
+			case BASTORE:
+			case CASTORE:
+			case SASTORE:
+			case AASTORE: rec("X-astore")
+				break
 			default: wat(opcode)
 		}
 	}

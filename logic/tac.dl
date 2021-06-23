@@ -37,6 +37,7 @@ TAC_RHS(stmt, CAT4("(", type, ") ", out0)) :-
 TAC_RHS(stmt, out) :-
 	OperandStr(stmt, 0, out),
 	!ARRAY_ALLOC(stmt, _, _, _),
+	!ALOAD(stmt, _),
 	!CAST(stmt, _, _),
 	!CallStmt(stmt, _),
 	!SLOAD(stmt, _),
@@ -108,6 +109,12 @@ TAC(method, index, CAT5(name, ".", fldName, " = ", val)) :-
 	Field(fld, _, fldName, _),
 	OperandStr(stmt, 1, val).
 
+// Array load
+TAC_RHS(stmt, CAT4(name, "[", arrIndex, "]")) :-
+	ALOAD(stmt, array),
+	VAR(_, array, _, name),
+	OperandStr(stmt, 1, arrIndex).
+
 // Array store
 TAC(method, index, CAT5(name, "[", arrIndex, "] = ", from)) :-
 	ASTORE(stmt, array),
@@ -174,3 +181,7 @@ TAC(method, index, cat("throw ", varName)) :-
 
 //TAC(method, -1, CAT4("// ", type, " ", name)) :-
 //	VAR(method, _, type, name).
+
+ERROR(stmt, cat("stmt has TAC: ", stmt)) :-
+	Stmt(stmt, method, index),
+	!TAC(method, index, _).

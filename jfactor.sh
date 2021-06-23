@@ -1,5 +1,5 @@
 #!/bin/bash
-FILTER='\<A test24('
+FILTER='\<A test25('
 BASE=build/out
 rm -rf $BASE && mkdir $BASE
 time souffle -j8 -F$BASE/../out_tmp -D$BASE logic/jfactor.dl

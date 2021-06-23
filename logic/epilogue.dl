@@ -94,6 +94,11 @@ ARRAY_ALLOC(stmt, ssaTo, heap, type) :-
 	p2_Assign(bcStmt, _, ssaTo, _, _),
 	BC_ToFinal(bcStmt, stmt).
 
+ALOAD(stmt, array) :-
+	p1_ALoad(bcStmt),
+	BC_ToFinal(bcStmt, stmt),
+	Operand_VAR(stmt, 0, array).
+
 ASTORE(stmt, array) :-
 	p1_AStore(bcStmt, array),
 	BC_ToFinal(bcStmt, stmt).

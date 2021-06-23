@@ -16,7 +16,8 @@
 
 .output ERROR
 .output OpcodeExt
-.output StackBeforeStmt
+//.output StackBeforeStmt
+//.output p3_ToFinalIndex
 
 // FACTS //
 //.output VAR
@@ -52,4 +53,3 @@
 
 .output TAC
 // TODO profile rules
-.output p3_ToFinalIndex
