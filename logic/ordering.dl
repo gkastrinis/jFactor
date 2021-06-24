@@ -88,22 +88,8 @@ OpcodeToHide("X-Lconst").
 OpcodeToHide("X-Sconst").
 OpcodeToHide("X-String").
 OpcodeToHide("X-NULL").
-OpcodeToHide("i2l").
-OpcodeToHide("i2f").
-OpcodeToHide("i2d").
-OpcodeToHide("l2i").
-OpcodeToHide("l2f").
-OpcodeToHide("l2d").
-OpcodeToHide("f2i").
-OpcodeToHide("f2l").
-OpcodeToHide("f2d").
-OpcodeToHide("d2i").
-OpcodeToHide("d2l").
-OpcodeToHide("d2f").
-OpcodeToHide("i2b").
-OpcodeToHide("i2c").
-OpcodeToHide("i2s").
 OpcodeToHide("dup").
+OpcodeToHide("pop").
 
 BCIndexToHide(method, bcIndex) :-
 	OpcodeExt(stmt, "X-store", _),

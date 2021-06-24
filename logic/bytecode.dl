@@ -81,11 +81,12 @@ StackForNext(stmt, stack) :-
 	IncValue(stmt, value, type1).
 
 // Handle casts
-p1_Cast(stmt, type, fromType),
-p1_Operand(stmt, 0, NIL, type),
+p1_Cast(stmt, toType, fromType),
+p1_Operand(stmt, 0, NIL, toType),
 p1_Operand(stmt, 1, fromType, from),
-REQ_Var(stmt, type, stack) :-
-	OpcodeExt(stmt, "checkcast", type),
+REQ_Var(stmt, toType, stack) :-
+	(OpcodeExt(stmt, "checkcast", toType) ;
+	 (OpcodeExt(stmt, opcode, _), ConvertOpcode(opcode, fromType, toType))),
 	StackBeforeStmt(stmt, TOP2(fromType, from, stack)).
 
 // Handle conditional jumps
@@ -186,12 +187,6 @@ ERROR(stmt, "dup should follow only a `new` opcode") :-
 StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, "pop", _),
 	StackBeforeStmt(stmt, [_, stack]).
-
-// Convert from one type to another
-StackForNext(stmt, [toTypeDesc, stack]) :-
-	OpcodeExt(stmt, opcode, _),
-	ConvertOpcode(opcode, fromTypeDesc, toTypeDesc),
-	StackBeforeStmt(stmt, [fromTypeDesc, stack]).
 
 // Calls... ////////////////////////////////////////////////////
 
