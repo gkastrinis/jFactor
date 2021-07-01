@@ -4,8 +4,6 @@
 ![jFactor](/jFactor.png)
 =============================
 
-...
-
 System requirements
 -------------------
 
@@ -15,7 +13,7 @@ Installation & Testing
 ----------------------
 
 ```bash
-git clone git://github.com/gkastrinis/panda.git
+git clone git://github.com/gkastrinis/jfactor.git
 cd jfactor
 ./jfactor.sh
 ```
