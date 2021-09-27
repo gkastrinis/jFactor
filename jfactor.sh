@@ -1,8 +1,12 @@
 #!/bin/bash
 FILTER='\<A test25('
 BASE=build/out
-rm -rf $BASE && mkdir $BASE
-time souffle -j8 -F$BASE/../out_tmp -D$BASE logic/jfactor.dl
+rm -rf $BASE && mkdir -p $BASE
+if [[ "$(uname -s)" =~ "Darwin" ]]; then
+	time souffle -F$BASE/../out_tmp -D$BASE logic/jfactor.dl
+else
+	time souffle -j8 -F$BASE/../out_tmp -D$BASE logic/jfactor.dl
+fi
 echo -e "\nERRORS: $(cat $BASE/ERROR.csv | wc -l)"
 sort -V $BASE/OpcodeExt.csv | grep "$FILTER" > $BASE/OpcodeExt.facts
 rm $BASE/OpcodeExt.csv
