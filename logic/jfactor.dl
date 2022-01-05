@@ -17,7 +17,7 @@
 .output ERROR
 .output OpcodeExt
 //.output StackBeforeStmt
-//.output p3_ToFinalIndex
+.output p3_ToFinalIndex
 
 // FACTS //
 //.output VAR
@@ -29,11 +29,11 @@
 //.output Stmt
 //.output NextStmt
 //.output ASSIGN
-//.output PHI_ASSIGN
+.output PHI_ASSIGN
 //.output CAST
 //.output Operator
-//.output Operand_VAR
-//.output Operand_CONST
+.output Operand_VAR
+.output Operand_CONST
 //.output SLOAD
 //.output SSTORE
 //.output ILOAD
@@ -53,3 +53,7 @@
 
 .output TAC
 // TODO profile rules
+.output p1_Assign
+.output p2_Assign
+.output p2_PhiAssign
+.output p2_Operand

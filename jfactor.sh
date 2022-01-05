@@ -1,5 +1,5 @@
 #!/bin/bash
-FILTER='\<A test25('
+FILTER='\<A test16('
 BASE=build/out
 rm -rf $BASE && mkdir -p $BASE
 if [[ "$(uname -s)" =~ "Darwin" ]]; then
