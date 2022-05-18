@@ -16,7 +16,7 @@ Installation & Testing
 ```bash
 git clone git://github.com/gkastrinis/jfactor.git
 cd jfactor
-./jfactor.sh
+./jfactor-souffle.sh
 ```
 
 [badge-license]: https://img.shields.io/badge/license-MIT-green.svg
