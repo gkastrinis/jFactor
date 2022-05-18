@@ -6,15 +6,15 @@ plugins {
 group = "org.codesimius"
 mainClassName = "org.codesimius.jfactor.Main"
 
-wrapper() { gradleVersion = "7.2" }
+wrapper() { gradleVersion = "7.4" }
 
 repositories { mavenCentral() }
 
 dependencies {
 	implementation "org.codehaus.groovy:groovy-all:3.0.9"
-	implementation "org.ow2.asm:asm:9.0"
-	implementation "org.ow2.asm:asm-commons:9.0"
-	implementation "org.ow2.asm:asm-util:9.0"
+	implementation "org.ow2.asm:asm:9.1"
+	implementation "org.ow2.asm:asm-commons:9.1"
+	implementation "org.ow2.asm:asm-util:9.1"
 }
 
 run {
