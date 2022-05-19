@@ -38,7 +38,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	void visitIincInsn(int var, int increment) {
 		counter++
-		rec(increment >= 0 ? "X-inc" : "X-dec", var)
+		bc(increment >= 0 ? "X-inc" : "X-dec", var)
 		increment = Math.abs(increment)
 		def type
 		if (increment <= Byte.MAX_VALUE) type = "byte"
@@ -56,139 +56,139 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitInsn(int opcode) {
 		counter++
 		switch (opcode) {
-			case ICONST_M1: rec("X-Bconst", "-1")
+			case ICONST_M1: bc("X-Bconst", "-1")
 				break
-			case ICONST_0: rec("X-Bconst", "0")
+			case ICONST_0: bc("X-Bconst", "0")
 				break
-			case ICONST_1: rec("X-Bconst", "1")
+			case ICONST_1: bc("X-Bconst", "1")
 				break
-			case ICONST_2: rec("X-Bconst", "2")
+			case ICONST_2: bc("X-Bconst", "2")
 				break
-			case ICONST_3: rec("X-Bconst", "3")
+			case ICONST_3: bc("X-Bconst", "3")
 				break
-			case ICONST_4: rec("X-Bconst", "4")
+			case ICONST_4: bc("X-Bconst", "4")
 				break
-			case ICONST_5: rec("X-Bconst", "5")
+			case ICONST_5: bc("X-Bconst", "5")
 				break
-			case LCONST_0: rec("X-Lconst", "0L")
+			case LCONST_0: bc("X-Lconst", "0L")
 				break
-			case LCONST_1: rec("X-Lconst", "1L")
+			case LCONST_1: bc("X-Lconst", "1L")
 				break
-			case FCONST_0: rec("X-Fconst", "0.0f")
+			case FCONST_0: bc("X-Fconst", "0.0f")
 				break
-			case FCONST_1: rec("X-Fconst", "1.0f")
+			case FCONST_1: bc("X-Fconst", "1.0f")
 				break
-			case FCONST_2: rec("X-Fconst", "2.0f")
+			case FCONST_2: bc("X-Fconst", "2.0f")
 				break
-			case DCONST_0: rec("X-Dconst", "0.0")
+			case DCONST_0: bc("X-Dconst", "0.0")
 				break
-			case DCONST_1: rec("X-Dconst", "1.0")
+			case DCONST_1: bc("X-Dconst", "1.0")
 				break
-			case ACONST_NULL: rec("X-NULL", "NULL")
+			case ACONST_NULL: bc("X-NULL", "NULL")
 				break
-			case I2L: rec("i2l")
+			case I2L: bc("i2l")
 				break
-			case I2F: rec("i2f")
+			case I2F: bc("i2f")
 				break
-			case I2D: rec("i2d")
+			case I2D: bc("i2d")
 				break
-			case L2I: rec("l2i")
+			case L2I: bc("l2i")
 				break
-			case L2F: rec("l2f")
+			case L2F: bc("l2f")
 				break
-			case L2D: rec("l2d")
+			case L2D: bc("l2d")
 				break
-			case F2I: rec("f2i")
+			case F2I: bc("f2i")
 				break
-			case F2L: rec("f2l")
+			case F2L: bc("f2l")
 				break
-			case F2D: rec("f2d")
+			case F2D: bc("f2d")
 				break
-			case D2I: rec("d2i")
+			case D2I: bc("d2i")
 				break
-			case D2L: rec("d2l")
+			case D2L: bc("d2l")
 				break
-			case D2F: rec("d2f")
+			case D2F: bc("d2f")
 				break
-			case I2B: rec("i2b")
+			case I2B: bc("i2b")
 				break
-			case I2C: rec("i2c")
+			case I2C: bc("i2c")
 				break
-			case I2S: rec("i2s")
+			case I2S: bc("i2s")
 				break
-			case POP: rec("pop")
+			case POP: bc("pop")
 				break
 			case POP2: wat(opcode)
 				break
-			case DUP: rec("dup")
+			case DUP: bc("dup")
 				break
 			case IADD:
 			case LADD:
 			case FADD:
-			case DADD: rec("X-add")
+			case DADD: bc("X-add")
 				break
 			case ISUB:
 			case LSUB:
 			case FSUB:
-			case DSUB: rec("X-sub")
+			case DSUB: bc("X-sub")
 				break
 			case IMUL:
 			case LMUL:
 			case FMUL:
-			case DMUL: rec("X-mul")
+			case DMUL: bc("X-mul")
 				break
 			case IDIV:
 			case LDIV:
 			case FDIV:
-			case DDIV: rec("X-div")
+			case DDIV: bc("X-div")
 				break
 			case IREM:
 			case LREM:
 			case FREM:
-			case DREM: rec("X-rem")
+			case DREM: bc("X-rem")
 				break
 			case INEG:
 			case LNEG:
 			case FNEG:
-			case DNEG: rec("X-neg")
+			case DNEG: bc("X-neg")
 				break
 			case IAND:
-			case LAND: rec("X-band")
+			case LAND: bc("X-band")
 				break
 			case IOR:
-			case LOR: rec("X-bor")
+			case LOR: bc("X-bor")
 				break
 			case IXOR:
-			case LXOR: rec("X-bxor")
+			case LXOR: bc("X-bxor")
 				break
 			case ISHL:
-			case LSHL: rec("X-shl")
+			case LSHL: bc("X-shl")
 				break
 			case ISHR:
-			case LSHR: rec("X-shr")
+			case LSHR: bc("X-shr")
 				break
 			case IUSHR:
-			case LUSHR: rec("X-ushr")
+			case LUSHR: bc("X-ushr")
 				break
-			case LCMP: rec("lcmp")
+			case LCMP: bc("lcmp")
 				break
 			case FCMPL:
-			case DCMPL: rec("cmpl") // -1 on NaN
+			case DCMPL: bc("cmpl") // -1 on NaN
 				break
 			case FCMPG:
-			case DCMPG: rec("cmpg") // 1 on NaN
+			case DCMPG: bc("cmpg") // 1 on NaN
 				break
 			case IRETURN:
 			case LRETURN:
 			case FRETURN:
 			case DRETURN:
-			case ARETURN: rec("X-return")
+			case ARETURN: bc("X-return")
 				break
-			case RETURN: rec("return")
+			case RETURN: bc("return")
 				break
-			case ATHROW: rec("athrow")
+			case ATHROW: bc("athrow")
 				break
-			case ARRAYLENGTH: rec("arraylength")
+			case ARRAYLENGTH: bc("arraylength")
 				break
 			case IALOAD:
 			case LALOAD:
@@ -197,7 +197,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 			case BALOAD:
 			case CALOAD:
 			case SALOAD:
-			case AALOAD: rec("X-aload")
+			case AALOAD: bc("X-aload")
 				break
 			case IASTORE:
 			case LASTORE:
@@ -206,7 +206,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 			case BASTORE:
 			case CASTORE:
 			case SASTORE:
-			case AASTORE: rec("X-astore")
+			case AASTORE: bc("X-astore")
 				break
 			default: wat(opcode)
 		}
@@ -219,13 +219,13 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 			case LLOAD:
 			case FLOAD:
 			case DLOAD:
-			case ALOAD: rec("X-load", var)
+			case ALOAD: bc("X-load", var)
 				break
 			case ISTORE:
 			case LSTORE:
 			case FSTORE:
 			case DSTORE:
-			case ASTORE: rec("X-store", var)
+			case ASTORE: bc("X-store", var)
 				break
 			case RET: wat(opcode) // Deprecated in Java 7
 				break
@@ -240,11 +240,11 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 			case NEW:
 				def heap = "${methID()}/new $type/$counter"
 				emit(Conf.instance.allocTypes, [stmtID(counter), type])
-				rec("new", heap)
+				bc("new", heap)
 				break
 			case ANEWARRAY: wat(opcode)
 				break
-			case CHECKCAST: rec("checkcast", type)
+			case CHECKCAST: bc("checkcast", type)
 				break
 			case INSTANCEOF: wat(opcode)
 				break
@@ -258,13 +258,13 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		def sig = "$owner.${name}$descriptor"
 		callInfo(sig, owner, name)
 		switch (opcode) {
-			case INVOKEVIRTUAL: rec("invokevirtual", sig)
+			case INVOKEVIRTUAL: bc("invokevirtual", sig)
 				break
-			case INVOKESPECIAL: rec(name == "<init>" ? "X-invokeinit" : "invokespecial", sig)
+			case INVOKESPECIAL: bc(name == "<init>" ? "X-invokeinit" : "invokespecial", sig)
 				break
-			case INVOKESTATIC: rec("invokestatic", sig)
+			case INVOKESTATIC: bc("invokestatic", sig)
 				break
-			case INVOKEINTERFACE: rec("invokeinterface", sig)
+			case INVOKEINTERFACE: bc("invokeinterface", sig)
 				break
 			default: wat(opcode)
 		}
@@ -273,39 +273,39 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitJumpInsn(int opcode, Label label) {
 		counter++
 		switch (opcode) {
-			case IFEQ: rec("ifeq", label)
+			case IFEQ: bc("ifeq", label)
 				break
-			case IFNE: rec("ifne", label)
+			case IFNE: bc("ifne", label)
 				break
-			case IFLT: rec("iflt", label)
+			case IFLT: bc("iflt", label)
 				break
-			case IFGE: rec("ifge", label)
+			case IFGE: bc("ifge", label)
 				break
-			case IFGT: rec("ifgt", label)
+			case IFGT: bc("ifgt", label)
 				break
-			case IFLE: rec("ifle", label)
+			case IFLE: bc("ifle", label)
 				break
-			case IF_ICMPEQ: rec("if_icmpeq", label)
+			case IF_ICMPEQ: bc("if_icmpeq", label)
 				break
-			case IF_ICMPNE: rec("if_icmpne", label)
+			case IF_ICMPNE: bc("if_icmpne", label)
 				break
-			case IF_ICMPLT: rec("if_icmplt", label)
+			case IF_ICMPLT: bc("if_icmplt", label)
 				break
-			case IF_ICMPGE: rec("if_icmpge", label)
+			case IF_ICMPGE: bc("if_icmpge", label)
 				break
-			case IF_ICMPGT: rec("if_icmpgt", label)
+			case IF_ICMPGT: bc("if_icmpgt", label)
 				break
-			case IF_ICMPLE: rec("if_icmple", label)
+			case IF_ICMPLE: bc("if_icmple", label)
 				break
-			case IF_ACMPEQ: rec("if_acmpeq", label)
+			case IF_ACMPEQ: bc("if_acmpeq", label)
 				break
-			case IF_ACMPNE: rec("if_acmpne", label)
+			case IF_ACMPNE: bc("if_acmpne", label)
 				break
-			case IFNULL: rec("ifnull", label)
+			case IFNULL: bc("ifnull", label)
 				break
-			case IFNONNULL: rec("ifnonnull", label)
+			case IFNONNULL: bc("ifnonnull", label)
 				break
-			case GOTO: rec("goto", label)
+			case GOTO: bc("goto", label)
 				break
 			case JSR: wat(opcode) // Deprecated in Java 7
 				break
@@ -316,22 +316,22 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitLdcInsn(Object value) {
 		counter++
 		if (value instanceof Byte)
-			rec("X-Bconst", value)
+			bc("X-Bconst", value)
 		else if (value instanceof Character)
-			rec("X-Cconst", value)
+			bc("X-Cconst", value)
 		else if (value instanceof Float)
-			rec("X-Fconst", value)
+			bc("X-Fconst", value)
 		else if (value instanceof Double)
-			rec("X-Dconst", value)
+			bc("X-Dconst", value)
 		else if (value instanceof Integer)
-			rec("X-Iconst", value)
+			bc("X-Iconst", value)
 		else if (value instanceof Long)
-			rec("X-Lconst", value)
+			bc("X-Lconst", value)
 		else if (value instanceof Short)
-			rec("X-Sconst", value)
+			bc("X-Sconst", value)
 		else if (value instanceof String) {
 			value = "\"${value.replaceAll("\t", "\\\\t").replaceAll("\"", "\\\\\"")}\""
-			rec("X-String", value)
+			bc("X-String", value)
 		} else
 			throw new RuntimeException("Should handle type: " + value.class)
 	}
@@ -346,13 +346,13 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 			visitedFlds << fld
 		}
 		switch (opcode) {
-			case GETSTATIC: rec("getstatic", fld)
+			case GETSTATIC: bc("getstatic", fld)
 				break
-			case PUTSTATIC: rec("putstatic", fld)
+			case PUTSTATIC: bc("putstatic", fld)
 				break
-			case GETFIELD: rec("getfield", fld)
+			case GETFIELD: bc("getfield", fld)
 				break
-			case PUTFIELD: rec("putfield", fld)
+			case PUTFIELD: bc("putfield", fld)
 				break
 			default: wat(opcode)
 		}
@@ -361,16 +361,16 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	void visitIntInsn(int opcode, int operand) {
 		counter++
 		switch (opcode) {
-			case BIPUSH: rec("X-Bconst", operand)
+			case BIPUSH: bc("X-Bconst", operand)
 				break
-			case SIPUSH: rec("X-Sconst", operand)
+			case SIPUSH: bc("X-Sconst", operand)
 				break
 			case NEWARRAY:
 				def type = toPrimitiveType(operand)
 				def heap = "${methID()}/new[] $type/$counter"
 				emit(Conf.instance.allocTypes, [stmtID(counter), type])
 				emit(Conf.instance.elemTypes, ["$type[]", type])
-				rec("newarray", heap)
+				bc("newarray", heap)
 				break
 			default: wat(opcode)
 		}
@@ -378,7 +378,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	void visitLabel(Label label) {
 		if (!firstLabel) firstLabel = label
-		emit(Conf.instance.labels, [methID(), label, stmtID(counter + 1)])
+		emit(Conf.instance.labels, [methID(), label, stmtID(counter + 1), counter + 1])
 	}
 
 	void visitLineNumber(int line, Label start) {
@@ -456,12 +456,12 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 	}
 
 	def wat(int opcode, boolean thr = true) {
-		rec(Integer.toHexString(opcode), "??")
+		bc(Integer.toHexString(opcode), "??")
 		if (thr) throw new RuntimeException(Integer.toHexString(opcode) + "??")
 	}
 
-	void rec(def opcode, def oper = "_") {
-		emit(Conf.instance.opcodes, [methID(), counter, stmtID(counter), opcode, oper])
+	void bc(String opcode, def oper = "_") {
+		emit(Conf.instance.bytecodes, [methID(), counter, stmtID(counter), opcode, oper])
 	}
 
 	static def emit(File f, ArrayList args) { f << args.join(Conf.instance.DELIM) << "\n" }

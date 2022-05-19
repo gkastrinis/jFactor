@@ -7,7 +7,7 @@ class Conf {
 
 	File baseDir = new File("build/out_tmp")
 
-	File opcodes = new File(baseDir, "opcode.csv")
+	File bytecodes = new File(baseDir, "bytecode.csv")
 	File allocTypes = new File(baseDir, "alloc-type.csv")
 	File labels = new File(baseDir, "label.csv")
 	File vars = new File(baseDir, "var.csv")
@@ -22,9 +22,9 @@ class Conf {
 			this[prop].delete()
 			this[prop].createNewFile()
 		}
-		opcodes << ["meth", "idx", "stmt", "opcode", "oper"].join(DELIM) << "\n"
+		bytecodes << ["meth", "idx", "stmt", "opcode", "oper"].join(DELIM) << "\n"
 		allocTypes << ["stmt", "type"].join(DELIM) << "\n"
-		labels << ["meth", "label", "stmt"].join(DELIM) << "\n"
+		labels << ["meth", "label_id", "stmt", "stmt_idx"].join(DELIM) << "\n"
 		vars << ["meth", "var_idx", "var", "name", "type", "start_label", "end_label"].join(DELIM) << "\n"
 		incValues << ["stmt", "value", "type"].join(DELIM) << "\n"
 		elemTypes << ["array_type", "elem_type"].join(DELIM) << "\n"
