@@ -4,7 +4,7 @@ import org.objectweb.asm.ClassReader
 
 import java.util.jar.JarFile
 
-Database.instance.init()
+Conf.instance.init()
 
 args.each {
 	def jarFile = new JarFile(it)

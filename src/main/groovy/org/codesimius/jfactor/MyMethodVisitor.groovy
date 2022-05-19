@@ -31,9 +31,10 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		counter = -1
 		formalCounter = 0
 		exceptions?.each {
-			Database.instance.methodExceptions << "$name\t${it.replace("/", ".")}\n"
+			// Conf.instance.methodExceptions << "$name\t${it.replace("/", ".")}\n"
 		}
 	}
+
 
 	void visitIincInsn(int var, int increment) {
 		counter++
@@ -45,7 +46,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		else if (increment <= Integer.MAX_VALUE) type = "int"
 		else if (increment <= Long.MAX_VALUE) type = "long"
 		else throw new RuntimeException("weird size")
-		Database.instance.incValues << "${stmtID(counter)}\t$increment\t$type\n"
+		emit(Conf.instance.incValues, [stmtID(counter), increment, type])
 	}
 
 	// NOP, ACONST_NULL,
@@ -238,7 +239,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		switch (opcode) {
 			case NEW:
 				def heap = "${methID()}/new $type/$counter"
-				Database.instance.allocTypes << "${stmtID(counter)}\t$type\n"
+				emit(Conf.instance.allocTypes, [stmtID(counter), type])
 				rec("new", heap)
 				break
 			case ANEWARRAY: wat(opcode)
@@ -341,7 +342,7 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 		def (type, rest) = typeFromJVM(descriptor)
 		def fld = "<$owner: $type $name>" as String
 		if (fld !in visitedFlds) {
-			Database.instance.fields << "$fld\t$type\t$name\t$owner\n"
+			// Conf.instance.fields << "$fld\t$type\t$name\t$owner\n"
 			visitedFlds << fld
 		}
 		switch (opcode) {
@@ -367,8 +368,8 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 			case NEWARRAY:
 				def type = toPrimitiveType(operand)
 				def heap = "${methID()}/new[] $type/$counter"
-				Database.instance.allocTypes << "${stmtID(counter)}\t$type[]\n"
-				Database.instance.componentTypes << "$type[]\t$type\n"
+				emit(Conf.instance.allocTypes, [stmtID(counter), type])
+				emit(Conf.instance.elemTypes, ["$type[]", type])
 				rec("newarray", heap)
 				break
 			default: wat(opcode)
@@ -377,32 +378,27 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 
 	void visitLabel(Label label) {
 		if (!firstLabel) firstLabel = label
-		Database.instance.labels << "${methID()}\t$label\t${stmtID(counter + 1)}\t${counter + 1}\n"
+		emit(Conf.instance.labels, [methID(), label, stmtID(counter + 1)])
 	}
 
 	void visitLineNumber(int line, Label start) {
-		Database.instance.lineNumbers << "${methID()}\t${stmtID(counter + 1)}\t$line\n"
+		// Conf.instance.lineNumbers << "${methID()}\t${stmtID(counter + 1)}\t$line\n"
 	}
 
 	void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
 		def (type, rest) = typeFromJVM(descriptor)
-		Database.instance.vars << "${methID()}\t$index\t${varID(name)}\t$name\t$type\t$start\t$end\n"
+		emit(Conf.instance.vars, [methID(), index, varID(name), name, type, start, end])
 		if (start == firstLabel) {
 			def pos = name == "this" ? -1 : formalCounter++
-			Database.instance.formals << "${methID()}\t$pos\t${varID(name)}\n"
+			// Conf.instance.formals << "${methID()}\t$pos\t${varID(name)}\n"
 		}
 	}
 
 	void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
 		def finalType = type ? type.replace("/", ".") : "java.lang.Throwable"
-		Database.instance.handlers << "${methID()}\t$start\t$end\t$handler\t$finalType\n"
+		// Conf.instance.handlers << "${methID()}\t$start\t$end\t$handler\t$finalType\n"
 	}
 
-
-	void rec(def opcode, def oper = "_") {
-		Database.instance.opcodes << "${stmtID(counter)}\t$opcode\t$oper\n"
-		Database.instance.stmts << "${stmtID(counter)}\t${methID()}\t$counter\n"
-	}
 
 	def methID() { "<${declaringType} ${name}$desc>" }
 
@@ -456,11 +452,17 @@ class MyMethodVisitor extends MethodVisitor implements Opcodes {
 			sig = rest
 		}
 		def (retType, rest) = typeFromJVM(sig.drop(1))
-		Database.instance.invocations << "$origSig\t$argc\t$retType\t$owner::$name\n"
+		emit(Conf.instance.invocations, [origSig, argc, retType, "$owner::$name"])
 	}
 
 	def wat(int opcode, boolean thr = true) {
 		rec(Integer.toHexString(opcode), "??")
 		if (thr) throw new RuntimeException(Integer.toHexString(opcode) + "??")
 	}
+
+	void rec(def opcode, def oper = "_") {
+		emit(Conf.instance.opcodes, [methID(), counter, stmtID(counter), opcode, oper])
+	}
+
+	static def emit(File f, ArrayList args) { f << args.join(Conf.instance.DELIM) << "\n" }
 }
