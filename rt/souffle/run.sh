@@ -1,6 +1,6 @@
 #!/bin/bash
 FILTER='\<A test16('
-BASE=build/out
+BASE=../build/out
 rm -rf $BASE && mkdir -p $BASE
 if [[ "$(uname -s)" =~ "Darwin" ]]; then
 	time souffle -F$BASE/../out_tmp -D$BASE rt/souffle/jfactor.dl
