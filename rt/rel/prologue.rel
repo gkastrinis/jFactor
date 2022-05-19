@@ -1,0 +1,136 @@
+// * BC = Bytecode
+// * BB = Basic-Block
+// * SSA = Static Single Assignment
+
+// Opcodes
+def opcode:bin = "X-add", "+"
+def opcode:bin = "X-sub", "-"
+def opcode:bin = "X-mul", "*"
+def opcode:bin = "X-div", "/"
+def opcode:bin = "X-rem", "%"
+def opcode:bin = "X-band", "&"
+def opcode:bin = "X-bor", "|"
+def opcode:bin = "X-bxor", "^"
+def opcode:bin = "X-shl", "<<"
+def opcode:bin = "X-shr", ">>"
+def opcode:bin = "X-ushr", ">>>"
+def opcode:bin = "lcmp", "cmp"
+def opcode:bin = "cmpl", "cmp"
+def opcode:bin = "cmpg", "cmp"
+def opcode:unary = "X-neg", "-"
+
+def opcode:const_load = "X-Bconst", "byte"
+def opcode:const_load = "X-Cconst", "char"
+def opcode:const_load = "X-Dconst", "double"
+def opcode:const_load = "X-Fconst", "float"
+def opcode:const_load = "X-Iconst", "int"
+def opcode:const_load = "X-Lconst", "long"
+def opcode:const_load = "X-Sconst", "short"
+def opcode:const_load = "X-String", "javalangString"
+def opcode:const_load = "X-NULL", "NULL"
+
+def opcode:load_store = "X-load"; "X-store"; "X-inc"; "X-dec"
+
+def opcode:convert = "i2l", "int", "long"
+def opcode:convert = "i2f", "int", "float"
+def opcode:convert = "i2d", "int", "double"
+def opcode:convert = "l2i", "long", "int"
+def opcode:convert = "l2f", "long", "float"
+def opcode:convert = "l2d", "long", "double"
+def opcode:convert = "f2i", "float", "int"
+def opcode:convert = "f2l", "float", "long"
+def opcode:convert = "f2d", "float", "double"
+def opcode:convert = "d2i", "double", "int"
+def opcode:convert = "d2l", "double", "long"
+def opcode:convert = "d2f", "double", "float"
+def opcode:convert = "i2b", "int", "byte"
+def opcode:convert = "i2c", "int", "char"
+def opcode:convert = "i2s", "int", "short"
+
+def opcode:call = "invokevirtual"
+def opcode:call = "invokeinterface"
+def opcode:call = "invokespecial"
+def opcode:call = "X-invokeinit"
+def opcode:call = "invokestatic"
+
+def opcode:cond_jump = "if_icmpeq", "=="
+def opcode:cond_jump = "if_icmpne", "!="
+def opcode:cond_jump = "if_icmplt", "<"
+def opcode:cond_jump = "if_icmpge", ">="
+def opcode:cond_jump = "if_icmpgt", ">"
+def opcode:cond_jump = "if_icmple", "<="
+def opcode:cond_jump = "if_acmpeq", "=="
+def opcode:cond_jump = "if_acmpne", "!="
+
+def opcode:implicit_cond_jump = "ifeq", "==", "byte", "0"
+def opcode:implicit_cond_jump = "ifne", "!=", "byte", "0"
+def opcode:implicit_cond_jump = "iflt", "<", "byte", "0"
+def opcode:implicit_cond_jump = "ifge", ">=", "byte", "0"
+def opcode:implicit_cond_jump = "ifgt", ">", "byte", "0"
+def opcode:implicit_cond_jump = "ifle", "<=", "byte", "0"
+def opcode:implicit_cond_jump = "ifnull", "==", "NULL", "NULL"
+def opcode:implicit_cond_jump = "ifnonnull", "!=", "NULL", "NULL"
+
+def opcode:jump = "goto"
+def opcode:jump = code: opcode:cond_jump(code, _)
+def opcode:jump = code: opcode:implicit_cond_jump(code, _, _, _)
+
+
+// Methods & Vars
+
+def method = meth: bytecode:meth(_, meth)
+
+def method:last_index = meth, last_index:
+    method(meth) and
+    last_index = max[key, idx: (bytecode:meth(key, meth) and bytecode:idx(key, idx))]
+
+def var:start_idx = v_key, start_idx:
+    var:start_label(v_key, start_label) and
+    label:label_id(l_key, start_label) and label:stmt_idx(l_key, start_idx)
+    from start_label, l_key
+
+// The end index is not inclusive in the original bytecode
+def var:end_idx = v_key, end_idx:
+    var:end_label(v_key, end_label) and
+    label:label_id(l_key, end_label) and label:stmt_idx(l_key, end_idx0) and end_idx = end_idx0 - 1
+    from end_label, l_key, end_idx0
+
+// Each label appears only in one method
+ic { function(label_id, meth: label:meth(key, meth) and label:label_id(key, label_id) from key) }
+
+
+// Extend bytecode operands
+
+// Jump targets
+def bytecode:oper_ext = key, next_stmt:
+    bytecode:opcode(key, code) and
+    opcode:jump(code) and
+    bytecode:oper(key, label_id) and
+    label:label_id(l_key, label_id) and label:stmt(l_key, next_stmt)
+    from code, label_id, l_key
+
+def next = stmt, next_stmt:
+    bytecode:opcode(key, code) and
+    opcode:jump(code) and
+    bytecode:stmt(key, stmt) and
+    bytecode:oper_ext(key, next_stmt)
+    from key, code
+
+// The next statement in sequence is also a successor in most cases
+def next = stmt, next_stmt:
+    bytecode:stmt(key, stmt) and
+    bytecode:opcode(key, code) and
+    not {"goto"; "athrow"; "X-return"; "return"}(code) and
+    bytecode:meth(key, meth) and
+    bytecode:idx(key, idx) and
+    not method:last_index(meth, idx) and
+    next_stmt = concat[meth, concat["/BC/", idx + 1]]
+    from key, code, meth, idx
+
+// Anything other than var loads/stores and jumps (or problematic vars) keeps the same operand
+def bytecode:oper_ext = key, oper:
+    bytecode:opcode(key, code) and
+    not opcode:load_store(code) and
+    not opcode:jump(code) and
+    bytecode:oper(key, oper)
+    from code
