@@ -1,0 +1,35 @@
+// Empty Stack
+@inline def empty_stack[] = last[hash[(:empty)]]
+// Push `x` and `y` in the stack identified by `s`
+@inline def push2[x, y, s] = last[hash[(:push2, x, y, s)]]
+
+// Initialize stack for first statement
+def stack =
+    (:before_stmt, stmt, s);
+    (:empty, s)
+    from key, stmt, s
+    where
+    bytecode:stmt(key, stmt) and
+    bytecode:idx(key, 0) and
+    s = empty_stack[]
+
+// -> constant value
+def stack =
+    (:after_stmt, stmt, new_s);
+    (:top2, new_s, t, const);
+    (:tail, new_s, s)
+    from key, code, t, const, s, stmt, new_s
+    where
+    bytecode:stmt(key, stmt) and
+    bytecode:opcode(key, code) and
+    opcode:const_load(code, t) and
+    bytecode:oper_ext(key, const) and
+    stack:before_stmt(stmt, s) and
+    new_s = push2[t, const, s]
+
+def show[s in stack:empty] = "@"
+def show[s] = str:
+    stack:top2(s, t, val) and
+    tail_str = show[stack:tail[s]] and
+    str = concat[t, concat[", ", concat[val, concat[", ", tail_str]]]]
+    from t, val, tail_str
