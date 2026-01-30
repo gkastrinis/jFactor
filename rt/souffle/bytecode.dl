@@ -301,8 +301,8 @@ StackForNext(stmt, stack) :-
 	OpcodeExt(stmt, "athrow", _),
 	StackBeforeStmt(stmt, TOP2(_, var, stack)).
 
-// Initialize stack for first statement
-StackBeforeStmt(stmt, nil) :- BytecodeStmt(stmt, _, 0).
+// // Initialize stack for first statement
+// StackBeforeStmt(stmt, nil) :- BytecodeStmt(stmt, _, 0).
 
 // Propagate stack to all successors
 StackBeforeStmt(nextStmt, stack) :-

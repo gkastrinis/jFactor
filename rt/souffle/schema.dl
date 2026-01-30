@@ -1,9 +1,9 @@
 #pragma once
 
-// Terms...
-// * BC = Bytecode
-// * BB = Basic-Block
-// * SSA = Static Single Assignment
+// // Terms...
+// // * BC = Bytecode
+// // * BB = Basic-Block
+// // * SSA = Static Single Assignment
 
 // Output //
 .decl ERROR(stmt: symbol, msg: symbol)

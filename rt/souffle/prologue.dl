@@ -1,147 +1,149 @@
 #pragma once
 
-// Opcodes
-.decl BinOpcode(opcode: symbol, op: symbol) inline
-.decl UnaryOpcode(opcode: symbol, op: symbol) inline
-.decl ConstLoadOpcode(opcode: symbol, type: symbol) inline
-.decl ConvertOpcode(opcode: symbol, fromTypeDesc: symbol, toTypeDesc: symbol) inline
-.decl CallOpcode(opcode: symbol) inline
-.decl ImplicitCondJumpOpcode(opcode: symbol, op: symbol, type1: symbol, oper1: symbol)
-.decl CondJumpOpcode(opcode: symbol, op: symbol)
-// Stmt Groups
-.decl LoadStoreStmt(stmt: symbol, opcode: symbol, oper: symbol)
-.decl JumpStmt(stmt: symbol, opcode: symbol, oper: symbol)
-.decl MethodLastStmtIndex(method: symbol, index: number) inline
-.decl p0_Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startIndex: number, endIndex: number)
+// // Opcodes
+// .decl BinOpcode(opcode: symbol, op: symbol) inline
+// .decl UnaryOpcode(opcode: symbol, op: symbol) inline
+// .decl ConstLoadOpcode(opcode: symbol, type: symbol) inline
+// .decl ConvertOpcode(opcode: symbol, fromTypeDesc: symbol, toTypeDesc: symbol) inline
+// .decl CallOpcode(opcode: symbol) inline
+// .decl ImplicitCondJumpOpcode(opcode: symbol, op: symbol, type1: symbol, oper1: symbol)
+// .decl CondJumpOpcode(opcode: symbol, op: symbol)
+// // Stmt Groups
+// .decl LoadStoreStmt(stmt: symbol, opcode: symbol, oper: symbol)
+// .decl JumpStmt(stmt: symbol, opcode: symbol, oper: symbol)
+// .decl MethodLastStmtIndex(method: symbol, index: number) inline
+// .decl p0_Var(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startIndex: number, endIndex: number)
 
-.decl p0_Opcode(stmt: symbol, opcode: symbol, oper: symbol)
-.decl p0_Var_RAW(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLabel: symbol)
-.decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
+// .decl p0_Opcode(stmt: symbol, opcode: symbol, oper: symbol)
+// .decl p0_Var_RAW(method: symbol, varIndex: symbol, var: symbol, name: symbol, type: symbol, startLabel: symbol, endLabel: symbol)
+// .decl Label(method: symbol, label: symbol, stmt: symbol, index: number)
 .decl Handler(method: symbol, startLabel: symbol, endLabel: symbol, handlerLabel: symbol, type: symbol)
-.input p0_Opcode(filename="Opcode.facts")
-.input p0_Var_RAW(filename="Var.facts")
-.input Label
-.input Handler
+// .input p0_Opcode(filename="Opcode.facts")
+// .input p0_Var_RAW(filename="Var.facts")
+// .input Label
+// .input Handler
 
-#define BYTE_T "byte"
-#define CHAR_T "char"
-#define DOUBLE_T "double"
-#define FLOAT_T "float"
-#define INT_T "int"
-#define LONG_T "long"
-#define SHORT_T "short"
-#define VOID_T "void"
+// #define BYTE_T "byte"
+// #define CHAR_T "char"
+// #define DOUBLE_T "double"
+// #define FLOAT_T "float"
+// #define INT_T "int"
+// #define LONG_T "long"
+// #define SHORT_T "short"
+// #define VOID_T "void"
 
-ConstLoadOpcode("X-Bconst", BYTE_T).
-ConstLoadOpcode("X-Cconst", CHAR_T).
-ConstLoadOpcode("X-Dconst", DOUBLE_T).
-ConstLoadOpcode("X-Fconst", FLOAT_T).
-ConstLoadOpcode("X-Iconst", INT_T).
-ConstLoadOpcode("X-Lconst", LONG_T).
-ConstLoadOpcode("X-Sconst", SHORT_T).
-ConstLoadOpcode("X-String", "java.lang.String").
-ConstLoadOpcode("X-NULL", "NULL").
+// ConstLoadOpcode("X-Bconst", BYTE_T).
+// ConstLoadOpcode("X-Cconst", CHAR_T).
+// ConstLoadOpcode("X-Dconst", DOUBLE_T).
+// ConstLoadOpcode("X-Fconst", FLOAT_T).
+// ConstLoadOpcode("X-Iconst", INT_T).
+// ConstLoadOpcode("X-Lconst", LONG_T).
+// ConstLoadOpcode("X-Sconst", SHORT_T).
+// ConstLoadOpcode("X-String", "java.lang.String").
+// ConstLoadOpcode("X-NULL", "NULL").
 
-ConvertOpcode("i2l", INT_T, LONG_T).
-ConvertOpcode("i2f", INT_T, FLOAT_T).
-ConvertOpcode("i2d", INT_T, DOUBLE_T).
-ConvertOpcode("l2i", LONG_T, INT_T).
-ConvertOpcode("l2f", LONG_T, FLOAT_T).
-ConvertOpcode("l2d", LONG_T, DOUBLE_T).
-ConvertOpcode("f2i", FLOAT_T, INT_T).
-ConvertOpcode("f2l", FLOAT_T, LONG_T).
-ConvertOpcode("f2d", FLOAT_T, DOUBLE_T).
-ConvertOpcode("d2i", DOUBLE_T, INT_T).
-ConvertOpcode("d2l", DOUBLE_T, LONG_T).
-ConvertOpcode("d2f", DOUBLE_T, FLOAT_T).
-ConvertOpcode("i2b", INT_T, BYTE_T).
-ConvertOpcode("i2c", INT_T, CHAR_T).
-ConvertOpcode("i2s", INT_T, SHORT_T).
+// ConvertOpcode("i2l", INT_T, LONG_T).
+// ConvertOpcode("i2f", INT_T, FLOAT_T).
+// ConvertOpcode("i2d", INT_T, DOUBLE_T).
+// ConvertOpcode("l2i", LONG_T, INT_T).
+// ConvertOpcode("l2f", LONG_T, FLOAT_T).
+// ConvertOpcode("l2d", LONG_T, DOUBLE_T).
+// ConvertOpcode("f2i", FLOAT_T, INT_T).
+// ConvertOpcode("f2l", FLOAT_T, LONG_T).
+// ConvertOpcode("f2d", FLOAT_T, DOUBLE_T).
+// ConvertOpcode("d2i", DOUBLE_T, INT_T).
+// ConvertOpcode("d2l", DOUBLE_T, LONG_T).
+// ConvertOpcode("d2f", DOUBLE_T, FLOAT_T).
+// ConvertOpcode("i2b", INT_T, BYTE_T).
+// ConvertOpcode("i2c", INT_T, CHAR_T).
+// ConvertOpcode("i2s", INT_T, SHORT_T).
 
-BinOpcode("X-add", "+").
-BinOpcode("X-sub", "-").
-BinOpcode("X-mul", "*").
-BinOpcode("X-div", "/").
-BinOpcode("X-rem", "%").
-BinOpcode("X-band", "&").
-BinOpcode("X-bor", "|").
-BinOpcode("X-bxor", "^").
-BinOpcode("X-shl", "<<").
-BinOpcode("X-shr", ">>").
-BinOpcode("X-ushr", ">>>").
-BinOpcode("lcmp", "cmp").
-BinOpcode("cmpl", "cmp").
-BinOpcode("cmpg", "cmp").
-UnaryOpcode("X-neg", "-").
+// BinOpcode("X-add", "+").
+// BinOpcode("X-sub", "-").
+// BinOpcode("X-mul", "*").
+// BinOpcode("X-div", "/").
+// BinOpcode("X-rem", "%").
+// BinOpcode("X-band", "&").
+// BinOpcode("X-bor", "|").
+// BinOpcode("X-bxor", "^").
+// BinOpcode("X-shl", "<<").
+// BinOpcode("X-shr", ">>").
+// BinOpcode("X-ushr", ">>>").
+// BinOpcode("lcmp", "cmp").
+// BinOpcode("cmpl", "cmp").
+// BinOpcode("cmpg", "cmp").
+// UnaryOpcode("X-neg", "-").
 
-CallOpcode("invokevirtual").
-CallOpcode("invokeinterface").
-CallOpcode("invokespecial").
-CallOpcode("X-invokeinit").
-CallOpcode("invokestatic").
+// CallOpcode("invokevirtual").
+// CallOpcode("invokeinterface").
+// CallOpcode("invokespecial").
+// CallOpcode("X-invokeinit").
+// CallOpcode("invokestatic").
 
-ImplicitCondJumpOpcode("ifeq", "==", BYTE_T, "0").
-ImplicitCondJumpOpcode("ifne", "!=", BYTE_T, "0").
-ImplicitCondJumpOpcode("iflt", "<", BYTE_T, "0").
-ImplicitCondJumpOpcode("ifge", ">=", BYTE_T, "0").
-ImplicitCondJumpOpcode("ifgt", ">", BYTE_T, "0").
-ImplicitCondJumpOpcode("ifle", "<=", BYTE_T, "0").
-ImplicitCondJumpOpcode("ifnull", "==", "NULL", "NULL").
-ImplicitCondJumpOpcode("ifnonnull", "!=", "NULL", "NULL").
+// ImplicitCondJumpOpcode("ifeq", "==", BYTE_T, "0").
+// ImplicitCondJumpOpcode("ifne", "!=", BYTE_T, "0").
+// ImplicitCondJumpOpcode("iflt", "<", BYTE_T, "0").
+// ImplicitCondJumpOpcode("ifge", ">=", BYTE_T, "0").
+// ImplicitCondJumpOpcode("ifgt", ">", BYTE_T, "0").
+// ImplicitCondJumpOpcode("ifle", "<=", BYTE_T, "0").
+// ImplicitCondJumpOpcode("ifnull", "==", "NULL", "NULL").
+// ImplicitCondJumpOpcode("ifnonnull", "!=", "NULL", "NULL").
 
-CondJumpOpcode("if_icmpeq", "==").
-CondJumpOpcode("if_icmpne", "!=").
-CondJumpOpcode("if_icmplt", "<").
-CondJumpOpcode("if_icmpge", ">=").
-CondJumpOpcode("if_icmpgt", ">").
-CondJumpOpcode("if_icmple", "<=").
-CondJumpOpcode("if_acmpeq", "==").
-CondJumpOpcode("if_acmpne", "!=").
+// CondJumpOpcode("if_icmpeq", "==").
+// CondJumpOpcode("if_icmpne", "!=").
+// CondJumpOpcode("if_icmplt", "<").
+// CondJumpOpcode("if_icmpge", ">=").
+// CondJumpOpcode("if_icmpgt", ">").
+// CondJumpOpcode("if_icmple", "<=").
+// CondJumpOpcode("if_acmpeq", "==").
+// CondJumpOpcode("if_acmpne", "!=").
 
-LoadStoreStmt(stmt, "X-load", varIndex) :- p0_Opcode(stmt, "X-load", varIndex).
-LoadStoreStmt(stmt, "X-store", varIndex) :- p0_Opcode(stmt, "X-store", varIndex).
-LoadStoreStmt(stmt, "X-inc", varIndex) :- p0_Opcode(stmt, "X-inc", varIndex).
-LoadStoreStmt(stmt, "X-dec", varIndex) :- p0_Opcode(stmt, "X-dec", varIndex).
+// LoadStoreStmt(stmt, "X-load", varIndex) :- p0_Opcode(stmt, "X-load", varIndex).
+// LoadStoreStmt(stmt, "X-store", varIndex) :- p0_Opcode(stmt, "X-store", varIndex).
+// LoadStoreStmt(stmt, "X-inc", varIndex) :- p0_Opcode(stmt, "X-inc", varIndex).
+// LoadStoreStmt(stmt, "X-dec", varIndex) :- p0_Opcode(stmt, "X-dec", varIndex).
 
-JumpStmt(stmt, opcode, oper) :- ImplicitCondJumpOpcode(opcode, _, _, _), p0_Opcode(stmt, opcode, oper).
-JumpStmt(stmt, opcode, oper) :- CondJumpOpcode(opcode, _), p0_Opcode(stmt, opcode, oper).
-JumpStmt(stmt, "goto", oper) :- p0_Opcode(stmt, "goto", oper).
+// JumpStmt(stmt, opcode, oper) :- ImplicitCondJumpOpcode(opcode, _, _, _), p0_Opcode(stmt, opcode, oper).
+// JumpStmt(stmt, opcode, oper) :- CondJumpOpcode(opcode, _), p0_Opcode(stmt, opcode, oper).
+// JumpStmt(stmt, "goto", oper) :- p0_Opcode(stmt, "goto", oper).
 
-MethodLastStmtIndex(method, lastIndex) :-
-	BytecodeStmt(_, method, _),
-	lastIndex = max index : { BytecodeStmt(_, method, index) }.
+// MethodLastStmtIndex(method, lastIndex) :-
+// 	BytecodeStmt(_, method, _),
+// 	lastIndex = max index : { BytecodeStmt(_, method, index) }.
 
-// The endIndex in VarRange is not inclusive in the original bytecode
-p0_Var(method, varIndex, var, name, type, startIndex, endIndex - 1) :-
-	p0_Var_RAW(method, varIndex, var, name, type, startLabel, endLabel),
-	Label(method, startLabel, _, startIndex),
-	Label(method, endLabel, _, endIndex).
+// // The endIndex in VarRange is not inclusive in the original bytecode
+// p0_Var(method, varIndex, var, name, type, startIndex, endIndex - 1) :-
+// 	p0_Var_RAW(method, varIndex, var, name, type, startLabel, endLabel),
+// 	Label(method, startLabel, _, startIndex),
+// 	Label(method, endLabel, _, endIndex).
 
-p1_Var(method, var, name, type, start, end) :- p0_Var(method, _, var, name, type, start, end).
+// p1_Var(method, var, name, type, start, end) :- p0_Var(method, _, var, name, type, start, end).
 
-// Anything other than var load/store and jumps
-OpcodeExt(stmt, opcode, oper) :-
-	p0_Opcode(stmt, opcode, oper),
-	!LoadStoreStmt(stmt, opcode, oper),
-	!JumpStmt(stmt, opcode, oper).
+// // Anything other than var load/store and jumps
+// OpcodeExt(stmt, opcode, oper) :-
+// 	p0_Opcode(stmt, opcode, oper),
+// 	!LoadStoreStmt(stmt, opcode, oper),
+// 	!JumpStmt(stmt, opcode, oper).
 
-// Jump targets
-p1_Next(stmt, nextStmt),
-OpcodeExt(stmt, opcode, nextStmt) :-
-	JumpStmt(stmt, opcode, label),
-	BytecodeStmt(stmt, method, _),
-	Label(method, label, nextStmt, _).
+// // Jump targets
+// p1_Next(stmt, nextStmt),
+// OpcodeExt(stmt, opcode, nextStmt) :-
+// 	JumpStmt(stmt, opcode, label),
+// 	BytecodeStmt(stmt, method, _),
+// 	Label(method, label, nextStmt, _).
 
-// The next statement, in sequence, is also a successor in most cases
-p1_Next(stmt, CAT3(method, "/BC/", to_string(i + 1))) :-
-	p0_Opcode(stmt, opcode, _),
-	BytecodeStmt(stmt, method, i),
-	MethodLastStmtIndex(method, lastIndex),
-	i != lastIndex,
-	opcode != "goto",
-	opcode != "athrow",
-	opcode != "X-return",
-	opcode != "return".
+// // The next statement, in sequence, is also a successor in most cases
+// p1_Next(stmt, CAT3(method, "/BC/", to_string(i + 1))) :-
+// 	p0_Opcode(stmt, opcode, _),
+// 	BytecodeStmt(stmt, method, i),
+// 	MethodLastStmtIndex(method, lastIndex),
+// 	i != lastIndex,
+// 	opcode != "goto",
+// 	opcode != "athrow",
+// 	opcode != "X-return",
+// 	opcode != "return".
+
+
 
 // Assume that the first instruction of a handler is a store
 p1_ExceptionHandler(method, startStmt, endStmt, handlerStmt, type, var) :-
